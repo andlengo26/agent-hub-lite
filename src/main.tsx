@@ -1,28 +1,24 @@
 import React from 'react';
-import { worker } from './lib/mock-server';
 import ReactDOM from 'react-dom/client';
 import App from './App';
+import { worker } from './lib/mock-server';
 import { QueryProvider } from './components/ui/QueryProvider';
 import './index.css';
 
-async function init() {
+async function bootstrap() {
+  // Only in development, start MSW first
   if (import.meta.env.DEV && 'serviceWorker' in navigator) {
-    // log the base URL to verify where Vite is hosting your app
-    console.log('BASE_URL =', import.meta.env.BASE_URL);
-
     await worker.start({
       serviceWorker: {
-        // ensure the path matches exactly where the file is served
+        // ensures Vite serves it at the right URL
         url: `${import.meta.env.BASE_URL}mockServiceWorker.js`,
-        options: { scope: '/' },  // <-- register for the entire origin
+        options: { scope: '/' },
       },
-      onUnhandledRequest: 'warn',
+      onUnhandledRequest: 'warn',  // logs any requests that MSW misses
     });
-
-    // confirm registration
-    console.log('MSW worker active:', navigator.serviceWorker.controller);
+    console.log('[MSW] Service worker ready');
   }
-
+  // Now mount your React app
   ReactDOM.createRoot(document.getElementById('root')!).render(
     <React.StrictMode>
       <QueryProvider>
@@ -32,8 +28,9 @@ async function init() {
   );
 }
 
-init().catch(err => {
+bootstrap().catch(err => {
   console.error('Failed to start MSW', err);
+  // Fallback: still start the app
   ReactDOM.createRoot(document.getElementById('root')!).render(
     <React.StrictMode>
       <QueryProvider>
