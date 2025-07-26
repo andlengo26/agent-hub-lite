@@ -22,16 +22,38 @@ export interface User {
 
 export interface Chat {
   id: string;
+  customerId: string;
+  customerName: string;
+  customerEmail: string;
   requesterName: string;
   requesterEmail: string;
   requesterPhone: string;
   ipAddress: string;
   browser: string;
   pageUrl: string;
+  subject: string;
   status: 'active' | 'missed' | 'closed';
+  priority: 'low' | 'medium' | 'high' | 'urgent';
   assignedAgentId: string;
+  lastMessage: string;
+  messageCount: number;
   createdAt: string;
   lastUpdatedAt: string;
+  // Enhanced properties for closed chats
+  callRecordingUrl?: string;
+  uploadedFiles?: Array<{
+    id: string;
+    name: string;
+    url: string;
+    type: string;
+    size: number;
+  }>;
+  transcript?: Array<{
+    id: string;
+    sender: 'customer' | 'agent' | 'system';
+    message: string;
+    timestamp: string;
+  }>;
 }
 
 export interface Engagement {
@@ -191,69 +213,156 @@ export const mockUsers: User[] = [
 
 export const mockChats: Chat[] = [
   {
-    id: "1",
+    id: "chat_001",
+    customerId: "cust_001",
+    customerName: "Alice Brown",
+    customerEmail: "alice.brown@email.com",
     requesterName: "Alice Brown",
     requesterEmail: "alice.brown@email.com",
     requesterPhone: "+1-555-0123",
     ipAddress: "192.168.1.100",
     browser: "Chrome 120.0",
     pageUrl: "https://example.com/support",
+    subject: "Need help with account setup",
     status: "active",
+    priority: "medium",
     assignedAgentId: "2",
+    lastMessage: "Can you help me configure my account settings?",
+    messageCount: 4,
     createdAt: "2024-07-26T10:30:00Z",
-    lastUpdatedAt: "2024-07-26T10:35:00Z"
+    lastUpdatedAt: "2024-07-26T10:35:00Z",
+    transcript: [
+      {
+        id: "msg_001",
+        sender: "customer",
+        message: "Hi, I need help setting up my account",
+        timestamp: "2024-07-26T10:30:00Z"
+      },
+      {
+        id: "msg_002",
+        sender: "agent",
+        message: "Hello! I'd be happy to help you with your account setup. What specific area are you having trouble with?",
+        timestamp: "2024-07-26T10:31:00Z"
+      }
+    ]
   },
   {
-    id: "2",
+    id: "chat_002",
+    customerId: "cust_002",
+    customerName: "Bob Green",
+    customerEmail: "bob.green@email.com",
     requesterName: "Bob Green",
     requesterEmail: "bob.green@email.com",
     requesterPhone: "+1-555-0124",
     ipAddress: "192.168.1.101",
     browser: "Firefox 121.0",
     pageUrl: "https://example.com/pricing",
+    subject: "Pricing inquiry for enterprise plan",
     status: "missed",
+    priority: "high",
     assignedAgentId: "3",
+    lastMessage: "Customer left chat before agent response",
+    messageCount: 1,
     createdAt: "2024-07-26T09:15:00Z",
     lastUpdatedAt: "2024-07-26T09:20:00Z"
   },
   {
-    id: "3",
+    id: "chat_003",
+    customerId: "cust_003",
+    customerName: "Carol White",
+    customerEmail: "carol.white@email.com",
     requesterName: "Carol White",
     requesterEmail: "carol.white@email.com",
     requesterPhone: "+1-555-0125",
     ipAddress: "192.168.1.102",
     browser: "Safari 17.0",
     pageUrl: "https://example.com/features",
+    subject: "Technical issue with API integration",
     status: "closed",
+    priority: "urgent",
     assignedAgentId: "4",
+    lastMessage: "Issue resolved. Thank you for your help!",
+    messageCount: 12,
     createdAt: "2024-07-26T08:45:00Z",
-    lastUpdatedAt: "2024-07-26T09:10:00Z"
+    lastUpdatedAt: "2024-07-26T09:10:00Z",
+    callRecordingUrl: "/recordings/chat_003_call.mp3",
+    uploadedFiles: [
+      {
+        id: "file_001",
+        name: "error_log.txt",
+        url: "/uploads/error_log.txt",
+        type: "text/plain",
+        size: 2048
+      }
+    ],
+    transcript: [
+      {
+        id: "msg_003",
+        sender: "customer",
+        message: "I'm getting a 500 error when calling your API",
+        timestamp: "2024-07-26T08:45:00Z"
+      },
+      {
+        id: "msg_004",
+        sender: "agent",
+        message: "I see the issue. Let me check your API key configuration.",
+        timestamp: "2024-07-26T08:46:00Z"
+      }
+    ]
   },
   {
-    id: "4",
+    id: "chat_004",
+    customerId: "cust_004",
+    customerName: "David Black",
+    customerEmail: "david.black@email.com",
     requesterName: "David Black",
     requesterEmail: "david.black@email.com",
     requesterPhone: "+1-555-0126",
     ipAddress: "192.168.1.103",
     browser: "Edge 120.0",
     pageUrl: "https://example.com/contact",
+    subject: "General product inquiry",
     status: "active",
+    priority: "low",
     assignedAgentId: "5",
+    lastMessage: "What features are included in the basic plan?",
+    messageCount: 2,
     createdAt: "2024-07-26T11:00:00Z",
     lastUpdatedAt: "2024-07-26T11:05:00Z"
   },
   {
-    id: "5",
+    id: "chat_005",
+    customerId: "cust_005",
+    customerName: "Eva Gray",
+    customerEmail: "eva.gray@email.com",
     requesterName: "Eva Gray",
     requesterEmail: "eva.gray@email.com",
     requesterPhone: "+1-555-0127",
     ipAddress: "192.168.1.104",
     browser: "Chrome 120.0",
     pageUrl: "https://example.com/home",
+    subject: "Billing question about invoice",
     status: "closed",
+    priority: "medium",
     assignedAgentId: "2",
+    lastMessage: "Perfect, my billing issue is now resolved!",
+    messageCount: 8,
     createdAt: "2024-07-26T07:30:00Z",
-    lastUpdatedAt: "2024-07-26T08:15:00Z"
+    lastUpdatedAt: "2024-07-26T08:15:00Z",
+    transcript: [
+      {
+        id: "msg_005",
+        sender: "customer",
+        message: "I have a question about my latest invoice",
+        timestamp: "2024-07-26T07:30:00Z"
+      },
+      {
+        id: "msg_006",
+        sender: "agent",
+        message: "I'd be happy to help with your billing question. Can you provide your account number?",
+        timestamp: "2024-07-26T07:31:00Z"
+      }
+    ]
   }
 ];
 

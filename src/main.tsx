@@ -5,13 +5,20 @@ import "./index.css";
 import { startMockServer } from "./lib/mock-server";
 import { QueryProvider } from "./components/ui/QueryProvider.tsx";
 
-// Start mock server in development
-startMockServer();
+// Initialize app after MSW is ready
+async function enableMocking() {
+  if (import.meta.env.MODE === 'development') {
+    const { startMockServer } = await import('./lib/mock-server');
+    await startMockServer();
+  }
+}
 
-createRoot(document.getElementById("root")!).render(
-  <StrictMode>
-    <QueryProvider>
-      <App />
-    </QueryProvider>
-  </StrictMode>,
-);
+enableMocking().then(() => {
+  createRoot(document.getElementById("root")!).render(
+    <StrictMode>
+      <QueryProvider>
+        <App />
+      </QueryProvider>
+    </StrictMode>,
+  );
+});
