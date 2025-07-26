@@ -41,7 +41,7 @@ const menuItems = [
     submenu: [
       { title: "All Chats", url: "/chats/all" },
       { title: "My Chats", url: "/chats/my" },
-      { title: "Engagement History", url: "/engagement-history" },
+      { title: "Engagement History", url: "/chats/history" },
     ],
   },
   {

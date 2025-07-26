@@ -2,8 +2,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { DataTable, Column } from "@/components/admin/DataTable";
-import { mockResources, Resource } from "@/lib/mock-data";
-import { Share, FileText, Video, Link, File } from "lucide-react";
+import { FileText, Video, Link, File, Plus } from "lucide-react";
+
+interface Resource {
+  id: string;
+  title: string;
+  type: string;
+  tags: string[];
+  updatedAt: string;
+}
 
 const getTypeIcon = (type: string) => {
   switch (type) {
@@ -47,20 +54,30 @@ const resourceColumns: Column<Resource>[] = [
 export default function Resources() {
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Resources</h1>
-        <p className="text-muted-foreground">Manage shareable resources for customer support</p>
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold">Resources</h1>
+          <p className="text-muted-foreground">Manage shareable resources for customer support</p>
+        </div>
+        <Button disabled>
+          <Plus className="h-4 w-4 mr-2" />
+          Add Resource
+        </Button>
       </div>
       <Card>
         <CardHeader>
           <CardTitle>Resource Library</CardTitle>
         </CardHeader>
         <CardContent>
-          <DataTable 
-            data={mockResources} 
-            columns={resourceColumns} 
-            onView={(resource) => console.log("Share in Chat", resource)}
-          />
+          <div className="text-center py-8">
+            <p className="text-muted-foreground mb-6">
+              No resources yet. Upload documents, videos, or links to get started.
+            </p>
+            <DataTable 
+              data={[]} 
+              columns={resourceColumns}
+            />
+          </div>
         </CardContent>
       </Card>
     </div>

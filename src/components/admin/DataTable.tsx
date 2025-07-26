@@ -113,7 +113,17 @@ export function DataTable<T extends { id: string }>({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {data.map((row) => (
+          {data.length === 0 ? (
+            <TableRow>
+              <TableCell 
+                colSpan={columns.length + (selectable ? 1 : 0) + (hasActions ? 1 : 0)} 
+                className="h-24 text-center text-muted-foreground"
+              >
+                No data available
+              </TableCell>
+            </TableRow>
+          ) : (
+            data.map((row) => (
             <TableRow
               key={row.id}
               className={`${onRowClick ? "cursor-pointer hover:bg-muted/50" : ""}`}
@@ -168,7 +178,8 @@ export function DataTable<T extends { id: string }>({
                 </TableCell>
               )}
             </TableRow>
-          ))}
+            ))
+          )}
         </TableBody>
       </Table>
     </div>

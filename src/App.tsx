@@ -70,7 +70,7 @@ const App = () => (
                 </AdminLayout>
               </AuthGuard>
             } />
-            <Route path="/engagement-history" element={
+            <Route path="/chats/history" element={
               <AuthGuard>
                 <AdminLayout>
                   <EngagementHistory />
