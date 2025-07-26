@@ -37,7 +37,7 @@ class ApiClient {
   ): Promise<T> {
     const url = `${this.baseUrl}${endpoint}`;
     
-    console.log(`🌐 API Request: ${options.method || 'GET'} ${url}`);
+    console.log(`🌐 API Request: ${options.method || 'GET'} ${endpoint}`);
     
     const defaultOptions: RequestInit = {
       headers: {
@@ -52,6 +52,12 @@ class ApiClient {
       
       console.log(`🌐 API Response: ${response.status} ${response.statusText}`);
       console.log(`🌐 Response headers:`, Object.fromEntries(response.headers.entries()));
+      
+      // Check if response is HTML (indicating MSW is not working)
+      const contentType = response.headers.get('content-type');
+      if (contentType && contentType.includes('text/html')) {
+        throw new Error(`API returned HTML instead of JSON. This usually means MSW is not intercepting requests properly. URL: ${url}`);
+      }
       
       if (!response.ok) {
         let errorMessage = `HTTP ${response.status}`;

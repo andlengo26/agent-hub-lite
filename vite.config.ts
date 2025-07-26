@@ -19,4 +19,9 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  // Ensure MSW service worker is served properly
+  publicDir: 'public',
+  optimizeDeps: {
+    exclude: ['msw'],
+  },
 }));

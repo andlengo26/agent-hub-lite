@@ -265,28 +265,58 @@ export const worker = setupWorker(...handlers);
 
 // Helper to start mock server
 export const startMockServer = async () => {
-  if (config.mock.enabled) {
-    try {
-      await worker.start({
-        onUnhandledRequest: 'bypass',
-        serviceWorker: {
-          url: '/mockServiceWorker.js'
-        }
-      });
-      console.log('🎭 Mock API server started successfully');
-      console.log('🎭 Mock enabled:', config.mock.enabled);
-      console.log('🎭 Available handlers:', handlers.length);
-      
-      // Test the handlers are working
-      setTimeout(() => {
-        console.log('🎭 Testing mock server with sample request...');
-      }, 1000);
-    } catch (error) {
-      console.error('❌ Failed to start mock server:', error);
-      console.log('🎭 Continuing without mock server - will use fallback data');
-    }
-  } else {
+  if (!config.mock.enabled) {
     console.log('🎭 Mock server disabled in config');
+    return false;
+  }
+
+  try {
+    console.log('🎭 Starting Mock Service Worker...');
+    
+    await worker.start({
+      onUnhandledRequest: 'bypass',
+      serviceWorker: {
+        url: '/mockServiceWorker.js',
+        options: {
+          scope: '/',
+        }
+      },
+      waitUntilReady: true,
+    });
+    
+    console.log('🎭 Mock API server started successfully');
+    console.log('🎭 Mock enabled:', config.mock.enabled);
+    console.log('🎭 Available handlers:', handlers.length);
+    console.log('🎭 Service worker scope: /');
+    
+    // Verify MSW is working by checking if it's intercepting
+    const testWorker = async () => {
+      try {
+        const response = await fetch('/api/mock/health');
+        const data = await response.json();
+        if (data.status === 'ok') {
+          console.log('✅ MSW is working correctly - health check passed');
+          return true;
+        }
+      } catch (error) {
+        console.warn('⚠️ MSW health check failed:', error);
+        return false;
+      }
+    };
+    
+    // Test after a short delay to ensure worker is ready
+    setTimeout(testWorker, 500);
+    
+    return true;
+  } catch (error) {
+    console.error('❌ Failed to start mock server:', error);
+    console.error('❌ Error details:', {
+      name: error.name,
+      message: error.message,
+      stack: error.stack
+    });
+    console.log('🎭 Continuing without mock server - API calls will use fallback data');
+    return false;
   }
 };
 
