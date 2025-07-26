@@ -85,11 +85,6 @@ const App = () => (
               <Security />
             </AdminLayout>
           } />
-          <Route path="/admin/settings/preview" element={
-            <AdminLayout>
-              <Preview />
-            </AdminLayout>
-          } />
           <Route path="/admin/content/documents" element={
             <AdminLayout>
               <Documents />

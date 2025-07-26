@@ -35,11 +35,6 @@ const menuItems = [
     icon: LayoutDashboard,
   },
   {
-    title: "My Profile",
-    url: "/admin/profile",
-    icon: User,
-  },
-  {
     title: "Chats",
     icon: MessageSquare,
     submenu: [
@@ -62,7 +57,6 @@ const menuItems = [
       { title: "Notifications", url: "/admin/settings/notifications" },
       { title: "Widget Management", url: "/admin/settings/widget" },
       { title: "Security", url: "/admin/settings/security" },
-      { title: "Preview", url: "/admin/settings/preview" },
     ],
   },
   {
@@ -88,10 +82,10 @@ export function AdminSidebar() {
   const currentPath = location.pathname;
 
   const [openMenus, setOpenMenus] = useState<string[]>(() => {
-    // Auto-open menus that contain the current path
+    // Keep all sections expanded by default
     const initialOpen: string[] = [];
     menuItems.forEach((item) => {
-      if (item.submenu && item.submenu.some((sub) => currentPath.startsWith(sub.url))) {
+      if (item.submenu) {
         initialOpen.push(item.title);
       }
     });

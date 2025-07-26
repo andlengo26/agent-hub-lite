@@ -9,6 +9,7 @@ import { Plus } from "lucide-react";
 import { DataTable, Column } from "@/components/admin/DataTable";
 import { mockOrganizations, Organization } from "@/lib/mock-data";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { FloatingPreview } from "@/components/admin/FloatingPreview";
 
 const orgColumns: Column<Organization>[] = [
   { 
@@ -41,14 +42,15 @@ export default function Organizations() {
   const [selectedOrgs, setSelectedOrgs] = useState<string[]>([]);
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold">Organization Management</h1>
-          <p className="text-muted-foreground">
-            Manage organizations and their configurations
-          </p>
-        </div>
+    <>
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold">Organization Management</h1>
+            <p className="text-muted-foreground">
+              Manage organizations and their configurations
+            </p>
+          </div>
         <Dialog>
           <DialogTrigger asChild>
             <Button className="gap-2">
@@ -90,5 +92,7 @@ export default function Organizations() {
         </CardContent>
       </Card>
     </div>
+    <FloatingPreview />
+  </>
   );
 }

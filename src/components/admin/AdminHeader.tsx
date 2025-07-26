@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { ChevronDown, User, LogOut, Settings } from "lucide-react";
 import { SidebarTrigger } from "@/components/ui/sidebar";
+import { NavLink } from "react-router-dom";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -85,9 +86,11 @@ export function AdminHeader() {
             <ChevronDown className="h-4 w-4" />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
-            <DropdownMenuItem>
-              <User className="mr-2 h-4 w-4" />
-              My Profile
+            <DropdownMenuItem asChild>
+              <NavLink to="/admin/profile" className="flex items-center w-full">
+                <User className="mr-2 h-4 w-4" />
+                My Profile
+              </NavLink>
             </DropdownMenuItem>
             <DropdownMenuItem>
               <Settings className="mr-2 h-4 w-4" />

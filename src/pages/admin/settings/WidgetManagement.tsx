@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { FloatingPreview } from "@/components/admin/FloatingPreview";
 
 export default function WidgetManagement() {
   const [widgetSettings, setWidgetSettings] = useState({
@@ -31,7 +32,8 @@ export default function WidgetManagement() {
   });
 
   return (
-    <div className="space-y-6">
+    <>
+      <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold">Widget Management</h1>
         <p className="text-muted-foreground">
@@ -370,5 +372,7 @@ export default function WidgetManagement() {
         <Button size="lg" variant="highlight">Save All Settings</Button>
       </div>
     </div>
+    <FloatingPreview />
+  </>
   );
 }

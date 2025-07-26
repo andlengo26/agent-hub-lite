@@ -9,6 +9,7 @@ import { Plus } from "lucide-react";
 import { DataTable, Column } from "@/components/admin/DataTable";
 import { mockUsers, User } from "@/lib/mock-data";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { FloatingPreview } from "@/components/admin/FloatingPreview";
 
 const userColumns: Column<User>[] = [
   { 
@@ -48,7 +49,8 @@ const userColumns: Column<User>[] = [
 
 export default function Users() {
   return (
-    <div className="space-y-6">
+    <>
+      <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold">User Management</h1>
@@ -116,5 +118,7 @@ export default function Users() {
         </CardContent>
       </Card>
     </div>
+    <FloatingPreview />
+  </>
   );
 }
