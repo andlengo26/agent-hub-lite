@@ -1,17 +1,44 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { useHealthCheck } from "@/hooks/useApiQuery";
 import { useFeatureFlags } from "@/hooks/useFeatureFlag";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { CheckCircle, XCircle, AlertTriangle } from "lucide-react";
+import { CheckCircle, XCircle, AlertTriangle, RefreshCw, Wrench } from "lucide-react";
+import { useState } from "react";
 
 export default function Dashboard() {
-  const { data: healthData, isLoading: healthLoading, error: healthError } = useHealthCheck();
+  const { data: healthData, isLoading: healthLoading, error: healthError, refetch } = useHealthCheck();
   const featureFlags = useFeatureFlags();
+  const [isRefreshing, setIsRefreshing] = useState(false);
   
   const enabledFeatures = Object.entries(featureFlags)
     .filter(([, enabled]) => enabled)
     .map(([feature]) => feature);
+
+  // Enhanced health status determination
+  const getHealthStatus = () => {
+    if (healthLoading || isRefreshing) return { status: 'checking', color: 'yellow', icon: AlertTriangle };
+    if (healthError) {
+      // Check for specific MSW-related errors
+      if (healthError.message.includes('HTML') || healthError.message.includes('MSW')) {
+        return { status: 'msw-error', color: 'destructive', icon: XCircle };
+      }
+      return { status: 'error', color: 'destructive', icon: XCircle };
+    }
+    return { status: 'healthy', color: 'success', icon: CheckCircle };
+  };
+
+  const handleRefreshHealth = async () => {
+    setIsRefreshing(true);
+    try {
+      await refetch();
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
+  const healthStatus = getHealthStatus();
   return (
     <div className="space-y-6">
       <div>
@@ -21,36 +48,83 @@ export default function Dashboard() {
         </p>
       </div>
 
-      {/* System Status */}
+      {/* Enhanced System Status */}
       <Card className="mb-6">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            System Status
-            {healthError ? (
-              <XCircle className="h-5 w-5 text-destructive" />
-            ) : healthLoading ? (
-              <AlertTriangle className="h-5 w-5 text-yellow-500" />
-            ) : (
-              <CheckCircle className="h-5 w-5 text-success" />
-            )}
+          <CardTitle className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              System Status
+              <healthStatus.icon className={`h-5 w-5 text-${healthStatus.color}`} />
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleRefreshHealth}
+              disabled={isRefreshing}
+              className="flex items-center gap-2"
+            >
+              <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+              Refresh
+            </Button>
           </CardTitle>
         </CardHeader>
-        <CardContent>
-          {healthError ? (
+        <CardContent className="space-y-4">
+          {healthStatus.status === 'msw-error' ? (
+            <Alert variant="destructive">
+              <Wrench className="h-4 w-4" />
+              <AlertDescription className="space-y-2">
+                <div>
+                  <strong>Mock Service Worker (MSW) Issue Detected</strong>
+                </div>
+                <div className="text-sm">
+                  The API is returning HTML instead of JSON, which usually means MSW is not intercepting requests properly.
+                </div>
+                <div className="text-xs mt-2 space-y-1">
+                  <div><strong>Troubleshooting steps:</strong></div>
+                  <div>1. Check that mockServiceWorker.js exists in the public directory</div>
+                  <div>2. Refresh the page to restart MSW</div>
+                  <div>3. Check browser console for MSW startup messages</div>
+                  <div>4. Verify no browser extensions are blocking service workers</div>
+                </div>
+              </AlertDescription>
+            </Alert>
+          ) : healthStatus.status === 'error' ? (
             <Alert variant="destructive">
               <AlertDescription>
-                System health check failed. Using offline mode.
+                <div className="space-y-2">
+                  <div>System health check failed. Operating in fallback mode.</div>
+                  <details className="text-xs">
+                    <summary className="cursor-pointer">Error Details</summary>
+                    <pre className="mt-1 p-2 bg-muted rounded overflow-auto">
+                      {healthError?.message || 'Unknown error'}
+                    </pre>
+                  </details>
+                </div>
               </AlertDescription>
             </Alert>
           ) : (
-            <div className="flex items-center gap-4">
-              <span className="text-sm text-muted-foreground">
-                API Status: {healthLoading ? "Checking..." : "Online"}
-              </span>
-              {healthData && (
-                <Badge variant="outline">
-                  Version {healthData.version}
-                </Badge>
+            <div className="space-y-2">
+              <div className="flex items-center gap-4">
+                <span className="text-sm text-muted-foreground">
+                  API Status: {healthStatus.status === 'checking' ? 'Checking...' : 'Online'}
+                </span>
+                {healthData && (
+                  <Badge variant="outline">
+                    Version {healthData.version}
+                  </Badge>
+                )}
+                {healthData && (
+                  <Badge variant="secondary">
+                    Last checked: {new Date(healthData.timestamp).toLocaleTimeString()}
+                  </Badge>
+                )}
+              </div>
+              
+              {import.meta.env.DEV && (
+                <div className="text-xs text-muted-foreground">
+                  <Badge variant="outline" className="mr-2">Development Mode</Badge>
+                  Mock Service Worker: {healthData ? 'Active' : 'Unknown'}
+                </div>
               )}
             </div>
           )}
