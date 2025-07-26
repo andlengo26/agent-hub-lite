@@ -269,70 +269,27 @@ export const handlers = [
 // Create and export the worker
 export const worker = setupWorker(...handlers);
 
-// Add diagnostic logging
+// Enhanced diagnostic logging
 worker.events.on('request:start', ({ request }) => {
-  console.log('[MSW] intercepting', request.method, request.url);
+  console.log('[MSW] 🎯 Intercepting:', request.method, request.url);
+});
+
+worker.events.on('request:match', ({ request }) => {
+  console.log('[MSW] ✅ Handler found for:', request.method, request.url);
 });
 
 worker.events.on('request:unhandled', ({ request }) => {
-  console.warn('[MSW] missed', request.method, request.url);
+  console.warn('[MSW] ❌ No handler for:', request.method, request.url);
 });
 
-// Simplified and more reliable mock server startup
+worker.events.on('response:mocked', ({ request, response }) => {
+  console.log('[MSW] 📤 Mocked response:', request.method, request.url, 'Status:', response.status);
+});
+
+// Legacy function - kept for backwards compatibility but not used in new bootstrap
 export const startMockServer = async (): Promise<boolean> => {
-  console.log('🎭 === STARTING MOCK SERVER ===');
-  
-  try {
-    // Basic environment check
-    if (!('serviceWorker' in navigator)) {
-      throw new Error('Service Workers not supported');
-    }
-    
-    console.log('🎭 Environment: development');
-    console.log('🎭 Handlers registered:', handlers.length);
-    console.log('🎭 Starting MSW worker...');
-    
-    // Start worker with minimal configuration for reliability
-    await worker.start({
-      onUnhandledRequest: 'warn',
-      serviceWorker: {
-        url: '/mockServiceWorker.js'
-      },
-      waitUntilReady: true
-    });
-    
-    console.log('✅ MSW worker started');
-    
-    // Wait a moment for MSW to be ready
-    console.log('🔍 Waiting for MSW to be ready...');
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // Simple verification - try a test request
-    console.log('🔍 Testing MSW with health check...');
-    const testResponse = await fetch('/api/mock/health?t=' + Date.now(), {
-      method: 'GET',
-      headers: { 'Content-Type': 'application/json' }
-    });
-    
-    console.log('🔍 Test response status:', testResponse.status);
-    console.log('🔍 Test response content-type:', testResponse.headers.get('content-type'));
-    
-    const contentType = testResponse.headers.get('content-type') || '';
-    if (contentType.includes('application/json')) {
-      const data = await testResponse.json();
-      console.log('✅ MSW is working correctly, response:', data);
-      return true;
-    } else {
-      const textResponse = await testResponse.text();
-      console.warn('⚠️ MSW test failed - got HTML instead of JSON');
-      console.warn('⚠️ Response preview:', textResponse.substring(0, 200));
-      throw new Error('MSW not intercepting requests');
-    }
-    
-  } catch (error) {
-    console.error('❌ MSW startup failed:', error.message);
-    return false;
-  }
+  console.warn('⚠️ startMockServer is deprecated - MSW is now started directly in main.tsx');
+  return true;
 };
 
 // Stop the mock server

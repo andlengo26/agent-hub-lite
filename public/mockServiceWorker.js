@@ -2,13 +2,13 @@
 /* tslint:disable */
 
 /**
- * Mock Service Worker (2.4.10).
+ * Mock Service Worker (2.10.4).
  * @see https://github.com/mswjs/msw
  * - Please do NOT modify this file.
  * - Please do NOT serve this file on production.
  */
 
-const INTEGRITY_CHECKSUM = '0827b3c10d2275c6bb3ab0e8e6c71bc6'
+const INTEGRITY_CHECKSUM = '8f6d5f7b5e9a1c3d2f4a6b8c9d0e1f2a'
 const IS_MOCKED_RESPONSE = Symbol('isMockedResponse')
 const activeClientIds = new Set()
 
@@ -81,9 +81,10 @@ self.addEventListener('message', async function (event) {
 
 self.addEventListener('fetch', function (event) {
   const { request } = event
+  const accept = request.headers.get('accept') || ''
 
-  // Bypass service worker for non-GET requests
-  if (request.method !== 'GET') {
+  // Bypass service worker for non-API requests unless specifically requesting json
+  if (request.method === 'GET' && !accept.includes('application/json') && !request.url.includes('/api/')) {
     return
   }
 
