@@ -20,13 +20,13 @@ export function useChats(params?: {
       console.log('🔄 useChats: Fetching chats with params:', params);
       
       try {
-        // Use relative URL for same-origin requests
+        // Use relative URL for same-origin requests - NEVER use window.location.origin
         const url = '/api/mock/chats' + (params ? '?' + new URLSearchParams(
           Object.entries(params).map(([k, v]) => [k, String(v)])
         ).toString() : '');
         
-        console.log('🔄 useChats: Fetching from URL:', url);
-        const response = await fetch(url);
+        console.log('🔄 useChats: Fetching from relative URL:', url);
+        const response = await fetch(url);  // <-- relative fetch only
         
         if (!response.ok) {
           throw new Error(`HTTP ${response.status}: ${response.statusText}`);

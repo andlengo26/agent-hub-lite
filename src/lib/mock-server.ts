@@ -274,21 +274,21 @@ export const handlers = [
 // Create and export the worker
 export const worker = setupWorker(...handlers);
 
-// Add debug logs BEFORE starting the worker
-worker.events.on('request:start', (req) => {
-  console.log('[MSW] starting request', req.request.method, req.request.url);
+// Add diagnostic logging BEFORE starting the worker
+worker.events.on('request:start', req => {
+  console.log('[MSW] Intercepting', req.request.method, req.request.url);
 });
 
-worker.events.on('request:match', (req) => {
-  console.log('[MSW] matched request', req.request.method, req.request.url);
+worker.events.on('request:unhandled', req => {
+  console.warn('[MSW] Missed', req.request.method, req.request.url);
 });
 
-worker.events.on('request:unhandled', (req) => {
-  console.error('[MSW] DID NOT HANDLE', req.request.method, req.request.url);
+worker.events.on('request:match', req => {
+  console.log('[MSW] Matched handler for', req.request.method, req.request.url);
 });
 
-worker.events.on('response:mocked', (res) => {
-  console.log('[MSW] response mocked', res.response.status, res.request.url);
+worker.events.on('response:mocked', res => {
+  console.log('[MSW] Response mocked:', res.response.status, res.request.url);
 });
 
 // Helper to start mock server (simplified for direct worker usage)
