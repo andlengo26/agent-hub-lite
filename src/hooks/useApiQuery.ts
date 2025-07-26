@@ -17,12 +17,19 @@ export function useChats(params?: {
   return useQuery({
     queryKey: ['chats', params],
     queryFn: async () => {
+      console.log('🔄 useChats: Fetching chats with params:', params);
+      
       try {
-        console.log('🔄 useChats: Fetching chats with params:', params);
-        const response = await fetch('/api/mock/chats' + (params ? '?' + new URLSearchParams(Object.entries(params).map(([k, v]) => [k, String(v)])).toString() : ''));
+        // Use relative URL for same-origin requests
+        const url = '/api/mock/chats' + (params ? '?' + new URLSearchParams(
+          Object.entries(params).map(([k, v]) => [k, String(v)])
+        ).toString() : '');
+        
+        console.log('🔄 useChats: Fetching from URL:', url);
+        const response = await fetch(url);
         
         if (!response.ok) {
-          throw new Error(`HTTP ${response.status}`);
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
         
         // Check if response is HTML (MSW not working)
@@ -36,7 +43,7 @@ export function useChats(params?: {
         return result;
       } catch (error) {
         console.warn('⚠️ useChats: API failed, using mock data fallback:', error);
-        // Return mock data in the same format as the API
+        // Return mock data in the same format as the API - ensure UI still renders
         const { mockChats } = await import('@/lib/mock-data');
         return {
           data: mockChats,

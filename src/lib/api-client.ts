@@ -28,7 +28,8 @@ class ApiClient {
   private baseUrl: string;
 
   constructor() {
-    this.baseUrl = config.mock.enabled ? '/api/mock' : config.api.baseUrl;
+    // Always use relative URLs for same-origin requests
+    this.baseUrl = config.mock.enabled ? '/api/mock' : '/api';
   }
 
   private async request<T>(
