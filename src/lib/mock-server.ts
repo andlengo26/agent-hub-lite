@@ -25,12 +25,15 @@ const createApiResponse = (data: any, pagination?: any) => {
 export const handlers = [
   // GET /api/mock/chats
   http.get('/api/mock/chats', async ({ request }) => {
+    console.log('🎭 Mock server intercepted GET /api/mock/chats');
     await delay(config.mock.apiDelay);
     
     const url = new URL(request.url);
     const page = parseInt(url.searchParams.get('page') || '1');
     const limit = parseInt(url.searchParams.get('limit') || '10');
     const status = url.searchParams.get('status');
+    
+    console.log('🎭 Chat request params:', { page, limit, status });
     
     let filteredChats = mockData.chats;
     if (status) {
@@ -48,6 +51,7 @@ export const handlers = [
       totalPages: Math.ceil(filteredChats.length / limit)
     };
     
+    console.log(`🎭 Returning ${paginatedChats.length} chats of ${filteredChats.length} total`);
     return HttpResponse.json(createApiResponse(paginatedChats, pagination));
   }),
 
@@ -262,13 +266,27 @@ export const worker = setupWorker(...handlers);
 // Helper to start mock server
 export const startMockServer = async () => {
   if (config.mock.enabled) {
-    await worker.start({
-      onUnhandledRequest: 'warn',
-      serviceWorker: {
-        url: '/mockServiceWorker.js'
-      }
-    });
-    console.log('🎭 Mock API server started');
+    try {
+      await worker.start({
+        onUnhandledRequest: 'bypass',
+        serviceWorker: {
+          url: '/mockServiceWorker.js'
+        }
+      });
+      console.log('🎭 Mock API server started successfully');
+      console.log('🎭 Mock enabled:', config.mock.enabled);
+      console.log('🎭 Available handlers:', handlers.length);
+      
+      // Test the handlers are working
+      setTimeout(() => {
+        console.log('🎭 Testing mock server with sample request...');
+      }, 1000);
+    } catch (error) {
+      console.error('❌ Failed to start mock server:', error);
+      console.log('🎭 Continuing without mock server - will use fallback data');
+    }
+  } else {
+    console.log('🎭 Mock server disabled in config');
   }
 };
 

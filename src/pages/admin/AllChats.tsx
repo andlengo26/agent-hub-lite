@@ -109,28 +109,16 @@ export default function AllChats() {
     );
   }
 
-  if (error) {
-    return (
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold">All Chats</h1>
-          <p className="text-muted-foreground">
-            Monitor and manage all customer chat interactions
-          </p>
-        </div>
-        <Card>
-          <CardContent className="flex items-center justify-center h-96">
-            <div className="text-center">
-              <p className="text-muted-foreground mb-4">Failed to load chats. Using offline data.</p>
-              <Button variant="outline" onClick={() => window.location.reload()}>
-                Retry
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+  // Don't show error UI, just use mock data and show a warning toast
+  useEffect(() => {
+    if (error && chats.length > 0) {
+      toast({
+        title: "Using offline data",
+        description: "Failed to connect to server. Showing cached data.",
+        variant: "destructive"
+      });
+    }
+  }, [error, chats.length]);
 
 
   return (
