@@ -17,6 +17,14 @@ import { performanceMonitor } from "@/lib/performance-monitor";
 const chatColumns: Column<Chat>[] = [
   { key: "requesterName", label: "Customer" },
   { key: "requesterEmail", label: "Email" },
+  { key: "requesterPhone", label: "Phone" },
+  { key: "ipAddress", label: "IP Address" },
+  { key: "browser", label: "Browser/OS" },
+  { key: "pageUrl", label: "Page URL", cell: (value) => (
+    <div className="max-w-32 truncate" title={value}>
+      {value}
+    </div>
+  )},
   { key: "status", label: "Status", cell: (value) => (
     <Badge variant={value === "active" ? "default" : value === "missed" ? "destructive" : "secondary"}>
       {value}
@@ -78,6 +86,24 @@ export default function AllChats() {
       });
     }
   }, [isRefetching, enableRealTimeUpdates]);
+
+  // Simulate new chat assignments
+  useEffect(() => {
+    if (!enableRealTimeUpdates) return;
+    
+    const interval = setInterval(() => {
+      // Simulate random new chat assignment
+      if (Math.random() > 0.95) {
+        toast({
+          title: "New chat assigned",
+          description: "A new customer chat has been assigned to you",
+          variant: "default"
+        });
+      }
+    }, 10000); // Check every 10 seconds
+
+    return () => clearInterval(interval);
+  }, [enableRealTimeUpdates]);
 
   // Error handling toast
   useEffect(() => {
