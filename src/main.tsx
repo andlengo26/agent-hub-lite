@@ -63,57 +63,32 @@ function renderApp(mswStatus: 'loading' | 'ready' | 'error' = 'ready') {
   );
 }
 
-// Comprehensive MSW initialization with detailed diagnostics
-async function initializeMSW(): Promise<boolean> {
+// Simplified MSW initialization focused on reliability
+async function initializeMSW(): Promise<void> {
   console.log('🎭 === MSW INITIALIZATION START ===');
   console.log('🎭 Environment:', import.meta.env.MODE);
-  console.log('🎭 Mock enabled:', config.mock.enabled);
   console.log('🎭 Service Worker support:', 'serviceWorker' in navigator);
   console.log('🎭 Current URL:', window.location.href);
   
-  // Check if MSW is disabled
-  if (!config.mock.enabled) {
-    console.log('🎭 MSW disabled in config - skipping initialization');
-    return false;
-  }
-
-  // Check service worker support
+  // Always check service worker support first
   if (!('serviceWorker' in navigator)) {
-    console.warn('🎭 Service Workers not supported - MSW cannot start');
-    return false;
+    throw new Error('Service Workers not supported - MSW cannot start');
   }
 
-  try {
-    // Start MSW with comprehensive error handling
-    console.log('🎭 Starting MSW with enhanced configuration...');
-    
-    const success = await startMockServer();
-    
-    if (success) {
-      console.log('✅ === MSW INITIALIZATION SUCCESS ===');
-      
-      // Verify MSW is working with a test request
-      await verifyMSWWorking();
-      
-      return true;
-    } else {
-      console.error('❌ MSW failed to start properly');
-      return false;
-    }
-  } catch (error) {
-    console.error('❌ === MSW INITIALIZATION ERROR ===');
-    console.error('❌ Error name:', error.name);
-    console.error('❌ Error message:', error.message);
-    console.error('❌ Error stack:', error.stack);
-    
-    // Additional diagnostics
-    console.error('❌ Troubleshooting info:');
-    console.error('   - Current origin:', window.location.origin);
-    console.error('   - Service worker URL:', '/mockServiceWorker.js');
-    console.error('   - Config mock enabled:', config.mock.enabled);
-    
-    return false;
+  // Start MSW unconditionally in development
+  console.log('🎭 Starting MSW...');
+  const success = await startMockServer();
+  
+  if (!success) {
+    throw new Error('MSW failed to start properly');
   }
+  
+  console.log('✅ MSW started successfully');
+  
+  // Verify MSW is working with a test request
+  await verifyMSWWorking();
+  
+  console.log('✅ === MSW INITIALIZATION SUCCESS ===');
 }
 
 // Verify MSW is properly intercepting requests
@@ -141,44 +116,29 @@ async function verifyMSWWorking(): Promise<void> {
   }
 }
 
-// Enhanced bootstrap with proper MSW waiting
+// Simplified bootstrap that always starts MSW in development
 async function bootstrap() {
   console.log('🚀 === APPLICATION BOOTSTRAP START ===');
   
-  try {
-    // Show loading status
-    renderApp('loading');
-    
-    // Wait for MSW to be ready (or fail)
-    const mswReady = await initializeMSW();
-    
-    if (mswReady) {
-      console.log('✅ MSW ready - rendering app with full functionality');
-      renderApp('ready');
-    } else {
-      console.warn('⚠️ MSW not available - rendering app with fallback behavior');
-      renderApp('error');
-      
-      // Clear error status after a delay
-      setTimeout(() => {
-        renderApp('ready');
-      }, 3000);
+  // Always show loading initially
+  renderApp('loading');
+  
+  // In development, always try to start MSW
+  if (import.meta.env.MODE === 'development') {
+    try {
+      console.log('🎭 Development mode detected - starting MSW...');
+      await initializeMSW();
+      console.log('✅ MSW initialization completed');
+    } catch (error) {
+      console.warn('⚠️ MSW failed to start, continuing without it:', error.message);
     }
-    
-    console.log('✅ === APPLICATION BOOTSTRAP COMPLETE ===');
-    
-  } catch (error) {
-    console.error('❌ === APPLICATION BOOTSTRAP FAILED ===');
-    console.error('❌ Error:', error);
-    
-    // Render app anyway with error status
-    renderApp('error');
-    
-    // Clear error status after a delay
-    setTimeout(() => {
-      renderApp('ready');
-    }, 3000);
   }
+  
+  // Always render the app regardless of MSW status
+  console.log('✅ Rendering React application...');
+  renderApp('ready');
+  
+  console.log('✅ === APPLICATION BOOTSTRAP COMPLETE ===');
 }
 
 // Start the application

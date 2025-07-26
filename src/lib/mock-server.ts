@@ -114,11 +114,14 @@ export const handlers = [
 
   // GET /api/mock/users
   http.get('/api/mock/users', async ({ request }) => {
+    console.log('🎭 Mock server intercepted GET /api/mock/users');
     await delay(config.mock.apiDelay);
     
     const url = new URL(request.url);
     const page = parseInt(url.searchParams.get('page') || '1');
     const limit = parseInt(url.searchParams.get('limit') || '10');
+    
+    console.log('🎭 User request params:', { page, limit });
     
     const startIndex = (page - 1) * limit;
     const endIndex = startIndex + limit;
@@ -131,6 +134,7 @@ export const handlers = [
       totalPages: Math.ceil(mockData.users.length / limit)
     };
     
+    console.log(`🎭 Returning ${paginatedUsers.length} users of ${mockData.users.length} total`);
     return HttpResponse.json(createApiResponse(paginatedUsers, pagination));
   }),
 
@@ -283,37 +287,43 @@ worker.events.on('request:unhandled', ({ request }) => {
   console.warn('[MSW] missed', request.method, request.url);
 });
 
-// Enhanced mock server startup with comprehensive diagnostics
+// Simplified mock server startup focused on reliability
 export const startMockServer = async (): Promise<boolean> => {
   console.log('🎭 === MOCK SERVER STARTUP ===');
   
-  if (!config.mock.enabled) {
-    console.log('🎭 Mock server disabled in config');
-    return false;
-  }
-
   try {
     console.log('🎭 Pre-flight checks...');
     console.log('🎭 - Service Worker API available:', 'serviceWorker' in navigator);
     console.log('🎭 - Current origin:', window.location.origin);
     console.log('🎭 - Handlers registered:', handlers.length);
     
+    // List all registered handlers for debugging
+    console.log('🎭 - Registered handlers:');
+    handlers.forEach((handler, index) => {
+      console.log(`🎭   ${index + 1}. ${handler.info.method || 'unknown'} ${handler.info.path || 'unknown'}`);
+    });
+    
     // Check if mockServiceWorker.js is accessible
     try {
       const swResponse = await fetch('/mockServiceWorker.js', { method: 'HEAD' });
       console.log('🎭 - Service Worker file status:', swResponse.status);
       if (!swResponse.ok) {
-        console.warn('⚠️ mockServiceWorker.js not found or not accessible');
+        console.warn('⚠️ mockServiceWorker.js not found - ensure it exists in public/ directory');
+        console.warn('⚠️ To fix: run `npx msw init public/` in project root');
       }
     } catch (swError) {
-      console.warn('⚠️ Cannot check mockServiceWorker.js availability:', swError.message);
+      console.warn('⚠️ Cannot check mockServiceWorker.js:', swError.message);
     }
     
-    console.log('🎭 Starting worker with enhanced configuration...');
+    console.log('🎭 Starting MSW worker...');
     
+    // Start with minimal but reliable configuration
     await worker.start({
       onUnhandledRequest: ({ method, url }) => {
-        console.warn(`🎭 Unhandled ${method} request to ${url}`);
+        // Only warn about actual API requests, not static assets
+        if (url.includes('/api/')) {
+          console.warn(`🎭 UNHANDLED API REQUEST: ${method} ${url}`);
+        }
       },
       serviceWorker: {
         url: '/mockServiceWorker.js',
@@ -322,34 +332,29 @@ export const startMockServer = async (): Promise<boolean> => {
           type: 'classic'
         }
       },
-      quiet: false // Enable detailed logging
+      quiet: false
     });
     
-    console.log('✅ Mock Service Worker started successfully');
-    console.log('🎭 Worker state:', worker.listHandlers().length, 'handlers active');
+    console.log('✅ MSW worker started successfully');
+    console.log('🎭 Active handlers:', worker.listHandlers().length);
     
-    // Add a small delay to ensure worker is fully ready
-    await new Promise(resolve => setTimeout(resolve, 100));
+    // Give worker time to fully initialize
+    await new Promise(resolve => setTimeout(resolve, 250));
     
     return true;
   } catch (error) {
     console.error('❌ === MOCK SERVER STARTUP FAILED ===');
     console.error('❌ Error type:', error.constructor.name);
     console.error('❌ Error message:', error.message);
-    console.error('❌ Error stack:', error.stack);
     
-    // Detailed error analysis
-    if (error.message.includes('Service Worker')) {
-      console.error('❌ Service Worker related error - check browser support and HTTPS');
+    // Specific error handling
+    if (error.message.includes('not found') || error.message.includes('404')) {
+      console.error('❌ Solution: Run `npx msw init public/` to generate mockServiceWorker.js');
     }
-    if (error.message.includes('scope')) {
-      console.error('❌ Scope related error - check service worker scope configuration');
-    }
-    if (error.message.includes('mockServiceWorker.js')) {
-      console.error('❌ Service Worker file not found - run `npx msw init public/`');
+    if (error.message.includes('registration failed')) {
+      console.error('❌ Solution: Check browser service worker support and HTTPS requirements');
     }
     
-    console.log('🎭 Mock server startup failed - API calls will use fallback behavior');
     return false;
   }
 };
