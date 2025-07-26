@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DataTable, Column } from "@/components/admin/DataTable";
-import { mockDomains, Domain } from "@/lib/mock-data";
+import { mockData, Domain } from "@/lib/mock-data";
 import { Plus } from "lucide-react";
 import { FloatingPreview } from "@/components/admin/FloatingPreview";
 
@@ -28,7 +28,7 @@ export default function Security() {
             <Input placeholder="example.com" />
             <Button className="gap-2"><Plus className="h-4 w-4" />Add</Button>
           </div>
-          <DataTable data={mockDomains} columns={domainColumns} onDelete={() => {}} />
+          <DataTable data={mockData.domains} columns={domainColumns} onDelete={() => {}} />
         </CardContent>
       </Card>
     </div>
