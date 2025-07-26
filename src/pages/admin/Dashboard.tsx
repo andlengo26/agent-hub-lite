@@ -1,6 +1,17 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { useHealthCheck } from "@/hooks/useApiQuery";
+import { useFeatureFlags } from "@/hooks/useFeatureFlag";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { CheckCircle, XCircle, AlertTriangle } from "lucide-react";
 
 export default function Dashboard() {
+  const { data: healthData, isLoading: healthLoading, error: healthError } = useHealthCheck();
+  const featureFlags = useFeatureFlags();
+  
+  const enabledFeatures = Object.entries(featureFlags)
+    .filter(([, enabled]) => enabled)
+    .map(([feature]) => feature);
   return (
     <div className="space-y-6">
       <div>
@@ -9,6 +20,63 @@ export default function Dashboard() {
           Welcome to your Customer Support AI Agent admin portal
         </p>
       </div>
+
+      {/* System Status */}
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            System Status
+            {healthError ? (
+              <XCircle className="h-5 w-5 text-destructive" />
+            ) : healthLoading ? (
+              <AlertTriangle className="h-5 w-5 text-yellow-500" />
+            ) : (
+              <CheckCircle className="h-5 w-5 text-success" />
+            )}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {healthError ? (
+            <Alert variant="destructive">
+              <AlertDescription>
+                System health check failed. Using offline mode.
+              </AlertDescription>
+            </Alert>
+          ) : (
+            <div className="flex items-center gap-4">
+              <span className="text-sm text-muted-foreground">
+                API Status: {healthLoading ? "Checking..." : "Online"}
+              </span>
+              {healthData && (
+                <Badge variant="outline">
+                  Version {healthData.version}
+                </Badge>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Feature Flags */}
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle>Active Features</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex gap-2 flex-wrap">
+            {enabledFeatures.map((feature) => (
+              <Badge key={feature} variant="secondary">
+                {feature}
+              </Badge>
+            ))}
+            {enabledFeatures.length === 0 && (
+              <span className="text-sm text-muted-foreground">
+                No advanced features enabled
+              </span>
+            )}
+          </div>
+        </CardContent>
+      </Card>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         <Card>

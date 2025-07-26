@@ -6,6 +6,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { DataTable, Column } from "@/components/admin/DataTable";
 import { mockChats, mockUsers, Chat } from "@/lib/mock-data";
+import { useChats } from "@/hooks/useApiQuery";
+import { useFeatureFlag } from "@/hooks/useFeatureFlag";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const chatColumns: Column<Chat>[] = [
   { key: "requesterName", header: "Customer" },
@@ -25,11 +28,55 @@ const chatColumns: Column<Chat>[] = [
 export default function AllChats() {
   const [selectedChat, setSelectedChat] = useState<Chat | null>(null);
   const [activeTab, setActiveTab] = useState("all");
+  
+  const enableRealTimeUpdates = useFeatureFlag('realTime');
+  const { data: chatsResponse, isLoading, error } = useChats({
+    page: 1,
+    limit: 50,
+    status: activeTab === "all" ? undefined : activeTab as any
+  });
+
+  const chats = chatsResponse?.data || mockChats;
 
   const filterChats = (status?: string) => {
-    if (!status || status === "all") return mockChats;
-    return mockChats.filter(chat => chat.status === status);
+    if (!status || status === "all") return chats;
+    return chats.filter(chat => chat.status === status);
   };
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <Skeleton className="h-8 w-48" />
+          <Skeleton className="h-4 w-96 mt-2" />
+        </div>
+        <Skeleton className="h-96 w-full" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold">All Chats</h1>
+          <p className="text-muted-foreground">
+            Monitor and manage all customer chat interactions
+          </p>
+        </div>
+        <Card>
+          <CardContent className="flex items-center justify-center h-96">
+            <div className="text-center">
+              <p className="text-muted-foreground mb-4">Failed to load chats. Using offline data.</p>
+              <Button variant="outline" onClick={() => window.location.reload()}>
+                Retry
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   const ChatPanel = ({ chat }: { chat: Chat }) => (
     <div className="space-y-4">
@@ -92,10 +139,13 @@ export default function AllChats() {
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList>
-          <TabsTrigger value="all">All Chats ({mockChats.length})</TabsTrigger>
+          <TabsTrigger value="all">All Chats ({chats.length})</TabsTrigger>
           <TabsTrigger value="active">Active ({filterChats("active").length})</TabsTrigger>
           <TabsTrigger value="missed">Missed ({filterChats("missed").length})</TabsTrigger>
           <TabsTrigger value="closed">Closed ({filterChats("closed").length})</TabsTrigger>
+          {enableRealTimeUpdates && (
+            <Badge variant="outline" className="ml-2">Live</Badge>
+          )}
         </TabsList>
 
         <TabsContent value="all">
@@ -105,7 +155,7 @@ export default function AllChats() {
             </CardHeader>
             <CardContent>
               <DataTable
-                data={mockChats}
+                data={chats}
                 columns={chatColumns}
                 onRowClick={setSelectedChat}
               />

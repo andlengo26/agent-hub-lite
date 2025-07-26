@@ -27,6 +27,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { cn } from "@/lib/utils";
 
 const menuItems = [
   {
@@ -99,7 +100,10 @@ export function AdminSidebar() {
   };
 
   const isActive = (path: string) => currentPath === path;
+  const isSubmenuActive = (submenu: any[]) => submenu.some(item => currentPath === item.url);
   const getNavCls = ({ isActive }: { isActive: boolean }) =>
+    isActive ? "bg-primary text-primary-foreground font-medium" : "hover:bg-accent hover:text-accent-foreground";
+  const getSubmenuNavCls = ({ isActive }: { isActive: boolean }) =>
     isActive ? "bg-primary text-primary-foreground font-medium" : "hover:bg-accent hover:text-accent-foreground";
 
   return (
@@ -120,7 +124,12 @@ export function AdminSidebar() {
                         onOpenChange={() => toggleMenu(item.title)}
                       >
                         <CollapsibleTrigger asChild>
-                          <SidebarMenuButton className="w-full justify-between">
+                          <SidebarMenuButton 
+                            className={cn(
+                              "w-full justify-between", 
+                              isSubmenuActive(item.submenu) ? "bg-accent text-accent-foreground" : "hover:bg-accent hover:text-accent-foreground"
+                            )}
+                          >
                             <div className="flex items-center gap-2">
                               <item.icon className="h-4 w-4" />
                               {!collapsed && <span>{item.title}</span>}
@@ -140,7 +149,7 @@ export function AdminSidebar() {
                               {item.submenu.map((subItem) => (
                                 <SidebarMenuSubItem key={subItem.title}>
                                   <SidebarMenuSubButton asChild>
-                                    <NavLink to={subItem.url} className={getNavCls}>
+                                    <NavLink to={subItem.url} className={getSubmenuNavCls}>
                                       <span>{subItem.title}</span>
                                     </NavLink>
                                   </SidebarMenuSubButton>

@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -5,11 +6,14 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus } from "lucide-react";
+import { Plus, Shield, Users as UsersIcon, UserCheck } from "lucide-react";
 import { DataTable, Column } from "@/components/admin/DataTable";
 import { mockUsers, User } from "@/lib/mock-data";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { FloatingPreview } from "@/components/admin/FloatingPreview";
+import { useUsers, useUpdateUser, useDeleteUser } from "@/hooks/useApiQuery";
+import { useFeatureFlag } from "@/hooks/useFeatureFlag";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const userColumns: Column<User>[] = [
   { 
@@ -48,6 +52,35 @@ const userColumns: Column<User>[] = [
 ];
 
 export default function Users() {
+  const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  
+  const enableMultiTenant = useFeatureFlag('multiTenant');
+  const { data: usersResponse, isLoading } = useUsers();
+  const updateUserMutation = useUpdateUser();
+  const deleteUserMutation = useDeleteUser();
+  
+  const users = usersResponse?.data || mockUsers;
+
+  const handleUpdateUser = (userId: string, data: Partial<User>) => {
+    updateUserMutation.mutate({ userId, data });
+  };
+
+  const handleDeleteUser = (userId: string) => {
+    deleteUserMutation.mutate(userId);
+  };
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <Skeleton className="h-8 w-48" />
+          <Skeleton className="h-4 w-96 mt-2" />
+        </div>
+        <Skeleton className="h-96 w-full" />
+      </div>
+    );
+  }
   return (
     <>
       <div className="space-y-6">
@@ -105,15 +138,20 @@ export default function Users() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Team Members ({mockUsers.length})</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <UsersIcon className="h-5 w-5" />
+            Team Members ({users.length})
+            {enableMultiTenant && (
+              <Badge variant="outline">Multi-Tenant</Badge>
+            )}
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <DataTable
-            data={mockUsers}
+            data={users}
             columns={userColumns}
-            selectable
-            onEdit={(user) => console.log("Edit", user)}
-            onDelete={(user) => console.log("Delete", user)}
+            onEdit={(user) => handleUpdateUser(user.id, user)}
+            onDelete={(user) => handleDeleteUser(user.id)}
           />
         </CardContent>
       </Card>
