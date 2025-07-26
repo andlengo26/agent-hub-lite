@@ -263,31 +263,9 @@ export const handlers = [
 // Create and export the worker
 export const worker = setupWorker(...handlers);
 
-// Helper to start mock server
+// Helper to start mock server (deprecated - use worker directly)
 export const startMockServer = async () => {
-  if (config.mock.enabled) {
-    try {
-      await worker.start({
-        onUnhandledRequest: 'bypass',
-        serviceWorker: {
-          url: '/mockServiceWorker.js'
-        }
-      });
-      console.log('🎭 Mock API server started successfully');
-      console.log('🎭 Mock enabled:', config.mock.enabled);
-      console.log('🎭 Available handlers:', handlers.length);
-      
-      // Test the handlers are working
-      setTimeout(() => {
-        console.log('🎭 Testing mock server with sample request...');
-      }, 1000);
-    } catch (error) {
-      console.error('❌ Failed to start mock server:', error);
-      console.log('🎭 Continuing without mock server - will use fallback data');
-    }
-  } else {
-    console.log('🎭 Mock server disabled in config');
-  }
+  console.log('⚠️ startMockServer is deprecated - use worker.start() directly in main.tsx');
 };
 
 // Helper to stop mock server
