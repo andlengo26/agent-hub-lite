@@ -1,6 +1,7 @@
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AdminSidebar } from "./AdminSidebar";
 import { AdminHeader } from "./AdminHeader";
+import { AdminFooter } from "./AdminFooter";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { useToast } from "@/hooks/use-toast";
@@ -35,6 +36,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
           <main className="flex-1 p-6 bg-muted/30">
             {children}
           </main>
+          <AdminFooter />
         </div>
       </div>
       <Toaster />

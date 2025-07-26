@@ -2,6 +2,11 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AdminLayout } from "@/components/admin/AdminLayout";
+import { AuthGuard } from "@/components/auth/AuthGuard";
+import { TenantProvider } from "@/contexts/TenantContext";
+
+// Login page
+import Login from "@/pages/Login";
 
 // Admin Pages
 import Dashboard from "./pages/admin/Dashboard";
@@ -27,87 +32,125 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Navigate to="/admin" replace />} />
-          <Route path="/admin" element={
-            <AdminLayout>
-              <Dashboard />
-            </AdminLayout>
-          } />
-          <Route path="/admin/profile" element={
-            <AdminLayout>
-              <Profile />
-            </AdminLayout>
-          } />
-          <Route path="/admin/chats/all" element={
-            <AdminLayout>
-              <AllChats />
-            </AdminLayout>
-          } />
-          <Route path="/admin/chats/my" element={
-            <AdminLayout>
-              <MyChats />
-            </AdminLayout>
-          } />
-          <Route path="/admin/engagement-history" element={
-            <AdminLayout>
-              <EngagementHistory />
-            </AdminLayout>
-          } />
-          <Route path="/admin/settings/organizations" element={
-            <AdminLayout>
-              <Organizations />
-            </AdminLayout>
-          } />
-          <Route path="/admin/settings/users" element={
-            <AdminLayout>
-              <Users />
-            </AdminLayout>
-          } />
-          <Route path="/admin/settings/ai-response" element={
-            <AdminLayout>
-              <AIResponse />
-            </AdminLayout>
-          } />
-          <Route path="/admin/settings/notifications" element={
-            <AdminLayout>
-              <Notifications />
-            </AdminLayout>
-          } />
-          <Route path="/admin/settings/widget" element={
-            <AdminLayout>
-              <WidgetManagement />
-            </AdminLayout>
-          } />
-          <Route path="/admin/settings/security" element={
-            <AdminLayout>
-              <Security />
-            </AdminLayout>
-          } />
-          <Route path="/admin/content/documents" element={
-            <AdminLayout>
-              <Documents />
-            </AdminLayout>
-          } />
-          <Route path="/admin/content/scraper" element={
-            <AdminLayout>
-              <URLScraper />
-            </AdminLayout>
-          } />
-          <Route path="/admin/content/faqs" element={
-            <AdminLayout>
-              <FAQs />
-            </AdminLayout>
-          } />
-          <Route path="/admin/resources" element={
-            <AdminLayout>
-              <Resources />
-            </AdminLayout>
-          } />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
+      <TenantProvider>
+        <BrowserRouter>
+          <Routes>
+            {/* Login route */}
+            <Route path="/login" element={<Login />} />
+            
+            {/* Redirect root to admin */}
+            <Route path="/" element={<Navigate to="/admin" replace />} />
+            
+            {/* Protected admin routes */}
+            <Route path="/admin" element={
+              <AuthGuard>
+                <AdminLayout>
+                  <Dashboard />
+                </AdminLayout>
+              </AuthGuard>
+            } />
+            <Route path="/admin/profile" element={
+              <AuthGuard>
+                <AdminLayout>
+                  <Profile />
+                </AdminLayout>
+              </AuthGuard>
+            } />
+            <Route path="/admin/chats/all" element={
+              <AuthGuard>
+                <AdminLayout>
+                  <AllChats />
+                </AdminLayout>
+              </AuthGuard>
+            } />
+            <Route path="/admin/chats/my" element={
+              <AuthGuard>
+                <AdminLayout>
+                  <MyChats />
+                </AdminLayout>
+              </AuthGuard>
+            } />
+            <Route path="/admin/engagement-history" element={
+              <AuthGuard>
+                <AdminLayout>
+                  <EngagementHistory />
+                </AdminLayout>
+              </AuthGuard>
+            } />
+            <Route path="/admin/settings/organizations" element={
+              <AuthGuard>
+                <AdminLayout>
+                  <Organizations />
+                </AdminLayout>
+              </AuthGuard>
+            } />
+            <Route path="/admin/settings/users" element={
+              <AuthGuard>
+                <AdminLayout>
+                  <Users />
+                </AdminLayout>
+              </AuthGuard>
+            } />
+            <Route path="/admin/settings/ai-response" element={
+              <AuthGuard>
+                <AdminLayout>
+                  <AIResponse />
+                </AdminLayout>
+              </AuthGuard>
+            } />
+            <Route path="/admin/settings/notifications" element={
+              <AuthGuard>
+                <AdminLayout>
+                  <Notifications />
+                </AdminLayout>
+              </AuthGuard>
+            } />
+            <Route path="/admin/settings/widget" element={
+              <AuthGuard>
+                <AdminLayout>
+                  <WidgetManagement />
+                </AdminLayout>
+              </AuthGuard>
+            } />
+            <Route path="/admin/settings/security" element={
+              <AuthGuard>
+                <AdminLayout>
+                  <Security />
+                </AdminLayout>
+              </AuthGuard>
+            } />
+            <Route path="/admin/content/documents" element={
+              <AuthGuard>
+                <AdminLayout>
+                  <Documents />
+                </AdminLayout>
+              </AuthGuard>
+            } />
+            <Route path="/admin/content/scraper" element={
+              <AuthGuard>
+                <AdminLayout>
+                  <URLScraper />
+                </AdminLayout>
+              </AuthGuard>
+            } />
+            <Route path="/admin/content/faqs" element={
+              <AuthGuard>
+                <AdminLayout>
+                  <FAQs />
+                </AdminLayout>
+              </AuthGuard>
+            } />
+            <Route path="/admin/resources" element={
+              <AuthGuard>
+                <AdminLayout>
+                  <Resources />
+                </AdminLayout>
+              </AuthGuard>
+            } />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </TenantProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );

@@ -5,8 +5,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Upload } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Profile() {
+  const { toast } = useToast();
   const [formData, setFormData] = useState({
     firstName: "John",
     lastName: "Doe",
@@ -17,6 +19,14 @@ export default function Profile() {
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleSave = () => {
+    // Mock save functionality
+    toast({
+      title: "Profile Updated",
+      description: "Your profile has been successfully updated.",
+    });
   };
 
   return (
@@ -104,7 +114,7 @@ export default function Profile() {
               </p>
             </div>
 
-            <Button>Save Changes</Button>
+            <Button onClick={handleSave}>Save Changes</Button>
           </CardContent>
         </Card>
 

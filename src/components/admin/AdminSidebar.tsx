@@ -41,12 +41,8 @@ const menuItems = [
     submenu: [
       { title: "All Chats", url: "/admin/chats/all" },
       { title: "My Chats", url: "/admin/chats/my" },
+      { title: "Engagement History", url: "/admin/engagement-history" },
     ],
-  },
-  {
-    title: "Engagement History",
-    url: "/admin/engagement-history",
-    icon: History,
   },
   {
     title: "Settings",
