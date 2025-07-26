@@ -309,7 +309,7 @@ export const startMockServer = async () => {
           scope: '/',
         }
       },
-      waitUntilReady: true,
+      // Removed waitUntilReady as it's deprecated
     });
     
     console.log('🎭 Mock API server started successfully');
