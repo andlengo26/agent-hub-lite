@@ -4,6 +4,7 @@
  */
 
 import config from './config';
+import type { CreateOrganizationInput, InviteUserInput } from './validations';
 
 export interface ApiResponse<T> {
   data: T;
@@ -120,10 +121,7 @@ class ApiClient {
     return this.request('/organizations');
   }
 
-  async createOrganization(data: {
-    name: string;
-    logoUrl?: string;
-  }): Promise<ApiResponse<any>> {
+  async createOrganization(data: CreateOrganizationInput): Promise<ApiResponse<any>> {
     return this.request('/organizations', {
       method: 'POST',
       body: JSON.stringify(data),
@@ -144,12 +142,7 @@ class ApiClient {
   }
 
   // User invite endpoint
-  async inviteUser(data: {
-    firstName: string;
-    lastName: string;
-    email: string;
-    role?: 'admin' | 'agent' | 'manager';
-  }): Promise<ApiResponse<any>> {
+  async inviteUser(data: InviteUserInput): Promise<ApiResponse<any>> {
     return this.request('/users', {
       method: 'POST',
       body: JSON.stringify(data),

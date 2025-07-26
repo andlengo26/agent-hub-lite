@@ -6,6 +6,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
 import { useToast } from '@/hooks/use-toast';
 import { logger } from '@/lib/logger';
+import type { CreateOrganizationInput, InviteUserInput } from '@/lib/validations';
 
 // Chat queries
 export function useChats(params?: {
@@ -33,7 +34,8 @@ export function useCreateChat() {
   const { toast } = useToast();
 
   return useMutation({
-    mutationFn: apiClient.createChat.bind(apiClient),
+    mutationFn: (data: { customerId: string; subject: string; priority?: 'low' | 'medium' | 'high' | 'urgent' }) =>
+      apiClient.createChat(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['chats'] });
       toast({
@@ -127,7 +129,8 @@ export function useCreateOrganization() {
   const { toast } = useToast();
 
   return useMutation({
-    mutationFn: apiClient.createOrganization.bind(apiClient),
+    mutationFn: (data: CreateOrganizationInput) => 
+      apiClient.createOrganization(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['organizations'] });
       toast({
@@ -200,7 +203,8 @@ export function useInviteUser() {
   const { toast } = useToast();
 
   return useMutation({
-    mutationFn: apiClient.inviteUser.bind(apiClient),
+    mutationFn: (data: InviteUserInput) =>
+      apiClient.inviteUser(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] });
       toast({
