@@ -8,6 +8,8 @@ export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
     port: 8080,
+    // Ensure service worker files are served correctly
+    middlewareMode: false,
   },
   plugins: [
     react(),
@@ -19,4 +21,18 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  // Ensure static assets including service workers are served properly
+  publicDir: 'public',
+  build: {
+    // Ensure service worker is included in build
+    rollupOptions: {
+      input: {
+        main: path.resolve(__dirname, 'index.html'),
+      }
+    }
+  },
+  // Development server configuration for MSW
+  optimizeDeps: {
+    exclude: ['msw']
+  }
 }));
