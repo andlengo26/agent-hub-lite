@@ -24,7 +24,7 @@ import Preview from "./pages/admin/settings/Preview";
 import Documents from "./pages/admin/content/Documents";
 import URLScraper from "./pages/admin/content/URLScraper";
 import FAQs from "./pages/admin/content/FAQs";
-import Resources from "./pages/admin/Resources";
+import Resources from "./pages/admin/content/Resources";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -38,109 +38,109 @@ const App = () => (
             {/* Login route */}
             <Route path="/login" element={<Login />} />
             
-            {/* Redirect root to admin */}
-            <Route path="/" element={<Navigate to="/admin" replace />} />
+            {/* Redirect root to dashboard */}
+            <Route path="/" element={<Navigate to="/dashboard" replace />} />
             
             {/* Protected admin routes */}
-            <Route path="/admin" element={
+            <Route path="/dashboard" element={
               <AuthGuard>
                 <AdminLayout>
                   <Dashboard />
                 </AdminLayout>
               </AuthGuard>
             } />
-            <Route path="/admin/profile" element={
+            <Route path="/profile" element={
               <AuthGuard>
                 <AdminLayout>
                   <Profile />
                 </AdminLayout>
               </AuthGuard>
             } />
-            <Route path="/admin/chats/all" element={
+            <Route path="/chats/all" element={
               <AuthGuard>
                 <AdminLayout>
                   <AllChats />
                 </AdminLayout>
               </AuthGuard>
             } />
-            <Route path="/admin/chats/my" element={
+            <Route path="/chats/my" element={
               <AuthGuard>
                 <AdminLayout>
                   <MyChats />
                 </AdminLayout>
               </AuthGuard>
             } />
-            <Route path="/admin/engagement-history" element={
+            <Route path="/engagement-history" element={
               <AuthGuard>
                 <AdminLayout>
                   <EngagementHistory />
                 </AdminLayout>
               </AuthGuard>
             } />
-            <Route path="/admin/settings/organizations" element={
+            <Route path="/settings/organizations" element={
               <AuthGuard>
                 <AdminLayout>
                   <Organizations />
                 </AdminLayout>
               </AuthGuard>
             } />
-            <Route path="/admin/settings/users" element={
+            <Route path="/settings/users" element={
               <AuthGuard>
                 <AdminLayout>
                   <Users />
                 </AdminLayout>
               </AuthGuard>
             } />
-            <Route path="/admin/settings/ai-response" element={
+            <Route path="/settings/ai-response" element={
               <AuthGuard>
                 <AdminLayout>
                   <AIResponse />
                 </AdminLayout>
               </AuthGuard>
             } />
-            <Route path="/admin/settings/notifications" element={
+            <Route path="/settings/notifications" element={
               <AuthGuard>
                 <AdminLayout>
                   <Notifications />
                 </AdminLayout>
               </AuthGuard>
             } />
-            <Route path="/admin/settings/widget" element={
+            <Route path="/settings/widget" element={
               <AuthGuard>
                 <AdminLayout>
                   <WidgetManagement />
                 </AdminLayout>
               </AuthGuard>
             } />
-            <Route path="/admin/settings/security" element={
+            <Route path="/settings/security" element={
               <AuthGuard>
                 <AdminLayout>
                   <Security />
                 </AdminLayout>
               </AuthGuard>
             } />
-            <Route path="/admin/content/documents" element={
+            <Route path="/content/documents" element={
               <AuthGuard>
                 <AdminLayout>
                   <Documents />
                 </AdminLayout>
               </AuthGuard>
             } />
-            <Route path="/admin/content/scraper" element={
+            <Route path="/content/scraper" element={
               <AuthGuard>
                 <AdminLayout>
                   <URLScraper />
                 </AdminLayout>
               </AuthGuard>
             } />
-            <Route path="/admin/content/faqs" element={
+            <Route path="/content/faqs" element={
               <AuthGuard>
                 <AdminLayout>
                   <FAQs />
                 </AdminLayout>
               </AuthGuard>
             } />
-            <Route path="/admin/resources" element={
+            <Route path="/content/resources" element={
               <AuthGuard>
                 <AdminLayout>
                   <Resources />

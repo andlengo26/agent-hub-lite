@@ -36,7 +36,7 @@ export default function Login() {
       description: "Welcome back!",
     });
 
-    navigate('/admin');
+    navigate('/dashboard');
     setIsLoading(false);
   };
 

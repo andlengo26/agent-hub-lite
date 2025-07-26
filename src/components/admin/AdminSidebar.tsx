@@ -32,43 +32,39 @@ import { cn } from "@/lib/utils";
 const menuItems = [
   {
     title: "Dashboard",
-    url: "/admin",
+    url: "/dashboard",
     icon: LayoutDashboard,
   },
   {
     title: "Chats",
     icon: MessageSquare,
     submenu: [
-      { title: "All Chats", url: "/admin/chats/all" },
-      { title: "My Chats", url: "/admin/chats/my" },
-      { title: "Engagement History", url: "/admin/engagement-history" },
+      { title: "All Chats", url: "/chats/all" },
+      { title: "My Chats", url: "/chats/my" },
+      { title: "Engagement History", url: "/engagement-history" },
     ],
   },
   {
     title: "Settings",
     icon: Settings,
     submenu: [
-      { title: "Organizations", url: "/admin/settings/organizations" },
-      { title: "Users", url: "/admin/settings/users" },
-      { title: "Auto AI Response", url: "/admin/settings/ai-response" },
-      { title: "Notifications", url: "/admin/settings/notifications" },
-      { title: "Widget Management", url: "/admin/settings/widget" },
-      { title: "Security", url: "/admin/settings/security" },
+      { title: "Organizations", url: "/settings/organizations" },
+      { title: "Users", url: "/settings/users" },
+      { title: "Auto AI Response", url: "/settings/ai-response" },
+      { title: "Notifications", url: "/settings/notifications" },
+      { title: "Widget Management", url: "/settings/widget" },
+      { title: "Security", url: "/settings/security" },
     ],
   },
   {
     title: "Content Management",
     icon: FileText,
     submenu: [
-      { title: "Documents", url: "/admin/content/documents" },
-      { title: "URL Scraper", url: "/admin/content/scraper" },
-      { title: "FAQs", url: "/admin/content/faqs" },
+      { title: "Documents", url: "/content/documents" },
+      { title: "URL Scraper", url: "/content/scraper" },
+      { title: "FAQs", url: "/content/faqs" },
+      { title: "Resources", url: "/content/resources" },
     ],
-  },
-  {
-    title: "Resources",
-    url: "/admin/resources",
-    icon: Folder,
   },
 ];
 
