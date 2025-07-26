@@ -4,6 +4,8 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { AuthGuard } from "@/components/auth/AuthGuard";
 import { TenantProvider } from "@/contexts/TenantContext";
+import { AuthProvider } from "@/contexts/AuthContext";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 // Login page
 import Login from "@/pages/Login";
@@ -27,21 +29,30 @@ import FAQs from "./pages/admin/content/FAQs";
 import Resources from "./pages/admin/content/Resources";
 import NotFound from "./pages/NotFound";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 3,
+      staleTime: 5 * 60 * 1000, // 5 minutes
+    },
+  },
+});
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <TenantProvider>
-        <BrowserRouter>
-          <Routes>
-            {/* Login route */}
-            <Route path="/login" element={<Login />} />
-            
-            {/* Redirect root to dashboard */}
-            <Route path="/" element={<Navigate to="/dashboard" replace />} />
-            
-            {/* Protected admin routes */}
+      <AuthProvider>
+        <TenantProvider>
+          <BrowserRouter>
+            <ErrorBoundary>
+              <Routes>
+                {/* Login route */}
+                <Route path="/login" element={<Login />} />
+                
+                {/* Redirect root to dashboard */}
+                <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                
+                {/* Protected admin routes */}
             <Route path="/dashboard" element={
               <AuthGuard>
                 <AdminLayout>
@@ -147,10 +158,12 @@ const App = () => (
                 </AdminLayout>
               </AuthGuard>
             } />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </TenantProvider>
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </ErrorBoundary>
+          </BrowserRouter>
+        </TenantProvider>
+      </AuthProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );
