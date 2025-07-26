@@ -22,6 +22,7 @@ export interface Column<T> {
   key: keyof T;
   header: string;
   cell?: (value: any, row: T) => React.ReactNode;
+  render?: (row: T) => React.ReactNode;
   sortable?: boolean;
 }
 

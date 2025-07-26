@@ -93,7 +93,7 @@ export interface Domain {
 }
 
 // Mock data
-export const mockOrganizations: Organization[] = [
+const mockOrganizations: Organization[] = [
   {
     id: "1",
     name: "TechCorp Solutions",
@@ -136,7 +136,7 @@ export const mockOrganizations: Organization[] = [
   }
 ];
 
-export const mockUsers: User[] = [
+const mockUsers: User[] = [
   {
     id: "1",
     avatarUrl: "/placeholder.svg",
@@ -189,7 +189,7 @@ export const mockUsers: User[] = [
   }
 ];
 
-export const mockChats: Chat[] = [
+const mockChats: Chat[] = [
   {
     id: "1",
     requesterName: "Alice Brown",
@@ -257,7 +257,7 @@ export const mockChats: Chat[] = [
   }
 ];
 
-export const mockEngagements: Engagement[] = [
+const mockEngagements: Engagement[] = [
   {
     id: "1",
     customerName: "Alice Brown",
@@ -310,7 +310,7 @@ export const mockEngagements: Engagement[] = [
   }
 ];
 
-export const mockDocuments: Document[] = [
+const mockDocuments: Document[] = [
   {
     id: "1",
     title: "User Guide v2.1.pdf",
@@ -358,7 +358,7 @@ export const mockDocuments: Document[] = [
   }
 ];
 
-export const mockScraperJobs: ScraperJob[] = [
+const mockScraperJobs: ScraperJob[] = [
   {
     id: "1",
     url: "https://docs.example.com",
@@ -401,7 +401,7 @@ export const mockScraperJobs: ScraperJob[] = [
   }
 ];
 
-export const mockFAQs: FAQ[] = [
+const mockFAQs: FAQ[] = [
   {
     id: "1",
     question: "How do I reset my password?",
@@ -444,7 +444,7 @@ export const mockFAQs: FAQ[] = [
   }
 ];
 
-export const mockResources: Resource[] = [
+const mockResources: Resource[] = [
   {
     id: "1",
     title: "Getting Started Guide",
@@ -502,7 +502,7 @@ export const mockResources: Resource[] = [
   }
 ];
 
-export const mockDomains: Domain[] = [
+const mockDomains: Domain[] = [
   {
     id: "1",
     domain: "example.com",
@@ -535,15 +535,28 @@ export const mockDomains: Domain[] = [
   }
 ];
 
-// Consolidated export
+// Consolidated Mock Data Export - Single source of truth
 export const mockData = {
-  chats: mockChats,
-  users: mockUsers,
   organizations: mockOrganizations,
+  users: mockUsers,
+  chats: mockChats,
   engagements: mockEngagements,
   documents: mockDocuments,
   scraperJobs: mockScraperJobs,
   faqs: mockFAQs,
   resources: mockResources,
-  domains: mockDomains
+  domains: mockDomains,
+};
+
+// Individual exports for backward compatibility
+export {
+  mockOrganizations,
+  mockUsers, 
+  mockChats,
+  mockEngagements,
+  mockDocuments,
+  mockScraperJobs,
+  mockFAQs,
+  mockResources,
+  mockDomains,
 };

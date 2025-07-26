@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { DataTable, Column } from "@/components/admin/DataTable";
+import { EnhancedTable, Column } from "@/components/admin/EnhancedTable";
 import { ChatPanel } from "@/components/admin/ChatPanel";
 import { ErrorBoundary } from "@/components/common/ErrorBoundary";
 import { mockChats, mockUsers, Chat } from "@/lib/mock-data";
@@ -12,42 +12,53 @@ import { useChats } from "@/hooks/useApiQuery";
 import { useFeatureFlag } from "@/hooks/useFeatureFlag";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "@/hooks/use-toast";
+import { performanceMonitor } from "@/lib/performance-monitor";
 
 const chatColumns: Column<Chat>[] = [
-  { key: "requesterName", header: "Customer" },
-  { key: "requesterEmail", header: "Email" },
-  { key: "status", header: "Status", cell: (value) => (
+  { key: "requesterName", label: "Customer" },
+  { key: "requesterEmail", label: "Email" },
+  { key: "status", label: "Status", cell: (value) => (
     <Badge variant={value === "active" ? "default" : value === "missed" ? "destructive" : "secondary"}>
       {value}
     </Badge>
   )},
-  { key: "assignedAgentId", header: "Agent", cell: (value) => {
+  { key: "assignedAgentId", label: "Agent", cell: (value) => {
     const agent = mockUsers.find(u => u.id === value);
     return agent ? `${agent.firstName} ${agent.lastName}` : "Unassigned";
   }},
-  { key: "createdAt", header: "Started" },
+  { key: "createdAt", label: "Started" },
 ];
 
 export default function AllChats() {
   const [selectedChat, setSelectedChat] = useState<Chat | null>(null);
   const [activeTab, setActiveTab] = useState("all");
   
+  // Performance monitoring
+  performanceMonitor.startTiming('chatLoadTime');
+  
   const enableRealTimeUpdates = useFeatureFlag('realTime');
+  
+  // Single API call without dynamic status filtering - let client handle filtering
   const { data: chatsResponse, isLoading, error, isRefetching } = useChats({
     page: 1,
     limit: 50,
-    status: activeTab === "all" ? undefined : activeTab as any
+    // Remove status parameter to get all chats in one call
   });
 
   const chats = chatsResponse?.data || mockChats;
 
   // Memoized filtered chats for performance
   const filteredChats = useMemo(() => {
-    const filterChats = (status?: string) => {
-      if (!status || status === "all") return chats;
-      return chats.filter(chat => chat.status === status);
-    };
-    return filterChats(activeTab);
+    performanceMonitor.startTiming('filterTime');
+    const result = (() => {
+      const filterChats = (status?: string) => {
+        if (!status || status === "all") return chats;
+        return chats.filter(chat => chat.status === status);
+      };
+      return filterChats(activeTab);
+    })();
+    performanceMonitor.endTiming('filterTime');
+    return result;
   }, [chats, activeTab]);
 
   // Memoized status counts
@@ -68,12 +79,23 @@ export default function AllChats() {
     }
   }, [isRefetching, enableRealTimeUpdates]);
 
-  // Cleanup on unmount
+  // Cleanup and performance monitoring on unmount
   useEffect(() => {
     return () => {
       setSelectedChat(null);
+      performanceMonitor.endTiming('chatLoadTime');
+      performanceMonitor.measureMemoryUsage();
+      performanceMonitor.checkPerformance();
     };
   }, []);
+
+  // Log performance metrics when data loads
+  useEffect(() => {
+    if (chats.length > 0) {
+      performanceMonitor.endTiming('chatLoadTime');
+      performanceMonitor.logMetrics();
+    }
+  }, [chats]);
 
   if (isLoading) {
     return (
@@ -144,10 +166,25 @@ export default function AllChats() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <DataTable
+                <EnhancedTable
                   data={filteredChats}
                   columns={chatColumns}
                   onRowClick={setSelectedChat}
+                  loading={isLoading}
+                  error={error?.message}
+                  showActions={true}
+                  onEmailReply={async (chat) => {
+                    toast({
+                      title: "Email Reply",
+                      description: `Preparing email reply for ${chat.requesterName}`,
+                    });
+                  }}
+                  onArchive={async (chats) => {
+                    console.log('Archiving chats:', chats);
+                  }}
+                  onExport={async (chats) => {
+                    console.log('Exporting chats:', chats);
+                  }}
                 />
               </CardContent>
             </Card>
