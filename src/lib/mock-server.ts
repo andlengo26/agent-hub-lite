@@ -23,6 +23,16 @@ const createApiResponse = (data: any, pagination?: any) => {
 
 // Mock API handlers
 export const handlers = [
+  // Health check endpoints - MUST be first to catch health checks
+  http.get('/health', async () => {
+    console.log('🎭 Health check hit: /health');
+    return HttpResponse.json({ status: 'ok', timestamp: new Date().toISOString(), version: '1.0.0' });
+  }),
+  
+  http.get('/api/mock/health', async () => {
+    console.log('🎭 Health check hit: /api/mock/health');
+    return HttpResponse.json({ status: 'ok', timestamp: new Date().toISOString(), version: '1.0.0' });
+  }),
   // GET /api/mock/chats
   http.get('/api/mock/chats', async ({ request }) => {
     console.log('🎭 Mock server intercepted GET /api/mock/chats');
@@ -250,8 +260,9 @@ export const handlers = [
     return HttpResponse.json(createApiResponse({ success: true }));
   }),
 
-  // Health check endpoint
+  // Duplicate health check at end for safety
   http.get('/api/mock/health', async () => {
+    console.log('🎭 Fallback health check hit: /api/mock/health');
     return HttpResponse.json({
       status: 'ok',
       timestamp: new Date().toISOString(),
@@ -263,22 +274,22 @@ export const handlers = [
 // Create and export the worker
 export const worker = setupWorker(...handlers);
 
-// Add diagnostic logs
-worker.events.on('request:start', (req) =>
-  console.log('🎭 [MSW] Request:', req.request.method, req.request.url)
-);
+// Add diagnostic logs with correct MSW v2 syntax
+worker.events.on('request:start', (req) => {
+  console.log('🎭 [MSW] Request started:', req.request.method, req.request.url);
+});
 
-worker.events.on('request:match', (req) =>
-  console.log('🎭 [MSW] Matched:', req.request.method, req.request.url)
-);
+worker.events.on('request:match', (req) => {
+  console.log('🎭 [MSW] Request matched:', req.request.method, req.request.url);
+});
 
-worker.events.on('request:unhandled', (req) =>
-  console.warn('🎭 [MSW] Unhandled:', req.request.method, req.request.url)
-);
+worker.events.on('request:unhandled', (req) => {
+  console.error('🎭 [MSW] Unhandled request:', req.request.method, req.request.url);
+});
 
-worker.events.on('response:mocked', (res) =>
-  console.log('🎭 [MSW] Mocked response:', res.response.status, res.request.url)
-);
+worker.events.on('response:mocked', (res) => {
+  console.log('🎭 [MSW] Response mocked:', res.response.status, res.request.url);
+});
 
 // Helper to start mock server (simplified for direct worker usage)
 export const startMockServer = async () => {
