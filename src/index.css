@@ -2,6 +2,137 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+  :root {
+    /* KB: Customer Support AI Agent Design Tokens */
+    
+    /* Primary Colors */
+    --primary: 213 100% 40%; /* #0052CC */
+    --primary-foreground: 0 0% 100%;
+    
+    /* Secondary Colors */
+    --secondary: 188 85% 40%; /* #17A2B8 */
+    --secondary-foreground: 0 0% 100%;
+    
+    /* Highlight Colors */
+    --highlight: 48 100% 52%; /* #FFC107 */
+    --highlight-foreground: 218 30% 18%;
+    
+    /* Background & Surface */
+    --background: 0 0% 100%; /* #FFFFFF */
+    --surface: 216 22% 96%; /* #F5F7FA */
+    --foreground: 218 30% 18%; /* #172B4D */
+    
+    /* Text Colors */
+    --text-primary: 218 30% 18%; /* #172B4D */
+    --text-secondary: 218 18% 40%; /* #42526E */
+    --muted: 216 22% 96%;
+    --muted-foreground: 218 18% 40%;
+    
+    /* Border & Accent */
+    --border: 218 25% 90%; /* #DFE1E6 */
+    --input: 218 25% 90%;
+    --ring: 213 100% 40%;
+    --accent: 216 22% 96%;
+    --accent-foreground: 218 30% 18%;
+    
+    /* Status Colors */
+    --destructive: 12 86% 46%; /* #DE350B */
+    --destructive-foreground: 0 0% 100%;
+    --success: 154 65% 47%; /* #36B37E */
+    --success-foreground: 0 0% 100%;
+    
+    /* Chart Colors */
+    --chart-1: 213 100% 40%;
+    --chart-2: 188 85% 40%;
+    --chart-3: 48 100% 52%;
+    --chart-4: 154 65% 47%;
+    --chart-5: 12 86% 46%;
+    
+    /* Spacing Scale (px converted to rem) */
+    --space-1: 0.25rem; /* 4px */
+    --space-2: 0.5rem;  /* 8px */
+    --space-3: 0.75rem; /* 12px */
+    --space-4: 1rem;    /* 16px */
+    --space-5: 1.25rem; /* 20px */
+    --space-6: 1.5rem;  /* 24px */
+    
+    /* Border Radius */
+    --radius-sm: 0.25rem; /* 4px */
+    --radius-md: 0.5rem;  /* 8px */
+    --radius-lg: 0.75rem; /* 12px */
+    --radius: 0.5rem; /* Default radius */
+    
+    /* Typography */
+    --font-family-primary: 'Inter', sans-serif;
+    --font-size-xs: 0.75rem;   /* 12px */
+    --font-size-sm: 0.875rem;  /* 14px */
+    --font-size-base: 1rem;    /* 16px */
+    --font-size-lg: 1.25rem;   /* 20px */
+    --font-size-xl: 1.5rem;    /* 24px */
+    --line-height-normal: 1.5;
+    --line-height-tight: 1.25;
+    
+    /* Component Specific */
+    --card: 0 0% 100%;
+    --card-foreground: 218 30% 18%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 218 30% 18%;
+    
+    /* Sidebar */
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 218 30% 18%;
+    --sidebar-primary: 213 100% 40%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 216 22% 96%;
+    --sidebar-accent-foreground: 218 30% 18%;
+    --sidebar-border: 218 25% 90%;
+    --sidebar-ring: 213 100% 40%;
+  }
+
+  .dark {
+    /* Dark mode adjustments - keeping primary colors consistent */
+    --background: 218 30% 7%;
+    --foreground: 0 0% 95%;
+    --surface: 218 25% 12%;
+    
+    --card: 218 25% 12%;
+    --card-foreground: 0 0% 95%;
+    
+    --popover: 218 25% 12%;
+    --popover-foreground: 0 0% 95%;
+    
+    --muted: 218 25% 15%;
+    --muted-foreground: 218 10% 65%;
+    
+    --accent: 218 25% 15%;
+    --accent-foreground: 0 0% 95%;
+    
+    --border: 218 25% 20%;
+    --input: 218 25% 20%;
+    
+    --text-primary: 0 0% 95%;
+    --text-secondary: 218 10% 65%;
+    
+    /* Sidebar dark mode */
+    --sidebar-background: 218 30% 7%;
+    --sidebar-foreground: 0 0% 95%;
+    --sidebar-accent: 218 25% 15%;
+    --sidebar-accent-foreground: 0 0% 95%;
+    --sidebar-border: 218 25% 20%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-family-primary);
+  }
+}
+
 /* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
 All colors MUST be HSL.
 */
