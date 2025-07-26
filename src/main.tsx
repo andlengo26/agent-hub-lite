@@ -5,18 +5,30 @@ import "./index.css";
 import { QueryProvider } from "./components/ui/QueryProvider.tsx";
 import { ErrorBoundary } from "./components/ErrorBoundary.tsx";
 import { logger } from "./lib/logger";
+import "./lib/debug"; // Load debug utilities in development
 
 // Initialize app after MSW is ready
 async function enableMocking() {
-  if (import.meta.env.MODE === 'development') {
+  const mockEnabled = import.meta.env.VITE_MOCK_ENABLED !== 'false' && import.meta.env.MODE === 'development';
+  
+  console.log('Mocking setup:', {
+    environment: import.meta.env.MODE,
+    VITE_MOCK_ENABLED: import.meta.env.VITE_MOCK_ENABLED,
+    mockEnabled
+  });
+  
+  if (mockEnabled) {
     try {
       const { startMockServer } = await import('./lib/mock-server');
       await startMockServer();
       logger.debug('Mock server started successfully');
     } catch (error) {
       logger.error('Failed to start mock server', error);
+      console.error('MSW Error:', error);
       // Continue app initialization even if mock server fails
     }
+  } else {
+    logger.debug('Mock server disabled');
   }
 }
 

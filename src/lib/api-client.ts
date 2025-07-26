@@ -29,6 +29,11 @@ class ApiClient {
 
   constructor() {
     this.baseUrl = config.mock.enabled ? '/api/mock' : config.api.baseUrl;
+    console.log('ApiClient initialized:', { 
+      mockEnabled: config.mock.enabled, 
+      baseUrl: this.baseUrl,
+      environment: import.meta.env.MODE 
+    });
   }
 
   private async request<T>(
@@ -46,14 +51,38 @@ class ApiClient {
     };
 
     try {
+      console.log('Making API request:', { url, options: defaultOptions });
       const response = await fetch(url, defaultOptions);
       
+      console.log('API response received:', { 
+        url, 
+        status: response.status, 
+        contentType: response.headers.get('content-type'),
+        ok: response.ok 
+      });
+      
       if (!response.ok) {
-        const error: ApiError = await response.json();
+        const errorText = await response.text();
+        console.error('API Error Response:', { url, status: response.status, body: errorText });
+        
+        let error: ApiError;
+        try {
+          error = JSON.parse(errorText);
+        } catch {
+          error = { message: `HTTP ${response.status}: ${errorText || 'Unknown error'}` };
+        }
         throw new Error(error.message || `HTTP ${response.status}`);
       }
 
-      return await response.json();
+      const responseText = await response.text();
+      console.log('Raw response:', { url, body: responseText });
+      
+      try {
+        return JSON.parse(responseText);
+      } catch (parseError) {
+        console.error('Failed to parse JSON response:', { url, body: responseText, error: parseError });
+        throw new Error('Invalid JSON response from server');
+      }
     } catch (error) {
       console.error(`API Error: ${endpoint}`, error);
       throw error;
