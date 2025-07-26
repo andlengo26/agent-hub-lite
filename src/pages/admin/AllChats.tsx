@@ -33,21 +33,20 @@ export default function AllChats() {
   const [selectedChat, setSelectedChat] = useState<Chat | null>(null);
   const [activeTab, setActiveTab] = useState("all");
   
-  // Performance monitoring
+  // Performance monitoring - always call
   performanceMonitor.startTiming('chatLoadTime');
   
+  // Feature flags and API calls - always call
   const enableRealTimeUpdates = useFeatureFlag('realTime');
-  
-  // Single API call without dynamic status filtering - let client handle filtering
   const { data: chatsResponse, isLoading, error, isRefetching } = useChats({
     page: 1,
     limit: 50,
-    // Remove status parameter to get all chats in one call
   });
 
+  // Data processing - always call
   const chats = chatsResponse?.data || mockChats;
 
-  // Memoized filtered chats for performance
+  // Memoized filtered chats for performance - always call
   const filteredChats = useMemo(() => {
     performanceMonitor.startTiming('filterTime');
     const result = (() => {
@@ -61,7 +60,7 @@ export default function AllChats() {
     return result;
   }, [chats, activeTab]);
 
-  // Memoized status counts
+  // Memoized status counts - always call
   const statusCounts = useMemo(() => ({
     all: chats.length,
     active: chats.filter(chat => chat.status === "active").length,
@@ -69,6 +68,7 @@ export default function AllChats() {
     closed: chats.filter(chat => chat.status === "closed").length
   }), [chats]);
 
+  // All useEffect hooks - always call in same order
   // Show refetch toast for real-time updates
   useEffect(() => {
     if (isRefetching && enableRealTimeUpdates) {
@@ -78,6 +78,17 @@ export default function AllChats() {
       });
     }
   }, [isRefetching, enableRealTimeUpdates]);
+
+  // Error handling toast
+  useEffect(() => {
+    if (error && chats.length > 0) {
+      toast({
+        title: "Using offline data",
+        description: "Failed to connect to server. Showing cached data.",
+        variant: "destructive"
+      });
+    }
+  }, [error, chats.length]);
 
   // Cleanup and performance monitoring on unmount
   useEffect(() => {
@@ -97,6 +108,7 @@ export default function AllChats() {
     }
   }, [chats]);
 
+  // Handle loading state in render return
   if (isLoading) {
     return (
       <div className="space-y-6">
@@ -108,17 +120,6 @@ export default function AllChats() {
       </div>
     );
   }
-
-  // Don't show error UI, just use mock data and show a warning toast
-  useEffect(() => {
-    if (error && chats.length > 0) {
-      toast({
-        title: "Using offline data",
-        description: "Failed to connect to server. Showing cached data.",
-        variant: "destructive"
-      });
-    }
-  }, [error, chats.length]);
 
 
   return (
