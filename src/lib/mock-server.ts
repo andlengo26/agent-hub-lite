@@ -262,28 +262,13 @@ export const worker = setupWorker(...handlers);
 // Helper to start mock server
 export const startMockServer = async () => {
   if (config.mock.enabled) {
-    console.log('Starting MSW with config:', { 
-      enabled: config.mock.enabled, 
-      delay: config.mock.apiDelay,
-      environment: import.meta.env.MODE 
-    });
-    
     await worker.start({
-      onUnhandledRequest: (req, print) => {
-        const url = new URL(req.url);
-        if (!url.pathname.startsWith('/api/mock/')) {
-          return; // Don't warn for non-API requests
-        }
-        print.warning();
-      },
+      onUnhandledRequest: 'warn',
       serviceWorker: {
         url: '/mockServiceWorker.js'
       }
     });
-    console.log('🎭 Mock API server started successfully');
-    console.log('🎯 Registered handlers:', handlers.length);
-  } else {
-    console.log('🎭 Mock API server disabled');
+    console.log('🎭 Mock API server started');
   }
 };
 

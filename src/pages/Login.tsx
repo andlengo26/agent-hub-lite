@@ -1,31 +1,20 @@
-import { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/contexts/AuthContext";
-import { logger } from "@/lib/logger";
 
 export default function Login() {
   const [formData, setFormData] = useState({
     email: "",
     password: "",
   });
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  const location = useLocation();
   const { toast } = useToast();
-  const { login, isLoading, isAuthenticated } = useAuth();
-
-  // Redirect if already authenticated
-  useEffect(() => {
-    if (isAuthenticated) {
-      const from = location.state?.from?.pathname || '/dashboard';
-      navigate(from, { replace: true });
-    }
-  }, [isAuthenticated, navigate, location]);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -33,36 +22,22 @@ export default function Login() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
+
+    // Mock authentication delay
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    // Store mock JWT
+    localStorage.setItem('auth_token', 'mock-jwt-token');
+    localStorage.setItem('user_id', 'user_001');
     
-    if (!formData.email || !formData.password) {
-      toast({
-        title: "Validation Error",
-        description: "Please enter both email and password.",
-        variant: "destructive",
-      });
-      return;
-    }
+    toast({
+      title: "Login Successful",
+      description: "Welcome back!",
+    });
 
-    logger.debug('Login attempt', { email: formData.email });
-
-    const success = await login(formData.email, formData.password);
-    
-    if (success) {
-      toast({
-        title: "Login Successful",
-        description: "Welcome back!",
-      });
-
-      // Navigate to the intended page or dashboard
-      const from = location.state?.from?.pathname || '/dashboard';
-      navigate(from, { replace: true });
-    } else {
-      toast({
-        title: "Login Failed",
-        description: "Invalid email or password. Please try again.",
-        variant: "destructive",
-      });
-    }
+    navigate('/dashboard');
+    setIsLoading(false);
   };
 
   const handleGoogleLogin = () => {

@@ -54,8 +54,8 @@ const config: AppConfig = {
     supportedFileTypes: ['.pdf', '.doc', '.docx', '.txt', '.md'],
   },
   mock: {
-    enabled: import.meta.env.VITE_MOCK_ENABLED !== 'false' && import.meta.env.MODE === 'development',
-    apiDelay: parseInt(import.meta.env.VITE_MOCK_API_DELAY || '800'),
+    enabled: import.meta.env.MODE === 'development',
+    apiDelay: 800, // Simulate network delay in ms
   },
 };
 
