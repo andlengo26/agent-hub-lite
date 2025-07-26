@@ -534,3 +534,16 @@ export const mockDomains: Domain[] = [
     addedAt: "2024-07-19T16:45:00Z"
   }
 ];
+
+// Consolidated export
+export const mockData = {
+  chats: mockChats,
+  users: mockUsers,
+  organizations: mockOrganizations,
+  engagements: mockEngagements,
+  documents: mockDocuments,
+  scraperJobs: mockScraperJobs,
+  faqs: mockFAQs,
+  resources: mockResources,
+  domains: mockDomains
+};

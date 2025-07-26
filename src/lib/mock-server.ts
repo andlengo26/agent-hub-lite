@@ -74,20 +74,26 @@ export const handlers = [
     const newChat = {
       id: `chat_${Date.now()}`,
       customerId: body.customerId,
-      customerName: mockData.users.find(u => u.id === body.customerId)?.name || 'Unknown Customer',
+      customerName: mockData.users.find(u => u.id === body.customerId)?.firstName + ' ' + mockData.users.find(u => u.id === body.customerId)?.lastName || 'Unknown Customer',
       customerEmail: mockData.users.find(u => u.id === body.customerId)?.email || 'unknown@example.com',
+      requesterName: mockData.users.find(u => u.id === body.customerId)?.firstName + ' ' + mockData.users.find(u => u.id === body.customerId)?.lastName || 'Unknown Customer',
+      requesterEmail: mockData.users.find(u => u.id === body.customerId)?.email || 'unknown@example.com',
+      requesterPhone: '+1-555-0000',
+      ipAddress: '192.168.1.999',
+      browser: 'Unknown Browser',
+      pageUrl: 'https://example.com',
       subject: body.subject,
       status: 'active' as const,
       priority: body.priority || 'medium' as const,
-      assignedAgent: 'agent_001',
+      assignedAgentId: 'agent_001',
       lastMessage: 'Chat started',
       messageCount: 1,
       createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      lastUpdatedAt: new Date().toISOString()
     };
     
     // Add to mock data (in-memory only)
-    mockData.chats.unshift(newChat);
+    mockData.chats.unshift(newChat as any);
     
     return HttpResponse.json(createApiResponse(newChat), { status: 201 });
   }),

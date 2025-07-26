@@ -1,13 +1,13 @@
 /**
- * Enhanced Table component following KB design system
- * Provides consistent table styling with pagination support
+ * Enhanced DataTable component using existing Table and improving it
+ * Provides consistent table styling with pagination support following KB design system
  */
 
 import * as React from "react";
 import { cn } from "@/lib/utils";
-import { Button } from "./button";
-import { Badge } from "./badge";
-import { Checkbox } from "./checkbox";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Table,
   TableBody,
@@ -15,7 +15,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "./table";
+} from "@/components/ui/table";
 
 export interface Column<T> {
   key: keyof T;
@@ -24,7 +24,7 @@ export interface Column<T> {
   render?: (value: any, row: T) => React.ReactNode;
 }
 
-export interface TableProps<T> {
+export interface DataTableProps<T> {
   columns: Column<T>[];
   data: T[];
   pagination?: boolean;
@@ -46,7 +46,7 @@ export function DataTable<T extends { id: string }>({
   onRowClick,
   emptyMessage = "No data available",
   loading = false,
-}: TableProps<T>) {
+}: DataTableProps<T>) {
   const [currentPage, setCurrentPage] = React.useState(1);
   const itemsPerPage = 10;
 
@@ -56,7 +56,6 @@ export function DataTable<T extends { id: string }>({
   const paginatedData = pagination ? data.slice(startIndex, endIndex) : data;
 
   const isAllSelected = selectedRows.length === data.length && data.length > 0;
-  const isPartialSelected = selectedRows.length > 0 && selectedRows.length < data.length;
 
   const handleSelectAll = () => {
     if (isAllSelected) {
@@ -104,7 +103,7 @@ export function DataTable<T extends { id: string }>({
   }
 
   return (
-    <div className="space-y-space-4">
+    <div className="space-y-4">
       <div className="rounded-md border">
         <Table>
           <TableHeader>
@@ -113,7 +112,6 @@ export function DataTable<T extends { id: string }>({
                 <TableHead className="w-12">
                   <Checkbox
                     checked={isAllSelected}
-                    indeterminate={isPartialSelected}
                     onCheckedChange={handleSelectAll}
                     aria-label="Select all rows"
                   />
@@ -176,7 +174,7 @@ export function DataTable<T extends { id: string }>({
           <div className="text-sm text-muted-foreground">
             Showing {startIndex + 1} to {Math.min(endIndex, data.length)} of {data.length} results
           </div>
-          <div className="flex space-x-space-2">
+          <div className="flex space-x-2">
             <Button
               variant="outline"
               size="sm"
@@ -185,7 +183,7 @@ export function DataTable<T extends { id: string }>({
             >
               Previous
             </Button>
-            <span className="flex items-center px-space-4 text-sm">
+            <span className="flex items-center px-4 text-sm">
               Page {currentPage} of {totalPages}
             </span>
             <Button

@@ -3,7 +3,7 @@
  * Provides type-safe access to feature flags with logging
  */
 
-import { useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { featureFlags } from '../lib/config';
 import { logger } from '../lib/logger';
 
