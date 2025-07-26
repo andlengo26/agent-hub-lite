@@ -1,19 +1,22 @@
-import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import React, { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Shield, Users as UsersIcon, UserCheck } from "lucide-react";
+import { Modal } from "@/components/ui/Modal";
+import { Label } from "@/components/ui/label";
 import { DataTable, Column } from "@/components/admin/DataTable";
-import { mockUsers, User } from "@/lib/mock-data";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { FloatingPreview } from "@/components/admin/FloatingPreview";
-import { useUsers, useUpdateUser, useDeleteUser } from "@/hooks/useApiQuery";
-import { useFeatureFlag } from "@/hooks/useFeatureFlag";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Plus, Loader2, Users as UsersIcon } from "lucide-react";
+import { useUsers, useInviteUser, useUpdateUser, useDeleteUser } from "@/hooks/useApiQuery";
+import { inviteUserSchema, updateUserSchema, type InviteUserInput, type UpdateUserInput } from "@/lib/validations";
+import { useFeatureFlag } from "@/hooks/useFeatureFlag";
+import { User } from "@/lib/mock-data";
 
 const userColumns: Column<User>[] = [
   { 
@@ -53,21 +56,74 @@ const userColumns: Column<User>[] = [
 
 export default function Users() {
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  
-  const enableMultiTenant = useFeatureFlag('multiTenant');
+  const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
+  const [editingUser, setEditingUser] = useState<User | null>(null);
+
+  const multiTenant = useFeatureFlag('multiTenant');
   const { data: usersResponse, isLoading } = useUsers();
+  const inviteUserMutation = useInviteUser();
   const updateUserMutation = useUpdateUser();
   const deleteUserMutation = useDeleteUser();
-  
-  const users = usersResponse?.data || mockUsers;
 
-  const handleUpdateUser = (userId: string, data: Partial<User>) => {
-    updateUserMutation.mutate({ userId, data });
+  const users = usersResponse?.data || [];
+
+  const inviteForm = useForm<InviteUserInput>({
+    resolver: zodResolver(inviteUserSchema),
+    defaultValues: {
+      firstName: '',
+      lastName: '',
+      email: '',
+      role: 'agent',
+    },
+  });
+
+  const editForm = useForm<UpdateUserInput>({
+    resolver: zodResolver(updateUserSchema),
+  });
+
+  const handleInviteUser = async (data: InviteUserInput) => {
+    try {
+      await inviteUserMutation.mutateAsync(data);
+      inviteForm.reset();
+      setIsInviteModalOpen(false);
+    } catch (error) {
+      // Error handled by mutation
+    }
   };
 
-  const handleDeleteUser = (userId: string) => {
-    deleteUserMutation.mutate(userId);
+  const handleEditUser = (user: User) => {
+    setEditingUser(user);
+    editForm.reset({
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+      role: user.role,
+    });
+  };
+
+  const handleUpdateUser = async (data: UpdateUserInput) => {
+    if (!editingUser) return;
+
+    try {
+      await updateUserMutation.mutateAsync({
+        userId: editingUser.id,
+        data,
+      });
+      editForm.reset();
+      setEditingUser(null);
+    } catch (error) {
+      // Error handled by mutation
+    }
+  };
+
+  const handleDeleteUser = async (user: User) => {
+    if (!confirm(`Are you sure you want to delete "${user.firstName} ${user.lastName}"?`)) return;
+    
+    try {
+      await deleteUserMutation.mutateAsync(user.id);
+    } catch (error) {
+      // Error handled by mutation
+    }
   };
 
   if (isLoading) {
@@ -81,82 +137,179 @@ export default function Users() {
       </div>
     );
   }
+
   return (
     <>
       <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold">User Management</h1>
-          <p className="text-muted-foreground">
-            Manage team members and their permissions
-          </p>
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold">User Management</h1>
+            <p className="text-muted-foreground">
+              Manage team members and their permissions
+            </p>
+          </div>
         </div>
-        <Dialog>
-          <DialogTrigger asChild>
-            <Button className="gap-2">
-              <Plus className="h-4 w-4" />
-              Invite User
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Invite New User</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="firstName">First Name</Label>
-                  <Input id="firstName" placeholder="John" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="lastName">Last Name</Label>
-                  <Input id="lastName" placeholder="Doe" />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input id="email" type="email" placeholder="john@example.com" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="role">Role</Label>
-                <Select>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select role" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="admin">Admin</SelectItem>
-                    <SelectItem value="manager">Manager</SelectItem>
-                    <SelectItem value="agent">Agent</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <Button className="w-full">Send Invitation</Button>
+
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2">
+                <UsersIcon className="h-5 w-5" />
+                Team Members ({users.length})
+                {multiTenant && (
+                  <Badge variant="outline">Multi-Tenant</Badge>
+                )}
+              </CardTitle>
+              <Button 
+                variant="default" 
+                size="sm"
+                onClick={() => setIsInviteModalOpen(true)}
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Invite User
+              </Button>
             </div>
-          </DialogContent>
-        </Dialog>
+          </CardHeader>
+          <CardContent>
+            <DataTable
+              columns={userColumns}
+              data={users}
+              onEdit={handleEditUser}
+              onDelete={handleDeleteUser}
+            />
+          </CardContent>
+        </Card>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <UsersIcon className="h-5 w-5" />
-            Team Members ({users.length})
-            {enableMultiTenant && (
-              <Badge variant="outline">Multi-Tenant</Badge>
-            )}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <DataTable
-            data={users}
-            columns={userColumns}
-            onEdit={(user) => handleUpdateUser(user.id, user)}
-            onDelete={(user) => handleDeleteUser(user.id)}
-          />
-        </CardContent>
-      </Card>
-    </div>
-    <FloatingPreview />
-  </>
+      {/* Invite User Modal */}
+      <Modal
+        isOpen={isInviteModalOpen}
+        onClose={() => {
+          setIsInviteModalOpen(false);
+          inviteForm.reset();
+        }}
+        title="Invite New User"
+        description="Send an invitation to add a new team member."
+      >
+        <form onSubmit={inviteForm.handleSubmit(handleInviteUser)} className="space-y-4">
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-2">
+              <Label>First Name *</Label>
+              <Input {...inviteForm.register('firstName')} placeholder="John" />
+            </div>
+            <div className="space-y-2">
+              <Label>Last Name *</Label>
+              <Input {...inviteForm.register('lastName')} placeholder="Doe" />
+            </div>
+          </div>
+          <div className="space-y-2">
+            <Label>Email Address *</Label>
+            <Input {...inviteForm.register('email')} type="email" placeholder="john.doe@example.com" />
+          </div>
+          <div className="space-y-2">
+            <Label>Role</Label>
+            <Select value={inviteForm.watch('role')} onValueChange={(value) => inviteForm.setValue('role', value as any)}>
+              <SelectTrigger><SelectValue placeholder="Select a role" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="agent">Agent</SelectItem>
+                <SelectItem value="manager">Manager</SelectItem>
+                <SelectItem value="admin">Admin</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="flex justify-end space-x-2 pt-4">
+            <Button 
+              variant="outline" 
+              size="sm"
+              type="button"
+              onClick={() => {
+                setIsInviteModalOpen(false);
+                inviteForm.reset();
+              }}
+            >
+              Cancel
+            </Button>
+            <Button 
+              variant="default" 
+              size="sm" 
+              type="submit"
+              disabled={inviteUserMutation.isPending}
+            >
+              {inviteUserMutation.isPending && (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              )}
+              Send Invitation
+            </Button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* Edit User Modal */}
+      <Modal
+        isOpen={!!editingUser}
+        onClose={() => {
+          setEditingUser(null);
+          editForm.reset();
+        }}
+        title="Edit User"
+        description="Update user information and role."
+      >
+        <form onSubmit={editForm.handleSubmit(handleUpdateUser)} className="space-y-4">
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-2">
+              <Label>First Name</Label>
+              <Input {...editForm.register('firstName')} placeholder="John" />
+            </div>
+            <div className="space-y-2">
+              <Label>Last Name</Label>
+              <Input {...editForm.register('lastName')} placeholder="Doe" />
+            </div>
+          </div>
+          <div className="space-y-2">
+            <Label>Email Address</Label>
+            <Input {...editForm.register('email')} type="email" placeholder="john.doe@example.com" />
+          </div>
+          <div className="space-y-2">
+            <Label>Role</Label>
+            <Select value={editForm.watch('role')} onValueChange={(value) => editForm.setValue('role', value as any)}>
+              <SelectTrigger><SelectValue placeholder="Select a role" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="agent">Agent</SelectItem>
+                <SelectItem value="manager">Manager</SelectItem>
+                <SelectItem value="admin">Admin</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="flex justify-end space-x-2 pt-4">
+            <Button 
+              variant="outline" 
+              size="sm"
+              type="button"
+              onClick={() => {
+                setEditingUser(null);
+                editForm.reset();
+              }}
+            >
+              Cancel
+            </Button>
+            <Button 
+              variant="default" 
+              size="sm" 
+              type="submit"
+              disabled={updateUserMutation.isPending}
+            >
+              {updateUserMutation.isPending && (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              )}
+              Update User
+            </Button>
+          </div>
+        </form>
+      </Modal>
+
+      <FloatingPreview />
+    </>
   );
 }

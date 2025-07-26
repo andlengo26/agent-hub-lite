@@ -120,6 +120,42 @@ class ApiClient {
     return this.request('/organizations');
   }
 
+  async createOrganization(data: {
+    name: string;
+    logoUrl?: string;
+  }): Promise<ApiResponse<any>> {
+    return this.request('/organizations', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async updateOrganization(orgId: string, data: Partial<any>): Promise<ApiResponse<any>> {
+    return this.request(`/organizations/${orgId}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async deleteOrganization(orgId: string): Promise<ApiResponse<{ success: boolean }>> {
+    return this.request(`/organizations/${orgId}`, {
+      method: 'DELETE',
+    });
+  }
+
+  // User invite endpoint
+  async inviteUser(data: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    role?: 'admin' | 'agent' | 'manager';
+  }): Promise<ApiResponse<any>> {
+    return this.request('/users', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
   // Health check
   async healthCheck(): Promise<{ status: string; timestamp: string; version: string }> {
     return this.request('/health');

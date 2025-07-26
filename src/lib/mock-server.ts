@@ -126,6 +126,87 @@ export const handlers = [
     return HttpResponse.json(createApiResponse(mockData.organizations));
   }),
 
+  // POST /api/mock/organizations
+  http.post('/api/mock/organizations', async ({ request }) => {
+    await delay(config.mock.apiDelay);
+    
+    const body = await request.json() as any;
+    const newOrganization = {
+      id: `org_${Date.now()}`,
+      name: body.name,
+      logoUrl: body.logoUrl || '/placeholder.svg',
+      activeAgents: 0,
+      status: 'active' as const,
+      createdAt: new Date().toISOString()
+    };
+    
+    // Add to mock data (in-memory only)
+    mockData.organizations.unshift(newOrganization as any);
+    
+    return HttpResponse.json(createApiResponse(newOrganization), { status: 201 });
+  }),
+
+  // PUT /api/mock/organizations/:orgId
+  http.put('/api/mock/organizations/:orgId', async ({ params, request }) => {
+    await delay(config.mock.apiDelay);
+    
+    const body = await request.json() as any;
+    const orgIndex = mockData.organizations.findIndex(o => o.id === params.orgId);
+    
+    if (orgIndex === -1) {
+      return HttpResponse.json(
+        { message: 'Organization not found', code: 'ORG_NOT_FOUND' },
+        { status: 404 }
+      );
+    }
+    
+    mockData.organizations[orgIndex] = {
+      ...mockData.organizations[orgIndex],
+      ...body,
+      updatedAt: new Date().toISOString()
+    };
+    
+    return HttpResponse.json(createApiResponse(mockData.organizations[orgIndex]));
+  }),
+
+  // DELETE /api/mock/organizations/:orgId
+  http.delete('/api/mock/organizations/:orgId', async ({ params }) => {
+    await delay(config.mock.apiDelay);
+    
+    const orgIndex = mockData.organizations.findIndex(o => o.id === params.orgId);
+    if (orgIndex === -1) {
+      return HttpResponse.json(
+        { message: 'Organization not found', code: 'ORG_NOT_FOUND' },
+        { status: 404 }
+      );
+    }
+    
+    mockData.organizations.splice(orgIndex, 1);
+    return HttpResponse.json(createApiResponse({ success: true }));
+  }),
+
+  // POST /api/mock/users (invite user)
+  http.post('/api/mock/users', async ({ request }) => {
+    await delay(config.mock.apiDelay);
+    
+    const body = await request.json() as any;
+    const newUser = {
+      id: `user_${Date.now()}`,
+      avatarUrl: '/placeholder.svg',
+      firstName: body.firstName,
+      lastName: body.lastName,
+      email: body.email,
+      role: body.role || 'agent' as const,
+      onlineStatus: 'offline' as const,
+      createdAt: new Date().toISOString()
+    };
+    
+    // Add to mock data (in-memory only)
+    mockData.users.unshift(newUser as any);
+    
+    return HttpResponse.json(createApiResponse(newUser), { status: 201 });
+  }),
+
   // PUT /api/mock/users/:userId
   http.put('/api/mock/users/:userId', async ({ params, request }) => {
     await delay(config.mock.apiDelay);
