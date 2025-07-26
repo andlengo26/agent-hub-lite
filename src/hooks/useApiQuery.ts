@@ -8,7 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 import { logger } from '@/lib/logger';
 import type { CreateOrganizationInput, InviteUserInput } from '@/lib/validations';
 
-// Chat queries
+// Enhanced chat queries with robust fallback mechanisms
 export function useChats(params?: {
   page?: number;
   limit?: number;
@@ -20,45 +20,47 @@ export function useChats(params?: {
       console.log('🔄 useChats: Fetching chats with params:', params);
       
       try {
-        // Use relative URL for same-origin requests - NEVER use window.location.origin
-        const url = '/api/mock/chats' + (params ? '?' + new URLSearchParams(
-          Object.entries(params).map(([k, v]) => [k, String(v)])
-        ).toString() : '');
-        
-        console.log('🔄 useChats: Fetching from relative URL:', url);
-        const response = await fetch(url);  // <-- relative fetch only
-        
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-        
-        // Check if response is HTML (MSW not working)
-        const contentType = response.headers.get('content-type');
-        if (contentType && contentType.includes('text/html')) {
-          throw new Error('MSW not intercepting - got HTML instead of JSON');
-        }
-        
-        const result = await response.json();
-        console.log('✅ useChats: Successfully fetched chats:', result);
+        const result = await apiClient.getChats(params);
+        console.log('✅ useChats: Successfully fetched chats via API client:', result);
         return result;
       } catch (error) {
-        console.warn('⚠️ useChats: API failed, using mock data fallback:', error);
-        // Return mock data in the same format as the API - ensure UI still renders
-        const { mockChats } = await import('@/lib/mock-data');
+        console.warn('⚠️ useChats: API failed, using mock data fallback:', error.message);
+        
+        // Import mock data and format it properly
+        const { mockData } = await import('@/lib/mock-data');
+        let filteredChats = mockData.chats;
+        
+        // Apply status filter if provided
+        if (params?.status) {
+          filteredChats = mockData.chats.filter(chat => chat.status === params.status);
+        }
+        
+        // Apply pagination
+        const page = params?.page || 1;
+        const limit = params?.limit || 10;
+        const startIndex = (page - 1) * limit;
+        const endIndex = startIndex + limit;
+        const paginatedChats = filteredChats.slice(startIndex, endIndex);
+        
+        // Return in API format
         return {
-          data: mockChats,
+          data: paginatedChats,
           timestamp: new Date().toISOString(),
           success: true,
           pagination: {
-            page: params?.page || 1,
-            limit: params?.limit || 10,
-            total: mockChats.length,
-            totalPages: Math.ceil(mockChats.length / (params?.limit || 10))
+            page,
+            limit,
+            total: filteredChats.length,
+            totalPages: Math.ceil(filteredChats.length / limit)
           }
         };
       }
     },
     staleTime: 30000, // 30 seconds
+    retry: (failureCount, error) => {
+      // Don't retry MSW errors, but retry network errors
+      return failureCount < 2 && !error.message.includes('MSW');
+    }
   });
 }
 
@@ -95,15 +97,52 @@ export function useCreateChat() {
   });
 }
 
-// User queries  
+// Enhanced user queries with robust fallback mechanisms
 export function useUsers(params?: {
   page?: number;
   limit?: number;
 }) {
   return useQuery({
     queryKey: ['users', params],
-    queryFn: () => apiClient.getUsers(params),
-    staleTime: 60000 // 1 minute
+    queryFn: async () => {
+      console.log('🔄 useUsers: Fetching users with params:', params);
+      
+      try {
+        const result = await apiClient.getUsers(params);
+        console.log('✅ useUsers: Successfully fetched users via API client:', result);
+        return result;
+      } catch (error) {
+        console.warn('⚠️ useUsers: API failed, using mock data fallback:', error.message);
+        
+        // Import mock data and format it properly
+        const { mockData } = await import('@/lib/mock-data');
+        
+        // Apply pagination
+        const page = params?.page || 1;
+        const limit = params?.limit || 10;
+        const startIndex = (page - 1) * limit;
+        const endIndex = startIndex + limit;
+        const paginatedUsers = mockData.users.slice(startIndex, endIndex);
+        
+        // Return in API format
+        return {
+          data: paginatedUsers,
+          timestamp: new Date().toISOString(),
+          success: true,
+          pagination: {
+            page,
+            limit,
+            total: mockData.users.length,
+            totalPages: Math.ceil(mockData.users.length / limit)
+          }
+        };
+      }
+    },
+    staleTime: 60000, // 1 minute
+    retry: (failureCount, error) => {
+      // Don't retry MSW errors, but retry network errors
+      return failureCount < 2 && !error.message.includes('MSW');
+    }
   });
 }
 
@@ -156,12 +195,36 @@ export function useDeleteUser() {
   });
 }
 
-// Organization queries
+// Enhanced organization queries with robust fallback mechanisms
 export function useOrganizations() {
   return useQuery({
     queryKey: ['organizations'],
-    queryFn: () => apiClient.getOrganizations(),
-    staleTime: 300000 // 5 minutes
+    queryFn: async () => {
+      console.log('🔄 useOrganizations: Fetching organizations');
+      
+      try {
+        const result = await apiClient.getOrganizations();
+        console.log('✅ useOrganizations: Successfully fetched organizations via API client:', result);
+        return result;
+      } catch (error) {
+        console.warn('⚠️ useOrganizations: API failed, using mock data fallback:', error.message);
+        
+        // Import mock data and format it properly
+        const { mockData } = await import('@/lib/mock-data');
+        
+        // Return in API format
+        return {
+          data: mockData.organizations,
+          timestamp: new Date().toISOString(),
+          success: true
+        };
+      }
+    },
+    staleTime: 300000, // 5 minutes
+    retry: (failureCount, error) => {
+      // Don't retry MSW errors, but retry network errors
+      return failureCount < 2 && !error.message.includes('MSW');
+    }
   });
 }
 

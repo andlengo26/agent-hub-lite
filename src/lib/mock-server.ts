@@ -283,41 +283,73 @@ worker.events.on('request:unhandled', ({ request }) => {
   console.warn('[MSW] missed', request.method, request.url);
 });
 
-// Helper to start mock server (simplified for direct worker usage)
-export const startMockServer = async () => {
+// Enhanced mock server startup with comprehensive diagnostics
+export const startMockServer = async (): Promise<boolean> => {
+  console.log('🎭 === MOCK SERVER STARTUP ===');
+  
   if (!config.mock.enabled) {
     console.log('🎭 Mock server disabled in config');
     return false;
   }
 
   try {
-    console.log('🎭 Starting Mock Service Worker...');
+    console.log('🎭 Pre-flight checks...');
+    console.log('🎭 - Service Worker API available:', 'serviceWorker' in navigator);
+    console.log('🎭 - Current origin:', window.location.origin);
+    console.log('🎭 - Handlers registered:', handlers.length);
+    
+    // Check if mockServiceWorker.js is accessible
+    try {
+      const swResponse = await fetch('/mockServiceWorker.js', { method: 'HEAD' });
+      console.log('🎭 - Service Worker file status:', swResponse.status);
+      if (!swResponse.ok) {
+        console.warn('⚠️ mockServiceWorker.js not found or not accessible');
+      }
+    } catch (swError) {
+      console.warn('⚠️ Cannot check mockServiceWorker.js availability:', swError.message);
+    }
+    
+    console.log('🎭 Starting worker with enhanced configuration...');
     
     await worker.start({
-      onUnhandledRequest: 'warn',
+      onUnhandledRequest: ({ method, url }) => {
+        console.warn(`🎭 Unhandled ${method} request to ${url}`);
+      },
       serviceWorker: {
         url: '/mockServiceWorker.js',
         options: {
           scope: '/',
+          type: 'classic'
         }
       },
-      // Removed waitUntilReady as it's deprecated
+      quiet: false // Enable detailed logging
     });
     
-    console.log('🎭 Mock API server started successfully');
-    console.log('🎭 Mock enabled:', config.mock.enabled);
-    console.log('🎭 Available handlers:', handlers.length);
-    console.log('🎭 Service worker scope: /');
+    console.log('✅ Mock Service Worker started successfully');
+    console.log('🎭 Worker state:', worker.listHandlers().length, 'handlers active');
+    
+    // Add a small delay to ensure worker is fully ready
+    await new Promise(resolve => setTimeout(resolve, 100));
     
     return true;
   } catch (error) {
-    console.error('❌ Failed to start mock server:', error);
-    console.error('❌ Error details:', {
-      name: error.name,
-      message: error.message,
-      stack: error.stack
-    });
-    console.log('🎭 Continuing without mock server - API calls will use fallback data');
+    console.error('❌ === MOCK SERVER STARTUP FAILED ===');
+    console.error('❌ Error type:', error.constructor.name);
+    console.error('❌ Error message:', error.message);
+    console.error('❌ Error stack:', error.stack);
+    
+    // Detailed error analysis
+    if (error.message.includes('Service Worker')) {
+      console.error('❌ Service Worker related error - check browser support and HTTPS');
+    }
+    if (error.message.includes('scope')) {
+      console.error('❌ Scope related error - check service worker scope configuration');
+    }
+    if (error.message.includes('mockServiceWorker.js')) {
+      console.error('❌ Service Worker file not found - run `npx msw init public/`');
+    }
+    
+    console.log('🎭 Mock server startup failed - API calls will use fallback behavior');
     return false;
   }
 };
