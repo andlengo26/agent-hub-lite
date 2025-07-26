@@ -263,7 +263,24 @@ export const handlers = [
 // Create and export the worker
 export const worker = setupWorker(...handlers);
 
-// Helper to start mock server
+// Add diagnostic logs
+worker.events.on('request:start', (req) =>
+  console.log('🎭 [MSW] Request:', req.request.method, req.request.url)
+);
+
+worker.events.on('request:match', (req) =>
+  console.log('🎭 [MSW] Matched:', req.request.method, req.request.url)
+);
+
+worker.events.on('request:unhandled', (req) =>
+  console.warn('🎭 [MSW] Unhandled:', req.request.method, req.request.url)
+);
+
+worker.events.on('response:mocked', (res) =>
+  console.log('🎭 [MSW] Mocked response:', res.response.status, res.request.url)
+);
+
+// Helper to start mock server (simplified for direct worker usage)
 export const startMockServer = async () => {
   if (!config.mock.enabled) {
     console.log('🎭 Mock server disabled in config');
@@ -274,7 +291,7 @@ export const startMockServer = async () => {
     console.log('🎭 Starting Mock Service Worker...');
     
     await worker.start({
-      onUnhandledRequest: 'bypass',
+      onUnhandledRequest: 'warn',
       serviceWorker: {
         url: '/mockServiceWorker.js',
         options: {
@@ -288,24 +305,6 @@ export const startMockServer = async () => {
     console.log('🎭 Mock enabled:', config.mock.enabled);
     console.log('🎭 Available handlers:', handlers.length);
     console.log('🎭 Service worker scope: /');
-    
-    // Verify MSW is working by checking if it's intercepting
-    const testWorker = async () => {
-      try {
-        const response = await fetch('/api/mock/health');
-        const data = await response.json();
-        if (data.status === 'ok') {
-          console.log('✅ MSW is working correctly - health check passed');
-          return true;
-        }
-      } catch (error) {
-        console.warn('⚠️ MSW health check failed:', error);
-        return false;
-      }
-    };
-    
-    // Test after a short delay to ensure worker is ready
-    setTimeout(testWorker, 500);
     
     return true;
   } catch (error) {

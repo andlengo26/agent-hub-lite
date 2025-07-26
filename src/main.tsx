@@ -1,30 +1,53 @@
-import { StrictMode } from "react";
-import { createRoot } from "react-dom/client";
-import App from "./App.tsx";
-import "./index.css";
-import { startMockServer } from "./lib/mock-server";
-import { QueryProvider } from "./components/ui/QueryProvider.tsx";
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import App from './App';
+import { worker } from './lib/mock-server';
+import { QueryProvider } from './components/ui/QueryProvider';
+import './index.css';
 
-// Initialize the app
-async function initializeApp() {
-  // Start mock server first in development
-  const mockStarted = await startMockServer();
-  
-  if (mockStarted) {
-    console.log('🎭 App initialized with mock server');
-  } else {
-    console.log('🎭 App initialized without mock server');
-  }
-  
-  // Render the app
-  createRoot(document.getElementById("root")!).render(
-    <StrictMode>
+// Only in development
+if (import.meta.env.DEV) {
+  worker
+    .start({
+      serviceWorker: {
+        url: '/mockServiceWorker.js',
+      },
+      onUnhandledRequest: 'warn',
+    })
+    .then(() => {
+      console.log('🎭 MSW started successfully, mounting React app');
+      ReactDOM.createRoot(
+        document.getElementById('root')!
+      ).render(
+        <React.StrictMode>
+          <QueryProvider>
+            <App />
+          </QueryProvider>
+        </React.StrictMode>
+      );
+    })
+    .catch((err) => {
+      console.error('❌ MSW failed to start', err);
+      // Fallback: still render your app so you can see error UI
+      ReactDOM.createRoot(
+        document.getElementById('root')!
+      ).render(
+        <React.StrictMode>
+          <QueryProvider>
+            <App />
+          </QueryProvider>
+        </React.StrictMode>
+      );
+    });
+} else {
+  // In production just mount the app normally
+  ReactDOM.createRoot(
+    document.getElementById('root')!
+  ).render(
+    <React.StrictMode>
       <QueryProvider>
         <App />
       </QueryProvider>
-    </StrictMode>,
+    </React.StrictMode>
   );
 }
-
-// Start the application
-initializeApp().catch(console.error);

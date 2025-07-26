@@ -19,7 +19,19 @@ export function useChats(params?: {
     queryFn: async () => {
       try {
         console.log('🔄 useChats: Fetching chats with params:', params);
-        const result = await apiClient.getChats(params);
+        const response = await fetch('/api/mock/chats' + (params ? '?' + new URLSearchParams(Object.entries(params).map(([k, v]) => [k, String(v)])).toString() : ''));
+        
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+        
+        // Check if response is HTML (MSW not working)
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('text/html')) {
+          throw new Error('MSW not intercepting - got HTML instead of JSON');
+        }
+        
+        const result = await response.json();
         console.log('✅ useChats: Successfully fetched chats:', result);
         return result;
       } catch (error) {
