@@ -83,29 +83,7 @@ export function useUsers(params?: {
 }) {
   return useQuery({
     queryKey: ['users', params],
-    queryFn: async () => {
-      try {
-        console.log('🔄 useUsers: Fetching users with params:', params);
-        const result = await apiClient.getUsers(params);
-        console.log('✅ useUsers: Successfully fetched users:', result);
-        return result;
-      } catch (error) {
-        console.warn('⚠️ useUsers: API failed, using mock data fallback:', error);
-        // Return mock data in the same format as the API
-        const { mockUsers } = await import('@/lib/mock-data');
-        return {
-          data: mockUsers,
-          timestamp: new Date().toISOString(),
-          success: true,
-          pagination: {
-            page: params?.page || 1,
-            limit: params?.limit || 10,
-            total: mockUsers.length,
-            totalPages: Math.ceil(mockUsers.length / (params?.limit || 10))
-          }
-        };
-      }
-    },
+    queryFn: () => apiClient.getUsers(params),
     staleTime: 60000 // 1 minute
   });
 }
@@ -163,23 +141,7 @@ export function useDeleteUser() {
 export function useOrganizations() {
   return useQuery({
     queryKey: ['organizations'],
-    queryFn: async () => {
-      try {
-        console.log('🔄 useOrganizations: Fetching organizations');
-        const result = await apiClient.getOrganizations();
-        console.log('✅ useOrganizations: Successfully fetched organizations:', result);
-        return result;
-      } catch (error) {
-        console.warn('⚠️ useOrganizations: API failed, using mock data fallback:', error);
-        // Return mock data in the same format as the API
-        const { mockOrganizations } = await import('@/lib/mock-data');
-        return {
-          data: mockOrganizations,
-          timestamp: new Date().toISOString(),
-          success: true
-        };
-      }
-    },
+    queryFn: () => apiClient.getOrganizations(),
     staleTime: 300000 // 5 minutes
   });
 }
