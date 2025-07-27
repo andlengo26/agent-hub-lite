@@ -52,7 +52,33 @@ export function ExpandableContextPanel({
   const isMobile = useIsMobile();
 
   if (!currentChat) {
-    return null;
+    return (
+      <div className="h-full flex flex-col">
+        <div className="flex items-center justify-between p-space-4 border-b border-border">
+          <h3 className="font-medium text-text-primary">Context</h3>
+          {!isMobile && onToggleExpanded && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onToggleExpanded}
+              className="h-6 w-6 p-0"
+            >
+              {isExpanded ? (
+                <ChevronRight className="h-4 w-4" />
+              ) : (
+                <ChevronLeft className="h-4 w-4" />
+              )}
+            </Button>
+          )}
+        </div>
+        <div className="flex-1 flex items-center justify-center p-space-4">
+          <div className="text-center text-text-secondary">
+            <UserIcon className="h-12 w-12 mx-auto mb-3 opacity-50" />
+            <p>Select a chat to view context</p>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   const assignedAgent = users.find(user => user.id === currentChat.assignedAgentId);
