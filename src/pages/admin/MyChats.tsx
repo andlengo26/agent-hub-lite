@@ -9,9 +9,10 @@ import { ChatFilters } from "@/components/admin/ChatFilters";
 import { ChatPanel } from "@/components/admin/ChatPanel";
 import { ErrorBoundary } from "@/components/common/ErrorBoundary";
 import { AgentConsoleProvider } from "@/contexts/AgentConsoleContext";
-import { AgentConsoleLayout } from "@/components/admin/agent-console/AgentConsoleLayout";
+import { NewAgentConsoleLayout } from "@/components/admin/agent-console/NewAgentConsoleLayout";
 import { Chat } from "@/types";
-import { useChats, useUsers } from "@/hooks/useApiQuery";
+import { useChatsSummary } from "@/hooks/useChatsSummary";
+import { useWebSocketChats } from "@/hooks/useWebSocketChats";
 import { useFeatureFlag } from "@/hooks/useFeatureFlag";
 import { Skeleton } from "@/components/ui/skeleton";
 import { MapPin, Filter, Monitor } from "lucide-react";
@@ -95,14 +96,15 @@ export default function MyChats() {
   });
 
   const enableRealTimeUpdates = useFeatureFlag('realTime');
-  const { data: chatsResponse, isLoading } = useChats();
-  const { data: usersResponse } = useUsers();
   
-  const allChats = chatsResponse?.data || [];
-  const users = usersResponse?.data || [];
+  // Use consolidated hook for data fetching
+  const { chats: allChats, users, counts, isLoading } = useChatsSummary({
+    agentId: currentUserId, // Filter by current agent
+  });
+  const { isConnected } = useWebSocketChats();
   
-  // Filter to only show chats assigned to current user
-  const userChats = allChats.filter(chat => chat.assignedAgentId === currentUserId);
+  // User chats are already filtered by the hook
+  const userChats = allChats;
 
   // Apply filters and active tab
   const filteredChats = useMemo(() => {
@@ -151,15 +153,13 @@ export default function MyChats() {
     return filtered;
   }, [userChats, activeTab, filters]);
 
-  // Calculate counts for tabs
-  const statusCounts = useMemo(() => {
-    return {
-      all: userChats.length,
-      active: userChats.filter(chat => chat.status === 'active').length,
-      missed: userChats.filter(chat => chat.status === 'missed').length,
-      closed: userChats.filter(chat => chat.status === 'closed').length
-    };
-  }, [userChats]);
+  // Use counts from the hook
+  const statusCounts = {
+    all: counts.total,
+    active: counts.active,
+    missed: counts.missed,
+    closed: counts.closed,
+  };
 
   // Filter queue chats (active/missed status for console view)
   const queueChats = useMemo(() => {
@@ -212,7 +212,7 @@ export default function MyChats() {
 
           {viewMode === 'console' ? (
             <div className="h-[calc(100vh-12rem)]">
-              <AgentConsoleLayout 
+              <NewAgentConsoleLayout 
                 queueChats={queueChats}
                 isLoading={isLoading}
                 users={users}
@@ -268,8 +268,8 @@ export default function MyChats() {
                       ) : (
                         <DataTable
                           data={filteredChats}
-                          columns={createChatColumns(users)}
-                          onRowClick={setSelectedChat}
+                          columns={createChatColumns(users) as any}
+                          onRowClick={(row: any) => setSelectedChat(row)}
                           loading={isLoading}
                         />
                       )}

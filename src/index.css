@@ -157,6 +157,44 @@
 }
 
 @layer utilities {
+  /* Spacing utilities using design tokens */
+  .p-space-1 { padding: var(--space-1); }
+  .p-space-2 { padding: var(--space-2); }
+  .p-space-3 { padding: var(--space-3); }
+  .p-space-4 { padding: var(--space-4); }
+  .p-space-5 { padding: var(--space-5); }
+  .p-space-6 { padding: var(--space-6); }
+  
+  .m-space-1 { margin: var(--space-1); }
+  .m-space-2 { margin: var(--space-2); }
+  .m-space-3 { margin: var(--space-3); }
+  .m-space-4 { margin: var(--space-4); }
+  .m-space-5 { margin: var(--space-5); }
+  .m-space-6 { margin: var(--space-6); }
+  
+  .gap-space-1 { gap: var(--space-1); }
+  .gap-space-2 { gap: var(--space-2); }
+  .gap-space-3 { gap: var(--space-3); }
+  .gap-space-4 { gap: var(--space-4); }
+  .gap-space-5 { gap: var(--space-5); }
+  .gap-space-6 { gap: var(--space-6); }
+
+  .mb-space-1 { margin-bottom: var(--space-1); }
+  .mb-space-2 { margin-bottom: var(--space-2); }
+  .mb-space-3 { margin-bottom: var(--space-3); }
+  .mb-space-4 { margin-bottom: var(--space-4); }
+  .mt-space-1 { margin-top: var(--space-1); }
+  .mt-space-2 { margin-top: var(--space-2); }
+  .mt-space-3 { margin-top: var(--space-3); }
+  .mt-space-4 { margin-top: var(--space-4); }
+  .mr-space-2 { margin-right: var(--space-2); }
+  .ml-space-2 { margin-left: var(--space-2); }
+
+  /* Border radius utilities */
+  .rounded-radius-sm { border-radius: var(--radius-sm); }
+  .rounded-radius-md { border-radius: var(--radius-md); }
+  .rounded-radius-lg { border-radius: var(--radius-lg); }
+
   /* Enhanced shimmer animation for skeletons */
   .animate-shimmer {
     background: linear-gradient(
