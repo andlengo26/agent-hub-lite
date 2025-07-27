@@ -58,32 +58,32 @@ export function ContextPanel({ currentChat, users }: ContextPanelProps) {
         <CardTitle className="text-lg">Engagements</CardTitle>
       </CardHeader>
       <CardContent className="p-0">
-        <ScrollArea className="h-[calc(100vh-8rem)] [&>div>div]:!block">
+        <ScrollArea className="h-[calc(100vh-8rem)]">
           <Accordion type="single" collapsible defaultValue="details" className="w-full">
-            <AccordionItem value="details" className="bg-surface/30">
-              <AccordionTrigger>
-                <div className="flex items-center gap-space-2">
-                  <User className="h-4 w-4 text-text-secondary" />
+            <AccordionItem value="details">
+              <AccordionTrigger className="px-4 py-3">
+                <div className="flex items-center gap-2">
+                  <User className="h-4 w-4" />
                   <span>Details</span>
                 </div>
               </AccordionTrigger>
-              <AccordionContent className="bg-background"    >
+              <AccordionContent className="px-4 pb-4">
                 <div className="space-y-4">
                   {/* Customer Info */}
                   <div>
-                    <div className="flex items-center gap-space-2 mb-space-3">
-                      <User className="h-3 w-3 text-text-secondary" />
-                      <h4 className="font-medium text-text-secondary">Customer Information</h4>
-                    </div>
-                    <div className="space-y-space-2 text-sm ml-space-5">
-                      <p className="font-medium text-text-primary">{currentChat.requesterName}</p>
-                      <div className="flex items-center gap-space-2 text-text-secondary">
-                        <span>Email:</span>
+                    <h4 className="font-medium mb-2">Customer Information</h4>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex items-center gap-2">
+                        <User className="h-4 w-4 text-muted-foreground" />
+                        <span>{currentChat.requesterName}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-muted-foreground">Email:</span>
                         <span>{currentChat.requesterEmail}</span>
                       </div>
                       {currentChat.requesterPhone && (
-                        <div className="flex items-center gap-space-2 text-text-secondary">
-                          <Smartphone className="h-3 w-3" />
+                        <div className="flex items-center gap-2">
+                          <Smartphone className="h-4 w-4 text-muted-foreground" />
                           <span>{currentChat.requesterPhone}</span>
                         </div>
                       )}
@@ -92,26 +92,23 @@ export function ContextPanel({ currentChat, users }: ContextPanelProps) {
 
                   {/* Session Info */}
                   <div>
-                    <div className="flex items-center gap-space-2 mb-space-3">
-                      <Globe className="h-3 w-3 text-text-secondary" />
-                      <h4 className="font-medium text-text-secondary">Session Details</h4>
-                    </div>
-                    <div className="space-y-space-2 text-sm ml-space-5">
-                      <div className="flex items-center gap-space-2">
-                        <MapPin className="h-3 w-3 text-text-secondary" />
-                        <span className="text-text-primary">{currentChat.geo}</span>
+                    <h4 className="font-medium mb-2">Session Details</h4>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex items-center gap-2">
+                        <MapPin className="h-4 w-4 text-muted-foreground" />
+                        <span>{currentChat.geo}</span>
                       </div>
-                      <div>
-                        <p className="text-text-secondary mb-space-1">Page URL:</p>
-                        <p className="text-text-primary font-mono text-xs break-all">{currentChat.pageUrl}</p>
+                      <div className="flex items-center gap-2">
+                        <Globe className="h-4 w-4 text-muted-foreground" />
+                        <span className="truncate">{currentChat.pageUrl}</span>
                       </div>
-                      <div>
-                        <p className="text-text-secondary mb-space-1">Browser:</p>
-                        <p className="text-text-primary">{currentChat.browser}</p>
+                      <div className="flex items-center gap-2">
+                        <span className="text-muted-foreground">Browser:</span>
+                        <span>{currentChat.browser}</span>
                       </div>
-                      <div className="flex items-center gap-space-2">
-                        <Clock className="h-3 w-3 text-text-secondary" />
-                        <span className="text-text-primary">{formatDistanceToNow(new Date(currentChat.createdAt), { addSuffix: true })}</span>
+                      <div className="flex items-center gap-2">
+                        <Clock className="h-4 w-4 text-muted-foreground" />
+                        <span>{formatDistanceToNow(new Date(currentChat.createdAt), { addSuffix: true })}</span>
                       </div>
                     </div>
                   </div>
@@ -119,11 +116,8 @@ export function ContextPanel({ currentChat, users }: ContextPanelProps) {
                   {/* Assigned Agent */}
                   {assignedAgent && (
                     <div>
-                      <div className="flex items-center gap-space-2 mb-space-3">
-                        <User className="h-3 w-3 text-text-secondary" />
-                        <h4 className="font-medium text-text-secondary">Assigned Agent</h4>
-                      </div>
-                      <div className="flex items-center gap-space-3 ml-space-5">
+                      <h4 className="font-medium mb-2">Assigned Agent</h4>
+                      <div className="flex items-center gap-2">
                         <Avatar className="h-8 w-8">
                           <AvatarImage src={assignedAgent.avatarUrl} />
                           <AvatarFallback>
@@ -131,32 +125,27 @@ export function ContextPanel({ currentChat, users }: ContextPanelProps) {
                           </AvatarFallback>
                         </Avatar>
                         <div>
-                          <p className="font-medium text-sm text-text-primary">
+                          <div className="font-medium text-sm">
                             {assignedAgent.firstName} {assignedAgent.lastName}
-                          </p>
-                          <div className="flex items-center gap-space-2">
-                            <Badge variant="secondary" className="text-xs">
-                              {assignedAgent.role}
-                            </Badge>
-                            <Badge 
-                              variant={assignedAgent.onlineStatus === 'online' ? 'default' : 'secondary'}
-                              className="text-xs"
-                            >
-                              {assignedAgent.onlineStatus}
-                            </Badge>
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            {assignedAgent.role}
                           </div>
                         </div>
+                        <Badge 
+                          variant={assignedAgent.onlineStatus === 'online' ? 'default' : 'secondary'}
+                          className="ml-auto"
+                        >
+                          {assignedAgent.onlineStatus}
+                        </Badge>
                       </div>
                     </div>
                   )}
 
                   {/* Chat Summary */}
                   <div>
-                    <div className="flex items-center gap-space-2 mb-space-3">
-                      <FileText className="h-3 w-3 text-text-secondary" />
-                      <h4 className="font-medium text-text-secondary">Summary</h4>
-                    </div>
-                    <p className="text-sm text-text-primary ml-space-5 leading-relaxed">
+                    <h4 className="font-medium mb-2">Summary</h4>
+                    <p className="text-sm text-muted-foreground">
                       {currentChat.summary}
                     </p>
                   </div>
@@ -164,38 +153,34 @@ export function ContextPanel({ currentChat, users }: ContextPanelProps) {
               </AccordionContent>
             </AccordionItem>
 
-            <AccordionItem value="history" className="bg-surface/30">
-              <AccordionTrigger>
-                <div className="flex items-center gap-space-2">
-                  <History className="h-4 w-4 text-text-secondary" />
+            <AccordionItem value="history">
+              <AccordionTrigger className="px-4 py-3">
+                <div className="flex items-center gap-2">
+                  <History className="h-4 w-4" />
                   <span>History</span>
                 </div>
               </AccordionTrigger>
-              <AccordionContent className="bg-background">
-                <div className="space-y-space-3">
+              <AccordionContent className="px-4 pb-4">
+                <div className="space-y-3">
+                  <h4 className="font-medium">Previous Interactions</h4>
                   {mockHistory.length === 0 ? (
-                    <div className="text-center py-space-6 text-text-secondary">
-                      <History className="h-8 w-8 mx-auto mb-space-3 opacity-50" />
+                    <div className="text-center py-4 text-muted-foreground">
+                      <History className="h-6 w-6 mx-auto mb-2 opacity-50" />
                       <p className="text-sm">No previous interactions</p>
                     </div>
                   ) : (
                     mockHistory.map((item) => (
-                      <div key={item.id} className="p-space-3 border border-border rounded-radius-md bg-surface hover:bg-surface/80 transition-colors">
-                        <div className="flex items-center justify-between mb-space-2">
-                          <span className="text-sm font-medium text-text-primary">{item.date}</span>
-                          <Badge variant={item.status === 'resolved' ? 'default' : 'secondary'} className="text-xs">
+                      <div key={item.id} className="border rounded-md p-3">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-sm font-medium">{item.date}</span>
+                          <Badge variant={item.status === 'resolved' ? 'default' : 'secondary'}>
                             {item.status}
                           </Badge>
                         </div>
-                        <p className="text-sm text-text-secondary mb-space-2">
+                        <p className="text-sm text-muted-foreground mb-1">
                           Agent: {item.agent}
                         </p>
-                        <p className="text-sm text-text-primary leading-relaxed">{item.summary}</p>
-                        <div className="flex justify-end mt-space-2">
-                          <Button variant="ghost" size="sm" className="h-6 text-xs text-primary hover:text-primary">
-                            View details
-                          </Button>
-                        </div>
+                        <p className="text-sm">{item.summary}</p>
                       </div>
                     ))
                   )}
@@ -203,28 +188,28 @@ export function ContextPanel({ currentChat, users }: ContextPanelProps) {
               </AccordionContent>
             </AccordionItem>
 
-            <AccordionItem value="notes" className="bg-surface/30">
-              <AccordionTrigger>
-                <div className="flex items-center gap-space-2">
-                  <FileText className="h-4 w-4 text-text-secondary" />
+            <AccordionItem value="notes">
+              <AccordionTrigger className="px-4 py-3">
+                <div className="flex items-center gap-2">
+                  <FileText className="h-4 w-4" />
                   <span>Notes</span>
                 </div>
               </AccordionTrigger>
-              <AccordionContent className="bg-background">
-                <div className="space-y-space-3">
+              <AccordionContent className="px-4 pb-4">
+                <div className="space-y-3">
+                  <h4 className="font-medium">Internal Notes</h4>
                   <Textarea
                     placeholder="Add notes about this customer or conversation..."
-                    className="min-h-32 resize-none"
+                    className="min-h-32"
                   />
-                  <Button variant="highlight" size="sm" className="gap-space-1">
-                    <FileText className="h-3 w-3" />
-                    Add Note
+                  <Button size="sm" className="w-full">
+                    Save Note
                   </Button>
                   
-                  <div className="mt-space-4">
-                    <h5 className="text-sm font-medium mb-space-3 text-text-secondary">Previous Notes</h5>
-                    <div className="text-center py-space-6 text-text-secondary">
-                      <FileText className="h-8 w-8 mx-auto mb-space-3 opacity-50" />
+                  <div className="mt-4">
+                    <h5 className="text-sm font-medium mb-2">Previous Notes</h5>
+                    <div className="text-center py-4 text-muted-foreground">
+                      <FileText className="h-6 w-6 mx-auto mb-2 opacity-50" />
                       <p className="text-sm">No notes yet</p>
                     </div>
                   </div>

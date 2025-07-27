@@ -81,7 +81,7 @@ export function QueuePreview({
     <div
       key={chat.id}
       className={cn(
-        "px-space-4 py-space-3 cursor-pointer transition-colors hover:bg-surface/50 border-b border-border last:border-b-0",
+        "p-3 cursor-pointer transition-colors hover:bg-surface/50 border-b border-border last:border-b-0",
         selectedChatId === chat.id && "bg-surface border-l-4 border-l-primary"
       )}
       onClick={() => onChatSelect(chat.id)}
@@ -91,8 +91,8 @@ export function QueuePreview({
           <h4 className="font-medium text-text-primary truncate text-sm">
             {chat.requesterName}
           </h4>
-          <div className="flex items-center gap-space-2 mt-space-1">
-            <div className="flex items-center gap-space-1 text-xs text-text-secondary">
+          <div className="flex items-center gap-2 mt-1">
+            <div className="flex items-center gap-1 text-xs text-text-secondary">
               <Clock className="h-3 w-3" />
               <span>{formatDistanceToNow(new Date(chat.createdAt), { addSuffix: true })}</span>
             </div>
@@ -117,8 +117,8 @@ export function QueuePreview({
       open={openSections[key]}
       onOpenChange={() => toggleSection(key)}
     >
-      <CollapsibleTrigger className="flex items-center justify-between w-full px-space-4 py-space-3 bg-surface/30 hover:bg-surface/50 transition-colors border-b border-border">
-        <div className="flex items-center gap-space-2">
+      <CollapsibleTrigger className="flex items-center justify-between w-full p-3 hover:bg-surface/50 transition-colors">
+        <div className="flex items-center gap-2">
           <span className="font-medium text-text-primary">{title}</span>
           <Badge variant={variant} className="text-xs">
             {chats.length}
@@ -131,11 +131,11 @@ export function QueuePreview({
       </CollapsibleTrigger>
       <CollapsibleContent>
         {chats.length === 0 ? (
-          <div className="p-space-6 text-center text-text-secondary text-sm bg-background">
+          <div className="p-6 text-center text-text-secondary text-sm">
             No {title.toLowerCase()} chats
           </div>
         ) : (
-          <div className="bg-background">
+          <div className="border-t border-border">
             {chats.map(renderChatItem)}
           </div>
         )}
@@ -213,8 +213,8 @@ export function QueuePreview({
       </div>
 
       {/* Queue sections */}
-      <ScrollArea className="flex-1 [&>div>div]:!block">
-        <div>
+      <ScrollArea className="flex-1">
+        <div className="divide-y divide-border">
           {renderSection("Waiting", "waiting", categorizedChats.waiting, "outline")}
           {renderSection("Active", "active", categorizedChats.active, "default")}
           {renderSection("Missed", "missed", categorizedChats.missed, "destructive")}
