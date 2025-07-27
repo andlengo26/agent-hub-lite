@@ -64,13 +64,13 @@ export function ExpandableContextPanel({
   currentChat,
   users,
   width = 320,
-  isExpanded = true,
+  isExpanded = false,
   onToggleExpanded,
   isLoading = false,
 }: ExpandableContextPanelProps) {
   const [historyModalOpen, setHistoryModalOpen] = useState(false);
   const [notesModalOpen, setNotesModalOpen] = useState(false);
-  const [expandedSections, setExpandedSections] = useState(['details']);
+  const [expandedSections, setExpandedSections] = useState<string | undefined>('details');
   const [engagements, setEngagements] = useState<Engagement[]>([]);
   const [engagementsLoading, setEngagementsLoading] = useState(false);
   const isMobile = useIsMobile();
@@ -100,7 +100,7 @@ export function ExpandableContextPanel({
       onToggleExpanded();
     }
     // Set the clicked section as expanded
-    setExpandedSections([section]);
+    setExpandedSections(section);
   };
 
   // Collapsed icon strip component
@@ -159,7 +159,7 @@ export function ExpandableContextPanel({
         {isExpanded ? (
           <>
             <div className="flex items-center justify-between p-space-4 border-b border-border">
-              <h3 className="font-medium text-text-primary">Context</h3>
+              <h3 className="font-medium text-text-primary">Engagements</h3>
               {!isMobile && onToggleExpanded && (
                 <Button
                   variant="ghost"
@@ -190,7 +190,7 @@ export function ExpandableContextPanel({
   const ContextContent = () => (
     <div className="h-full flex flex-col">
       <div className="flex items-center justify-between p-space-4 border-b border-border">
-        <h3 className="font-medium text-text-primary">Context</h3>
+        <h3 className="font-medium text-text-primary">Engagements</h3>
         {!isMobile && onToggleExpanded && (
           <Button
             variant="ghost"
@@ -203,7 +203,7 @@ export function ExpandableContextPanel({
         )}
       </div>
 
-      <div className="flex-1 overflow-hidden">
+      <ScrollArea className="flex-1">
         {isLoading ? (
           <div className="p-space-4 space-y-space-4">
             <Skeleton className="h-20 w-full" />
@@ -212,9 +212,11 @@ export function ExpandableContextPanel({
           </div>
         ) : (
           <Accordion
-            type="multiple"
+            type="single"
             value={expandedSections}
             onValueChange={setExpandedSections}
+            collapsible
+            defaultValue="details"
             className="w-full"
           >
             {/* Details Section */}
@@ -230,100 +232,98 @@ export function ExpandableContextPanel({
                   </Badge>
                 </div>
               </AccordionTrigger>
-              <AccordionContent className="px-0 pb-0">
-                <ScrollArea className="h-80">
-                  <div className="px-space-4 pb-space-4 space-y-space-4">
-                    {/* Customer Information */}
-                    <div>
-                      <div className="flex items-center gap-space-2 mb-space-2">
-                        <UserIcon className="h-3 w-3 text-text-secondary" />
-                        <span className="text-sm font-medium text-text-secondary">Customer</span>
+              <AccordionContent className="px-space-4 pb-space-4">
+                <div className="space-y-space-4">
+                  {/* Customer Information */}
+                  <div>
+                    <div className="flex items-center gap-space-2 mb-space-2">
+                      <UserIcon className="h-3 w-3 text-text-secondary" />
+                      <span className="text-sm font-medium text-text-secondary">Customer</span>
+                    </div>
+                    <div className="space-y-space-2 ml-space-5">
+                      <p className="font-medium text-text-primary">{currentChat.requesterName}</p>
+                      <div className="flex items-center gap-space-2">
+                        <Mail className="h-3 w-3 text-text-secondary" />
+                        <p className="text-sm text-text-secondary">{currentChat.requesterEmail}</p>
                       </div>
-                      <div className="space-y-space-2 ml-space-5">
-                        <p className="font-medium text-text-primary">{currentChat.requesterName}</p>
+                      {currentChat.requesterPhone && (
                         <div className="flex items-center gap-space-2">
-                          <Mail className="h-3 w-3 text-text-secondary" />
-                          <p className="text-sm text-text-secondary">{currentChat.requesterEmail}</p>
+                          <Phone className="h-3 w-3 text-text-secondary" />
+                          <p className="text-sm text-text-secondary">{currentChat.requesterPhone}</p>
                         </div>
-                        {currentChat.requesterPhone && (
-                          <div className="flex items-center gap-space-2">
-                            <Phone className="h-3 w-3 text-text-secondary" />
-                            <p className="text-sm text-text-secondary">{currentChat.requesterPhone}</p>
-                          </div>
-                        )}
+                      )}
+                    </div>
+                  </div>
+
+                  <Separator />
+
+                  {/* Session Information */}
+                  <div>
+                    <div className="flex items-center gap-space-2 mb-space-2">
+                      <Globe className="h-3 w-3 text-text-secondary" />
+                      <span className="text-sm font-medium text-text-secondary">Session</span>
+                    </div>
+                    <div className="space-y-space-2 ml-space-5 text-sm">
+                      <div className="flex items-center gap-space-2">
+                        <MapPin className="h-3 w-3 text-text-secondary" />
+                        <span className="text-text-primary">{currentChat.geo}</span>
+                      </div>
+                      <div>
+                        <p className="text-text-secondary mb-space-1">Page URL:</p>
+                        <p className="text-text-primary font-mono text-xs break-all">
+                          {currentChat.pageUrl}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-text-secondary mb-space-1">Browser:</p>
+                        <p className="text-text-primary">{currentChat.browser}</p>
+                      </div>
+                      <div className="flex items-center gap-space-2">
+                        <Clock className="h-3 w-3 text-text-secondary" />
+                        <span className="text-text-primary">
+                          {formatDistanceToNow(new Date(currentChat.createdAt), { addSuffix: true })}
+                        </span>
                       </div>
                     </div>
+                  </div>
 
-                    <Separator />
-
-                    {/* Session Information */}
-                    <div>
-                      <div className="flex items-center gap-space-2 mb-space-2">
-                        <Globe className="h-3 w-3 text-text-secondary" />
-                        <span className="text-sm font-medium text-text-secondary">Session</span>
-                      </div>
-                      <div className="space-y-space-2 ml-space-5 text-sm">
-                        <div className="flex items-center gap-space-2">
-                          <MapPin className="h-3 w-3 text-text-secondary" />
-                          <span className="text-text-primary">{currentChat.geo}</span>
+                  {/* Assigned Agent */}
+                  {assignedAgent && (
+                    <>
+                      <Separator />
+                      <div>
+                        <div className="flex items-center gap-space-2 mb-space-2">
+                          <UserIcon className="h-3 w-3 text-text-secondary" />
+                          <span className="text-sm font-medium text-text-secondary">Assigned Agent</span>
                         </div>
-                        <div>
-                          <p className="text-text-secondary mb-space-1">Page URL:</p>
-                          <p className="text-text-primary font-mono text-xs break-all">
-                            {currentChat.pageUrl}
-                          </p>
-                        </div>
-                        <div>
-                          <p className="text-text-secondary mb-space-1">Browser:</p>
-                          <p className="text-text-primary">{currentChat.browser}</p>
-                        </div>
-                        <div className="flex items-center gap-space-2">
-                          <Clock className="h-3 w-3 text-text-secondary" />
-                          <span className="text-text-primary">
-                            {formatDistanceToNow(new Date(currentChat.createdAt), { addSuffix: true })}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Assigned Agent */}
-                    {assignedAgent && (
-                      <>
-                        <Separator />
-                        <div>
-                          <div className="flex items-center gap-space-2 mb-space-2">
-                            <UserIcon className="h-3 w-3 text-text-secondary" />
-                            <span className="text-sm font-medium text-text-secondary">Assigned Agent</span>
-                          </div>
-                          <div className="flex items-center gap-space-3 ml-space-5">
-                            <Avatar className="h-8 w-8">
-                              <AvatarImage src={assignedAgent.avatarUrl} />
-                              <AvatarFallback>
-                                {assignedAgent.firstName[0]}{assignedAgent.lastName[0]}
-                              </AvatarFallback>
-                            </Avatar>
-                            <div>
-                              <p className="font-medium text-text-primary">
-                                {assignedAgent.firstName} {assignedAgent.lastName}
-                              </p>
-                              <div className="flex items-center gap-space-2">
-                                <Badge variant="secondary" className="text-xs">
-                                  {assignedAgent.role}
-                                </Badge>
-                                <Badge 
-                                  variant={assignedAgent.onlineStatus === 'online' ? 'default' : 'secondary'}
-                                  className="text-xs"
-                                >
-                                  {assignedAgent.onlineStatus}
-                                </Badge>
-                              </div>
+                        <div className="flex items-center gap-space-3 ml-space-5">
+                          <Avatar className="h-8 w-8">
+                            <AvatarImage src={assignedAgent.avatarUrl} />
+                            <AvatarFallback>
+                              {assignedAgent.firstName[0]}{assignedAgent.lastName[0]}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <p className="font-medium text-text-primary">
+                              {assignedAgent.firstName} {assignedAgent.lastName}
+                            </p>
+                            <div className="flex items-center gap-space-2">
+                              <Badge variant="secondary" className="text-xs">
+                                {assignedAgent.role}
+                              </Badge>
+                              <Badge 
+                                variant={assignedAgent.onlineStatus === 'online' ? 'default' : 'secondary'}
+                                className="text-xs"
+                              >
+                                {assignedAgent.onlineStatus}
+                              </Badge>
                             </div>
                           </div>
                         </div>
-                      </>
-                    )}
-                  </div>
-                </ScrollArea>
+                      </div>
+                    </>
+                  )}
+                </div>
               </AccordionContent>
             </AccordionItem>
 
@@ -340,68 +340,66 @@ export function ExpandableContextPanel({
                   </Badge>
                 </div>
               </AccordionTrigger>
-              <AccordionContent className="px-0 pb-0">
-                <ScrollArea className="h-64">
-                  <div className="px-space-4 pb-space-4">
-                    {engagementsLoading ? (
-                      <div className="space-y-space-3">
-                        {[1, 2, 3].map((i) => (
-                          <Skeleton key={i} className="h-16 w-full" />
-                        ))}
-                      </div>
-                    ) : engagements.length > 0 ? (
-                      <div className="space-y-space-3">
-                        {engagements.map((engagement, index) => {
-                          const channelType = mockChannelTypes[index % mockChannelTypes.length];
-                          const ChannelIcon = getChannelIcon(channelType);
-                          
-                          return (
-                            <div
-                              key={engagement.id}
-                              className="p-space-3 border border-border rounded-radius-md bg-surface"
-                            >
-                              <div className="flex items-start justify-between mb-space-2">
-                                <div className="flex items-center gap-space-2">
-                                  <ChannelIcon className="h-4 w-4 text-text-secondary" />
-                                  <Badge variant="outline" className="text-xs capitalize">
-                                    {channelType}
-                                  </Badge>
-                                </div>
-                                <span className="text-xs text-text-secondary">
-                                  {engagement.engagementCount} interactions
-                                </span>
+              <AccordionContent className="px-space-4 pb-space-4">
+                <div>
+                  {engagementsLoading ? (
+                    <div className="space-y-space-3">
+                      {[1, 2, 3].map((i) => (
+                        <Skeleton key={i} className="h-16 w-full" />
+                      ))}
+                    </div>
+                  ) : engagements.length > 0 ? (
+                    <div className="space-y-space-3">
+                      {engagements.map((engagement, index) => {
+                        const channelType = mockChannelTypes[index % mockChannelTypes.length];
+                        const ChannelIcon = getChannelIcon(channelType);
+                        
+                        return (
+                          <div
+                            key={engagement.id}
+                            className="p-space-3 border border-border rounded-radius-md bg-surface"
+                          >
+                            <div className="flex items-start justify-between mb-space-2">
+                              <div className="flex items-center gap-space-2">
+                                <ChannelIcon className="h-4 w-4 text-text-secondary" />
+                                <Badge variant="outline" className="text-xs capitalize">
+                                  {channelType}
+                                </Badge>
                               </div>
-                              
-                              <p className="text-sm text-text-primary mb-space-2 leading-relaxed">
-                                {engagement.aiSummary}
-                              </p>
-                              
-                              <div className="flex items-center justify-between">
-                                <div className="text-xs text-text-secondary">
-                                  {formatDistanceToNow(new Date(engagement.lastEngagedAt), { addSuffix: true })}
-                                </div>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => setHistoryModalOpen(true)}
-                                  className="h-6 text-xs"
-                                >
-                                  <Eye className="h-3 w-3 mr-space-1" />
-                                  View details
-                                </Button>
-                              </div>
+                              <span className="text-xs text-text-secondary">
+                                {engagement.engagementCount} interactions
+                              </span>
                             </div>
-                          );
-                        })}
-                      </div>
-                    ) : (
-                      <div className="text-center py-space-6 text-text-secondary">
-                        <History className="h-8 w-8 mx-auto mb-space-2 opacity-50" />
-                        <p className="text-sm">No previous engagements</p>
-                      </div>
-                    )}
-                  </div>
-                </ScrollArea>
+                            
+                            <p className="text-sm text-text-primary mb-space-2 leading-relaxed">
+                              {engagement.aiSummary}
+                            </p>
+                            
+                            <div className="flex items-center justify-between">
+                              <div className="text-xs text-text-secondary">
+                                {formatDistanceToNow(new Date(engagement.lastEngagedAt), { addSuffix: true })}
+                              </div>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setHistoryModalOpen(true)}
+                                className="h-6 text-xs"
+                              >
+                                <Eye className="h-3 w-3 mr-space-1" />
+                                View details
+                              </Button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="text-center py-space-6 text-text-secondary">
+                      <History className="h-8 w-8 mx-auto mb-space-2 opacity-50" />
+                      <p className="text-sm">No previous engagements</p>
+                    </div>
+                  )}
+                </div>
               </AccordionContent>
             </AccordionItem>
 
@@ -418,17 +416,13 @@ export function ExpandableContextPanel({
                   </Badge>
                 </div>
               </AccordionTrigger>
-              <AccordionContent className="px-0 pb-0">
-                <ScrollArea className="h-64">
-                  <div className="px-space-4 pb-space-4">
-                    <NotesSection chatId={currentChat.id} />
-                  </div>
-                </ScrollArea>
+              <AccordionContent className="px-space-4 pb-space-4">
+                <NotesSection chatId={currentChat.id} />
               </AccordionContent>
             </AccordionItem>
           </Accordion>
         )}
-      </div>
+      </ScrollArea>
     </div>
   );
 
@@ -439,13 +433,13 @@ export function ExpandableContextPanel({
         <Sheet>
           <SheetTrigger asChild>
             <Button variant="outline" size="sm">
-              Context
+              Engagements
             </Button>
           </SheetTrigger>
           <SheetContent side="right" className="w-full sm:w-96">
-            <SheetHeader>
-              <SheetTitle>Chat Context</SheetTitle>
-            </SheetHeader>
+          <SheetHeader>
+            <SheetTitle>Engagements</SheetTitle>
+          </SheetHeader>
             <ContextContent />
           </SheetContent>
         </Sheet>
