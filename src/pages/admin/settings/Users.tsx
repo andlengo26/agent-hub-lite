@@ -62,8 +62,8 @@ export default function Users() {
   const userColumns: Column<User>[] = [
     {
       key: "firstName",
-      header: "User",
-      cell: (_, user) => (
+      label: "User",
+      render: (_, user) => (
         <div className="flex items-center space-x-3">
           <Avatar className="h-8 w-8">
             <AvatarImage src={user.avatarUrl} alt={`${user.firstName} ${user.lastName}`} />
@@ -78,18 +78,18 @@ export default function Users() {
     },
     {
       key: "role",
-      header: "Role",
-      cell: (role) => <Badge variant="outline" className="capitalize">{role}</Badge>,
+      label: "Role",
+      render: (role) => <Badge variant="outline" className="capitalize">{role}</Badge>,
     },
     {
       key: "organizationId",
-      header: "Organization",
-      cell: (orgId) => <span className="text-sm">{getOrgName(orgId)}</span>,
+      label: "Organization",
+      render: (orgId) => <span className="text-sm">{getOrgName(orgId)}</span>,
     },
     {
       key: "onlineStatus",
-      header: "Status",
-      cell: (status) => (
+      label: "Status",
+      render: (status) => (
         <div className="flex items-center space-x-2">
           <div className={`w-2 h-2 rounded-full ${status === "online" ? "bg-green-500" : status === "away" ? "bg-yellow-500" : "bg-gray-500"}`} />
           <span className="text-sm capitalize">{status}</span>
@@ -172,7 +172,8 @@ export default function Users() {
               selectable
               onEdit={handleEditUser}
               bulkActions={bulkActions}
-              emptyState={{ title: "No users found", description: "Get started by inviting your first user." }}
+              emptyMessage="No users found"
+              emptyDescription="Get started by inviting your first user."
             />
           </CardContent>
         </Card>

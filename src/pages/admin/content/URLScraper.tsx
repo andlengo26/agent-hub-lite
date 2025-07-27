@@ -7,19 +7,19 @@ import { Play, Edit } from "lucide-react";
 import { useScraperJobs } from "@/hooks/useApiQuery";
 
 const scraperColumns: Column<ScraperJob>[] = [
-  { key: "url", header: "URL" },
-  { key: "linkDepth", header: "Depth" },
-  { key: "frequency", header: "Frequency" },
+  { key: "url", label: "URL" },
+  { key: "linkDepth", label: "Depth" },
+  { key: "frequency", label: "Frequency" },
   { 
     key: "status", 
-    header: "Status",
-    cell: (value) => (
+    label: "Status",
+    render: (value) => (
       <Badge variant={value === "completed" ? "default" : value === "failed" ? "destructive" : "secondary"}>
         {value}
       </Badge>
     )
   },
-  { key: "lastScrapedAt", header: "Last Run" },
+  { key: "lastScrapedAt", label: "Last Run" },
 ];
 
 export default function URLScraper() {

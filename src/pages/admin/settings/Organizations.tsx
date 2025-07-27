@@ -85,8 +85,8 @@ export default function Organizations() {
   const orgColumns: Column<Organization>[] = [
     {
       key: "name",
-      header: "Organization",
-      cell: (_, org) => (
+      label: "Organization",
+      render: (_, org) => (
         <div className="flex items-center space-x-3">
           <Avatar className="h-8 w-8">
             <AvatarImage src={org.logoUrl} alt={org.name} />
@@ -105,8 +105,8 @@ export default function Organizations() {
     },
     {
       key: "activeAgents",
-      header: "Active Agents",
-      cell: (agents) => (
+      label: "Active Agents",
+      render: (agents) => (
         <Badge variant="secondary">
           {agents} agents
         </Badge>
@@ -114,8 +114,8 @@ export default function Organizations() {
     },
     {
       key: "status",
-      header: "Status", 
-      cell: (status) => (
+      label: "Status", 
+      render: (status) => (
         <Badge variant={status === "active" ? "default" : "secondary"}>
           {status}
         </Badge>
@@ -123,8 +123,8 @@ export default function Organizations() {
     },
     {
       key: "createdAt",
-      header: "Created",
-      cell: (date) => new Date(date).toLocaleDateString(),
+      label: "Created",
+      render: (date) => new Date(date).toLocaleDateString(),
     },
   ];
 
@@ -305,10 +305,8 @@ export default function Organizations() {
               onDelete={handleDeleteOrg}
               onRowClick={handleManageUsers}
               bulkActions={bulkActions}
-              emptyState={{
-                title: "No organizations found",
-                description: "Get started by creating your first organization.",
-              }}
+              emptyMessage="No organizations found"
+              emptyDescription="Get started by creating your first organization."
             />
           </CardContent>
         </Card>
