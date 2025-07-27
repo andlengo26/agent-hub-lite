@@ -3,7 +3,7 @@
  * Displays chat messages with proper formatting and timestamps
  */
 
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -61,6 +61,15 @@ const mockMessages: Message[] = [
 ];
 
 export function TranscriptViewer({ chatId }: TranscriptViewerProps) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Auto-scroll to bottom when new messages arrive
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [mockMessages]);
+
   return (
     <ScrollArea className="h-full p-space-4">
       <div className="space-y-space-4">
@@ -117,6 +126,8 @@ export function TranscriptViewer({ chatId }: TranscriptViewerProps) {
             </div>
           </div>
         ))}
+        {/* Invisible element for auto-scroll */}
+        <div ref={scrollRef} />
       </div>
     </ScrollArea>
   );

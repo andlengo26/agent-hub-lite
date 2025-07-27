@@ -12,13 +12,13 @@ import { Section } from '@/components/common/Section';
 import { TranscriptViewer } from './TranscriptViewer';
 import { Chat } from '@/types';
 import { 
-  Phone, 
-  Video, 
+  CheckCircle, 
+  XCircle, 
   X, 
   Send, 
   Paperclip, 
   Smile,
-  MoreHorizontal 
+  Mail 
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -26,12 +26,18 @@ interface ActiveChatProps {
   currentChat?: Chat;
   onCloseChat?: (chatId: string) => void;
   onSendMessage?: (message: string) => void;
+  onAcceptChat?: (chatId: string) => void;
+  onCancelChat?: (chatId: string) => void;
+  onEmailTranscript?: (chatId: string) => void;
 }
 
 export function ActiveChat({
   currentChat,
   onCloseChat,
   onSendMessage,
+  onAcceptChat,
+  onCancelChat,
+  onEmailTranscript,
 }: ActiveChatProps) {
   const [message, setMessage] = useState('');
 
@@ -96,22 +102,49 @@ export function ActiveChat({
           </div>
           
           <div className="flex items-center gap-space-2">
-            <Button variant="ghost" size="sm">
-              <Phone className="h-4 w-4" />
-            </Button>
-            <Button variant="ghost" size="sm">
-              <Video className="h-4 w-4" />
-            </Button>
-            <Button variant="ghost" size="sm">
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-            <Button 
-              variant="ghost" 
-              size="sm"
-              onClick={() => onCloseChat?.(currentChat.id)}
-            >
-              <X className="h-4 w-4" />
-            </Button>
+            {/* Status-specific actions */}
+            {!currentChat.assignedAgentId && currentChat.status !== 'closed' && (
+              <>
+                <Button 
+                  variant="default" 
+                  size="sm"
+                  onClick={() => onAcceptChat?.(currentChat.id)}
+                >
+                  <CheckCircle className="h-4 w-4 mr-1" />
+                  Accept Chat
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => onCancelChat?.(currentChat.id)}
+                >
+                  <XCircle className="h-4 w-4 mr-1" />
+                  Cancel
+                </Button>
+              </>
+            )}
+            
+            {currentChat.assignedAgentId && currentChat.status === 'active' && (
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => onCloseChat?.(currentChat.id)}
+              >
+                <X className="h-4 w-4 mr-1" />
+                Close Chat
+              </Button>
+            )}
+            
+            {currentChat.status === 'closed' && (
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => onEmailTranscript?.(currentChat.id)}
+              >
+                <Mail className="h-4 w-4 mr-1" />
+                Email Transcript
+              </Button>
+            )}
           </div>
         </div>
       </div>

@@ -12,7 +12,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Chat } from '@/types';
-import { formatDistanceToNow, format, isToday, isSameDay } from 'date-fns';
+import { formatDistanceToNow, format, isToday, isSameDay, isYesterday, isThisWeek, isThisMonth } from 'date-fns';
 import { Clock, MessageCircle, ChevronDown, CalendarIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -24,6 +24,8 @@ interface QueuePreviewProps {
   onChatAccept: (chatId: string) => void;
 }
 
+type DateFilterOption = 'today' | 'yesterday' | 'this-week' | 'this-month' | 'all' | 'custom';
+
 export function QueuePreview({
   chats,
   isLoading,
@@ -31,7 +33,8 @@ export function QueuePreview({
   onChatSelect,
   onChatAccept,
 }: QueuePreviewProps) {
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [dateFilter, setDateFilter] = useState<DateFilterOption>('today');
+  const [customDate, setCustomDate] = useState<Date>(new Date());
   const [openSections, setOpenSections] = useState({
     waiting: true,
     active: true,
@@ -39,10 +42,27 @@ export function QueuePreview({
     closed: false,
   });
 
-  // Filter chats by selected date
-  const filteredChats = chats.filter(chat => 
-    isSameDay(new Date(chat.createdAt), selectedDate)
-  );
+  // Filter chats by date filter option
+  const filteredChats = chats.filter(chat => {
+    const chatDate = new Date(chat.createdAt);
+    
+    switch (dateFilter) {
+      case 'today':
+        return isToday(chatDate);
+      case 'yesterday':
+        return isYesterday(chatDate);
+      case 'this-week':
+        return isThisWeek(chatDate);
+      case 'this-month':
+        return isThisMonth(chatDate);
+      case 'all':
+        return true;
+      case 'custom':
+        return isSameDay(chatDate, customDate);
+      default:
+        return isToday(chatDate);
+    }
+  });
 
   // Categorize chats by status
   const categorizedChats = {
@@ -140,36 +160,89 @@ export function QueuePreview({
 
   return (
     <div className="h-full flex flex-col">
-      {/* Header with date picker */}
+      {/* Header with enhanced date filter */}
       <div className="p-4 border-b border-border">
         <h3 className="font-medium text-text-primary mb-3">Queue</h3>
-        <Popover>
-          <PopoverTrigger asChild>
+        <div className="space-y-2">
+          {/* Quick filter options */}
+          <div className="grid grid-cols-2 gap-2">
             <Button
-              variant="outline"
-              className={cn(
-                "w-full justify-start text-left font-normal",
-                !selectedDate && "text-text-secondary"
-              )}
+              variant={dateFilter === 'today' ? 'default' : 'outline'}
+              size="sm"
+              className="text-xs"
+              onClick={() => setDateFilter('today')}
             >
-              <CalendarIcon className="mr-2 h-4 w-4" />
-              {selectedDate ? (
-                isToday(selectedDate) ? "Today" : format(selectedDate, "PPP")
-              ) : (
-                <span>Pick a date</span>
-              )}
+              Today
             </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="start">
-            <Calendar
-              mode="single"
-              selected={selectedDate}
-              onSelect={(date) => date && setSelectedDate(date)}
-              initialFocus
-              className="p-3 pointer-events-auto"
-            />
-          </PopoverContent>
-        </Popover>
+            <Button
+              variant={dateFilter === 'yesterday' ? 'default' : 'outline'}
+              size="sm"
+              className="text-xs"
+              onClick={() => setDateFilter('yesterday')}
+            >
+              Yesterday
+            </Button>
+            <Button
+              variant={dateFilter === 'this-week' ? 'default' : 'outline'}
+              size="sm"
+              className="text-xs"
+              onClick={() => setDateFilter('this-week')}
+            >
+              This Week
+            </Button>
+            <Button
+              variant={dateFilter === 'this-month' ? 'default' : 'outline'}
+              size="sm"
+              className="text-xs"
+              onClick={() => setDateFilter('this-month')}
+            >
+              This Month
+            </Button>
+          </div>
+          
+          {/* All dates and custom date picker */}
+          <div className="space-y-2">
+            <Button
+              variant={dateFilter === 'all' ? 'default' : 'outline'}
+              size="sm"
+              className="w-full text-xs"
+              onClick={() => setDateFilter('all')}
+            >
+              All Dates
+            </Button>
+            
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant={dateFilter === 'custom' ? 'default' : 'outline'}
+                  size="sm"
+                  className={cn(
+                    "w-full justify-start text-left font-normal text-xs",
+                    dateFilter !== 'custom' && "text-text-secondary"
+                  )}
+                  onClick={() => setDateFilter('custom')}
+                >
+                  <CalendarIcon className="mr-2 h-3 w-3" />
+                  {dateFilter === 'custom' ? format(customDate, "MMM dd") : "Custom Date"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={customDate}
+                  onSelect={(date) => {
+                    if (date) {
+                      setCustomDate(date);
+                      setDateFilter('custom');
+                    }
+                  }}
+                  initialFocus
+                  className="p-3 pointer-events-auto"
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
+        </div>
       </div>
 
       {/* Queue sections */}
