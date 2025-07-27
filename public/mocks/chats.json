@@ -11,7 +11,9 @@
       "status": "active",
       "assignedAgentId": "user_001",
       "createdAt": "2025-01-27T08:30:00Z",
-      "lastUpdatedAt": "2025-01-27T09:45:00Z"
+      "lastUpdatedAt": "2025-01-27T09:45:00Z",
+      "geo": "New York, NY",
+      "summary": "Customer experiencing login issues with their business account. Requires password reset assistance and account verification."
     },
     {
       "id": "chat_002", 
@@ -24,7 +26,9 @@
       "status": "active",
       "assignedAgentId": "user_002",
       "createdAt": "2025-01-27T07:15:00Z",
-      "lastUpdatedAt": "2025-01-27T07:30:00Z"
+      "lastUpdatedAt": "2025-01-27T07:30:00Z",
+      "geo": "Los Angeles, CA",
+      "summary": "Inquiry about enterprise pricing plans and custom integration options. Evaluating solution for 500+ employee organization."
     },
     {
       "id": "chat_003",
@@ -37,7 +41,9 @@
       "status": "closed",
       "assignedAgentId": "user_001",
       "createdAt": "2025-01-26T16:20:00Z",
-      "lastUpdatedAt": "2025-01-26T18:45:00Z"
+      "lastUpdatedAt": "2025-01-26T18:45:00Z",
+      "geo": "Seattle, WA",
+      "summary": "Technical support for API integration. Successfully resolved authentication token configuration and webhook setup."
     },
     {
       "id": "chat_004",
@@ -50,7 +56,9 @@
       "status": "active",
       "assignedAgentId": "user_003",
       "createdAt": "2025-01-26T14:10:00Z",
-      "lastUpdatedAt": "2025-01-27T09:20:00Z"
+      "lastUpdatedAt": "2025-01-27T09:20:00Z",
+      "geo": "Chicago, IL",
+      "summary": "Billing inquiry regarding recent subscription charges. Investigating discrepancy in monthly recurring billing amount."
     },
     {
       "id": "chat_005",
@@ -63,7 +71,9 @@
       "status": "active",
       "assignedAgentId": "user_002",
       "createdAt": "2025-01-25T11:30:00Z",
-      "lastUpdatedAt": "2025-01-25T12:00:00Z"
+      "lastUpdatedAt": "2025-01-25T12:00:00Z",
+      "geo": "Austin, TX",
+      "summary": "General product demonstration request. Interested in features for inventory management and analytics dashboard capabilities."
     }
   ],
   "pagination": {

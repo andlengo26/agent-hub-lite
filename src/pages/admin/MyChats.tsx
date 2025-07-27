@@ -7,7 +7,7 @@ import { useChats } from "@/hooks/useApiQuery";
 import { useFeatureFlag } from "@/hooks/useFeatureFlag";
 import { Skeleton } from "@/components/ui/skeleton";
 
-const currentUserId = "2"; // Mock current user ID
+const currentUserId = "user_002"; // Mock current user ID
 
 const chatColumns: Column<Chat>[] = [
   { key: "requesterName", header: "Customer" },
