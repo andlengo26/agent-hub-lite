@@ -181,7 +181,7 @@ export default function MyChats() {
   return (
     <ErrorBoundary>
       <AgentConsoleProvider>
-        <div className="space-y-6 p-6">
+        <div className="space-y-6">
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold">My Chats</h1>
@@ -284,7 +284,7 @@ export default function MyChats() {
         {/* Chat Details Drawer - only show in table view */}
         {viewMode === 'table' && (
           <Sheet open={!!selectedChat} onOpenChange={() => setSelectedChat(null)}>
-            <SheetContent className="w-2/3 max-w-[66vw] overflow-y-auto p-6">
+            <SheetContent className="w-2/3 max-w-[66vw] overflow-y-auto">
               <SheetHeader>
                 <SheetTitle>Chat Details</SheetTitle>
               </SheetHeader>

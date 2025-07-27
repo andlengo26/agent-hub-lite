@@ -61,7 +61,7 @@ export function NewAgentConsoleLayout({
   };
 
   return (
-    <div className="flex h-[calc(100vh-200px)] gap-6 p-4">
+    <div className="flex h-[calc(100vh-200px)] gap-space-4">
       {/* Left Pane - Queue Preview */}
       <div className="w-80 flex-shrink-0">
         <Card className="h-full p-0 overflow-hidden">
