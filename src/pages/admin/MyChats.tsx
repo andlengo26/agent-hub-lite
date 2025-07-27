@@ -61,9 +61,13 @@ const chatColumns = [
     key: "status", 
     header: "Status",
     cell: (chat: Chat) => (
-      <Badge variant={chat.status === "active" ? "default" : chat.status === "missed" ? "destructive" : "secondary"}>
+      <span className={`capitalize ${
+        chat.status === 'active' ? 'text-green-600 font-medium' :
+        chat.status === 'missed' ? 'text-red-600 font-medium' : 
+        'text-gray-600 font-medium'
+      }`}>
         {chat.status}
-      </Badge>
+      </span>
     ),
     sortable: true
   },
@@ -239,7 +243,7 @@ export default function MyChats() {
 
       {/* Chat Detail Sheet */}
       <Sheet open={!!selectedChat} onOpenChange={(open) => !open && setSelectedChat(null)}>
-        <SheetContent className="w-full sm:max-w-3xl">
+        <SheetContent className="w-[700px] sm:w-[700px] overflow-y-auto">
           <SheetHeader>
             <SheetTitle>
               Chat Details - {selectedChat?.requesterName}

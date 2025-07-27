@@ -53,9 +53,13 @@ const chatColumns = [
     key: "status", 
     header: "Status",
     cell: (chat: Chat) => (
-      <Badge variant={chat.status === "active" ? "default" : chat.status === "missed" ? "destructive" : "secondary"}>
+      <span className={`capitalize ${
+        chat.status === 'active' ? 'text-green-600 font-medium' :
+        chat.status === 'missed' ? 'text-red-600 font-medium' : 
+        'text-gray-600 font-medium'
+      }`}>
         {chat.status}
-      </Badge>
+      </span>
     ),
     sortable: true
   },
@@ -393,7 +397,7 @@ export default function AllChats() {
 
         {/* Chat Details Drawer */}
         <Sheet open={!!selectedChat} onOpenChange={() => setSelectedChat(null)}>
-          <SheetContent className="w-[700px] sm:w-[700px]">
+          <SheetContent className="w-[700px] sm:w-[700px] overflow-y-auto">
             <SheetHeader>
               <SheetTitle>Chat Details</SheetTitle>
             </SheetHeader>

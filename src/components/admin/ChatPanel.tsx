@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Chat, mockUsers } from "@/lib/mock-data";
 import { toast } from "@/hooks/use-toast";
 import { 
@@ -29,6 +30,7 @@ export const ChatPanel = memo<ChatPanelProps>(({ chat }) => {
   const [message, setMessage] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [isRetrying, setIsRetrying] = useState(false);
+  const [selectedAgentId, setSelectedAgentId] = useState(chat.assignedAgentId || "");
 
   const assignedAgent = mockUsers.find(u => u.id === chat.assignedAgentId);
 
@@ -71,6 +73,25 @@ export const ChatPanel = memo<ChatPanelProps>(({ chat }) => {
       });
     } finally {
       setIsRetrying(false);
+    }
+  };
+
+  const handleAgentChange = async (agentId: string) => {
+    try {
+      setSelectedAgentId(agentId);
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 500));
+      const agent = mockUsers.find(u => u.id === agentId);
+      toast({
+        title: "Agent assigned",
+        description: `Chat assigned to ${agent?.firstName} ${agent?.lastName}`
+      });
+    } catch (error) {
+      toast({
+        title: "Failed to assign agent",
+        description: "Please try again",
+        variant: "destructive"
+      });
     }
   };
 
@@ -150,21 +171,31 @@ export const ChatPanel = memo<ChatPanelProps>(({ chat }) => {
             </div>
             
             <div className="flex items-center gap-2">
-              {assignedAgent ? (
-                <div className="flex items-center gap-2">
-                  <Avatar className="h-6 w-6">
-                    <AvatarImage src={assignedAgent.avatar || assignedAgent.avatarUrl} />
-                    <AvatarFallback>
-                      {assignedAgent.firstName[0]}{assignedAgent.lastName[0]}
-                    </AvatarFallback>
-                  </Avatar>
-                  <span className="text-sm font-medium">
-                    {assignedAgent.firstName} {assignedAgent.lastName}
-                  </span>
-                </div>
-              ) : (
-                <Badge variant="outline">Unassigned</Badge>
-              )}
+              <span className="text-sm text-muted-foreground">Assigned Agent:</span>
+              <Select value={selectedAgentId} onValueChange={handleAgentChange}>
+                <SelectTrigger className="w-48">
+                  <SelectValue placeholder="Select agent" />
+                </SelectTrigger>
+                <SelectContent className="bg-background border shadow-md z-50">
+                  <SelectItem value="">Unassigned</SelectItem>
+                  {mockUsers.filter(user => user.role === 'agent' || user.role === 'admin').map((user) => (
+                    <SelectItem key={user.id} value={user.id}>
+                      <div className="flex items-center gap-2">
+                        <Avatar className="h-5 w-5">
+                          <AvatarImage src={user.avatar || user.avatarUrl} />
+                          <AvatarFallback className="text-xs">
+                            {user.firstName[0]}{user.lastName[0]}
+                          </AvatarFallback>
+                        </Avatar>
+                        <span>{user.firstName} {user.lastName}</span>
+                        <Badge variant="outline" className="text-xs">
+                          {user.role}
+                        </Badge>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
         </CardContent>
