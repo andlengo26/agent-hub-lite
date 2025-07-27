@@ -3,7 +3,7 @@
  * Features: Thin icon strip when collapsed, three main sections with count badges
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -57,9 +57,6 @@ const getChannelIcon = (type: string) => {
 // Mock channel types for engagements
 const mockChannelTypes = ['chat', 'email', 'phone', 'video'];
 
-// Mock notes count for demo
-const mockNotesCount = 4;
-
 export function ExpandableContextPanel({
   currentChat,
   users,
@@ -73,7 +70,40 @@ export function ExpandableContextPanel({
   const [expandedSections, setExpandedSections] = useState<string | undefined>('details');
   const [engagements, setEngagements] = useState<Engagement[]>([]);
   const [engagementsLoading, setEngagementsLoading] = useState(false);
+  const [notesCount, setNotesCount] = useState(4);
   const isMobile = useIsMobile();
+
+  // Keyboard shortcuts for context panel
+  const handleKeyDown = useCallback((event: KeyboardEvent) => {
+    if (event.ctrlKey || event.metaKey) {
+      switch (event.key) {
+        case '1':
+          event.preventDefault();
+          setExpandedSections('details');
+          if (!isExpanded && onToggleExpanded) onToggleExpanded();
+          break;
+        case '2':
+          event.preventDefault();
+          setExpandedSections('history');
+          if (!isExpanded && onToggleExpanded) onToggleExpanded();
+          break;
+        case '3':
+          event.preventDefault();
+          setExpandedSections('notes');
+          if (!isExpanded && onToggleExpanded) onToggleExpanded();
+          break;
+        case '[':
+          event.preventDefault();
+          if (onToggleExpanded) onToggleExpanded();
+          break;
+      }
+    }
+  }, [isExpanded, onToggleExpanded]);
+
+  useEffect(() => {
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [handleKeyDown]);
 
   // Load engagement data based on current chat
   useEffect(() => {
@@ -191,17 +221,23 @@ export function ExpandableContextPanel({
   const ContextContent = () => (
     <div className="h-full flex flex-col">
       <div className="p-4 border-b border-border">
-        <h3 className="font-medium text-text-primary mb-3">Engagements</h3>
-        {!isMobile && onToggleExpanded && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onToggleExpanded}
-            className="h-6 w-6 p-0"
-          >
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-        )}
+        <div className="flex items-center justify-between">
+          <h3 className="font-medium text-text-primary">Engagements</h3>
+          {!isMobile && onToggleExpanded && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onToggleExpanded}
+              className="h-6 w-6 p-0"
+              title="Collapse panel (Ctrl+[)"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
+        <p className="text-xs text-text-secondary mt-1">
+          Use Ctrl+1/2/3 to switch sections
+        </p>
       </div>
 
       <ScrollArea className="flex-1">
@@ -221,9 +257,14 @@ export function ExpandableContextPanel({
           >
             {/* Details Section */}
             <AccordionItem value="details">
-              <AccordionTrigger className="flex items-center justify-between w-full p-3 hover:bg-surface/50 transition-colors">
+              <AccordionTrigger 
+                className="flex items-center justify-between w-full p-3 hover:bg-surface/50 transition-colors"
+                aria-label="Customer details section"
+              >
                 <div className="flex items-center gap-2">
+                  <UserIcon className="h-4 w-4 text-text-secondary" />
                   <span className="font-medium text-text-primary">Details</span>
+                  <Badge variant="outline" className="text-xs">Ctrl+1</Badge>
                 </div>
               </AccordionTrigger>
               <AccordionContent>
@@ -323,12 +364,17 @@ export function ExpandableContextPanel({
 
             {/* History Section */}
             <AccordionItem value="history">
-              <AccordionTrigger className="flex items-center justify-between w-full p-3 hover:bg-surface/50 transition-colors">
+              <AccordionTrigger 
+                className="flex items-center justify-between w-full p-3 hover:bg-surface/50 transition-colors"
+                aria-label="Engagement history section"
+              >
                 <div className="flex items-center gap-2">
+                  <History className="h-4 w-4 text-text-secondary" />
                   <span className="font-medium text-text-primary">History</span>
                   <Badge variant="secondary" className="text-xs">
                     {engagements.length}
                   </Badge>
+                  <Badge variant="outline" className="text-xs">Ctrl+2</Badge>
                 </div>
               </AccordionTrigger>
               <AccordionContent>
@@ -396,18 +442,26 @@ export function ExpandableContextPanel({
 
             {/* Notes Section */}
             <AccordionItem value="notes">
-              <AccordionTrigger className="flex items-center justify-between w-full p-3 hover:bg-surface/50 transition-colors">
+              <AccordionTrigger 
+                className="flex items-center justify-between w-full p-3 hover:bg-surface/50 transition-colors"
+                aria-label="Internal notes section"
+              >
                 <div className="flex items-center gap-2">
+                  <FileText className="h-4 w-4 text-text-secondary" />
                   <span className="font-medium text-text-primary">Notes</span>
                   <Badge variant="secondary" className="text-xs">
-                    {mockNotesCount}
+                    {notesCount}
                   </Badge>
+                  <Badge variant="outline" className="text-xs">Ctrl+3</Badge>
                 </div>
               </AccordionTrigger>
               <AccordionContent>
-                <div className="p-4">
-                  <NotesSection chatId={currentChat.id} />
-                </div>
+                 <div className="p-4">
+                   <NotesSection 
+                     chatId={currentChat.id} 
+                     onNotesCountChange={setNotesCount}
+                   />
+                 </div>
               </AccordionContent>
             </AccordionItem>
           </Accordion>

@@ -3,7 +3,7 @@
  * Displays all notes in one scrollable list separated by horizontal lines
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -13,6 +13,7 @@ import { Save, Plus } from 'lucide-react';
 
 interface NotesSectionProps {
   chatId: string;
+  onNotesCountChange?: (count: number) => void;
 }
 
 // Mock notes data
@@ -43,10 +44,15 @@ const mockNotes = [
   }
 ];
 
-export function NotesSection({ chatId }: NotesSectionProps) {
+export function NotesSection({ chatId, onNotesCountChange }: NotesSectionProps) {
   const [newNote, setNewNote] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [showAddNote, setShowAddNote] = useState(false);
+
+  // Update parent component with notes count
+  useEffect(() => {
+    onNotesCountChange?.(mockNotes.length);
+  }, [onNotesCountChange]);
 
   const handleSaveNote = async () => {
     if (!newNote.trim()) return;
