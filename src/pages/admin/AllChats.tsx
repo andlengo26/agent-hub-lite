@@ -11,13 +11,15 @@ import { ChatFilters, ChatFilters as ChatFiltersType } from "@/components/admin/
 import { ChatPagination } from "@/components/admin/ChatPagination";
 import { AgentAssignmentModal } from "@/components/admin/AgentAssignmentModal";
 import { ErrorBoundary } from "@/components/common/ErrorBoundary";
+import { AgentConsoleProvider } from "@/contexts/AgentConsoleContext";
+import { AgentConsoleLayout } from "@/components/admin/agent-console/AgentConsoleLayout";
 import { Chat } from "@/types";
 import { useChats, useUsers } from "@/hooks/useApiQuery";
 import { useFeatureFlag } from "@/hooks/useFeatureFlag";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "@/hooks/use-toast";
 import { performanceMonitor } from "@/lib/performance-monitor";
-import { MoreHorizontal, UserPlus, MessageSquareX, XCircle, Trash2, MapPin, Archive } from "lucide-react";
+import { MoreHorizontal, UserPlus, MessageSquareX, XCircle, Trash2, MapPin, Archive, Monitor } from "lucide-react";
 import { isWithinInterval, parseISO } from "date-fns";
 
 const chatColumns = [
@@ -86,6 +88,7 @@ export default function AllChats() {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
   const [filtersCollapsed, setFiltersCollapsed] = useState(false);
+  const [viewMode, setViewMode] = useState<'table' | 'console'>('console');
   const [assignmentModal, setAssignmentModal] = useState<{
     isOpen: boolean;
     chat: Chat | null;
@@ -318,110 +321,154 @@ export default function AllChats() {
   }
 
 
+  // Filter queue chats (active/missed status for console view)
+  const queueChats = useMemo(() => {
+    return filteredChats.filter(chat => chat.status === 'active' || chat.status === 'missed');
+  }, [filteredChats]);
+
   return (
     <ErrorBoundary>
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold">All Chats</h1>
-          <p className="text-muted-foreground">
-            Monitor and manage all customer chat interactions
-          </p>
+      <AgentConsoleProvider>
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold">All Chats</h1>
+              <p className="text-muted-foreground">
+                Monitor and manage all customer chat interactions
+              </p>
+            </div>
+            
+            {/* View Mode Toggle */}
+            <div className="flex items-center gap-space-2">
+              <Button
+                variant={viewMode === 'console' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setViewMode('console')}
+              >
+                <Monitor className="h-4 w-4 mr-2" />
+                Console View
+              </Button>
+              <Button
+                variant={viewMode === 'table' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setViewMode('table')}
+              >
+                Table View
+              </Button>
+            </div>
+          </div>
+
+          {viewMode === 'console' ? (
+            <div className="h-[calc(100vh-12rem)]">
+              <AgentConsoleLayout 
+                queueChats={queueChats}
+                isLoading={isLoading}
+                users={users}
+              />
+            </div>
+          ) : (
+            <>
+              {/* Filters */}
+              <ChatFilters
+                filters={filters}
+                onFiltersChange={setFilters}
+                isCollapsed={filtersCollapsed}
+                onToggleCollapse={() => setFiltersCollapsed(!filtersCollapsed)}
+              />
+
+              <Tabs value={activeTab} onValueChange={setActiveTab}>
+                <TabsList>
+                  <TabsTrigger value="all">All Chats ({statusCounts.all})</TabsTrigger>
+                  <TabsTrigger value="active">Active ({statusCounts.active})</TabsTrigger>
+                  <TabsTrigger value="missed">Missed ({statusCounts.missed})</TabsTrigger>
+                  <TabsTrigger value="closed">Closed ({statusCounts.closed})</TabsTrigger>
+                  {enableRealTimeUpdates && (
+                    <Badge variant="outline" className="ml-2">
+                      {isRefetching ? "Updating..." : "Live"}
+                    </Badge>
+                  )}
+                </TabsList>
+
+                <TabsContent value={activeTab} key={`tab-${activeTab}`}>
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center justify-between">
+                        <span>
+                          {activeTab === "all" ? "All Conversations" : 
+                           activeTab === "active" ? "Active Chats" :
+                           activeTab === "missed" ? "Missed Chats" : "Closed Chats"}
+                        </span>
+                        <span className="text-sm font-normal text-muted-foreground">
+                          {filteredChats.length} total
+                        </span>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <EnhancedDataTable
+                        data={paginatedChats}
+                        columns={chatColumns.map(col => ({
+                          ...col,
+                          cell: col.cell ? (chat: Chat) => col.cell(chat, users) : undefined
+                        }))}
+                        onRowClick={setSelectedChat}
+                        onEdit={(chat) => setSelectedChat(chat)}
+                        onView={(chat) => setSelectedChat(chat)}
+                        loading={isLoading}
+                        emptyState={{
+                          title: "No chats found",
+                          description: "No chats match your current filters."
+                        }}
+                        selectable={true}
+                        searchable={false}
+                        bulkActions={bulkActions}
+                      />
+
+                      {/* Pagination */}
+                      <ChatPagination
+                        currentPage={currentPage}
+                        totalPages={totalPages}
+                        pageSize={pageSize}
+                        totalItems={filteredChats.length}
+                        onPageChange={setCurrentPage}
+                        onPageSizeChange={(size) => {
+                          setPageSize(size);
+                          setCurrentPage(1);
+                        }}
+                      />
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+              </Tabs>
+            </>
+          )}
         </div>
 
-        {/* Filters */}
-        <ChatFilters
-          filters={filters}
-          onFiltersChange={setFilters}
-          isCollapsed={filtersCollapsed}
-          onToggleCollapse={() => setFiltersCollapsed(!filtersCollapsed)}
-        />
+        {/* Chat Details Drawer - only show in table view */}
+        {viewMode === 'table' && (
+          <>
+            <Sheet open={!!selectedChat} onOpenChange={() => setSelectedChat(null)}>
+              <SheetContent className="w-2/3 max-w-[66vw] overflow-y-auto">
+                <SheetHeader>
+                  <SheetTitle>Chat Details</SheetTitle>
+                </SheetHeader>
+                {selectedChat && (
+                  <ErrorBoundary>
+                    <ChatPanel key={selectedChat.id} chat={selectedChat} />
+                  </ErrorBoundary>
+                )}
+              </SheetContent>
+            </Sheet>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList>
-            <TabsTrigger value="all">All Chats ({statusCounts.all})</TabsTrigger>
-            <TabsTrigger value="active">Active ({statusCounts.active})</TabsTrigger>
-            <TabsTrigger value="missed">Missed ({statusCounts.missed})</TabsTrigger>
-            <TabsTrigger value="closed">Closed ({statusCounts.closed})</TabsTrigger>
-            {enableRealTimeUpdates && (
-              <Badge variant="outline" className="ml-2">
-                {isRefetching ? "Updating..." : "Live"}
-              </Badge>
-            )}
-          </TabsList>
-
-          <TabsContent value={activeTab} key={`tab-${activeTab}`}>
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center justify-between">
-                  <span>
-                    {activeTab === "all" ? "All Conversations" : 
-                     activeTab === "active" ? "Active Chats" :
-                     activeTab === "missed" ? "Missed Chats" : "Closed Chats"}
-                  </span>
-                  <span className="text-sm font-normal text-muted-foreground">
-                    {filteredChats.length} total
-                  </span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <EnhancedDataTable
-                  data={paginatedChats}
-                  columns={chatColumns.map(col => ({
-                    ...col,
-                    cell: col.cell ? (chat: Chat) => col.cell(chat, users) : undefined
-                  }))}
-                  onRowClick={setSelectedChat}
-                  onEdit={(chat) => setSelectedChat(chat)}
-                  onView={(chat) => setSelectedChat(chat)}
-                  loading={isLoading}
-                  emptyState={{
-                    title: "No chats found",
-                    description: "No chats match your current filters."
-                  }}
-                  selectable={true}
-                  searchable={false}
-                  bulkActions={bulkActions}
-                />
-
-                {/* Pagination */}
-                <ChatPagination
-                  currentPage={currentPage}
-                  totalPages={totalPages}
-                  pageSize={pageSize}
-                  totalItems={filteredChats.length}
-                  onPageChange={setCurrentPage}
-                  onPageSizeChange={(size) => {
-                    setPageSize(size);
-                    setCurrentPage(1);
-                  }}
-                />
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
-
-        {/* Chat Details Drawer */}
-        <Sheet open={!!selectedChat} onOpenChange={() => setSelectedChat(null)}>
-          <SheetContent className="w-2/3 max-w-[66vw] overflow-y-auto">
-            <SheetHeader>
-              <SheetTitle>Chat Details</SheetTitle>
-            </SheetHeader>
-            {selectedChat && (
-              <ErrorBoundary>
-                <ChatPanel key={selectedChat.id} chat={selectedChat} />
-              </ErrorBoundary>
-            )}
-          </SheetContent>
-        </Sheet>
-
-        {/* Agent Assignment Modal */}
-        <AgentAssignmentModal
-          isOpen={assignmentModal.isOpen}
-          onClose={() => setAssignmentModal({ isOpen: false, chat: null })}
-          chat={assignmentModal.chat}
-          onAssign={handleAgentAssigned}
-        />
-      </div>
+            {/* Agent Assignment Modal */}
+            <AgentAssignmentModal
+              isOpen={assignmentModal.isOpen}
+              onClose={() => setAssignmentModal({ isOpen: false, chat: null })}
+              chat={assignmentModal.chat}
+              onAssign={handleAgentAssigned}
+            />
+          </>
+        )}
+      </AgentConsoleProvider>
     </ErrorBoundary>
   );
 }

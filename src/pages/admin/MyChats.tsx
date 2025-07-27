@@ -3,16 +3,18 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { EnhancedDataTable } from "@/components/common/EnhancedDataTable";
 import { ChatFilters } from "@/components/admin/ChatFilters";
 import { ChatPanel } from "@/components/admin/ChatPanel";
 import { ErrorBoundary } from "@/components/common/ErrorBoundary";
+import { AgentConsoleProvider } from "@/contexts/AgentConsoleContext";
+import { AgentConsoleLayout } from "@/components/admin/agent-console/AgentConsoleLayout";
 import { Chat } from "@/types";
 import { useChats, useUsers } from "@/hooks/useApiQuery";
 import { useFeatureFlag } from "@/hooks/useFeatureFlag";
 import { Skeleton } from "@/components/ui/skeleton";
-import { MapPin, Filter } from "lucide-react";
+import { MapPin, Filter, Monitor } from "lucide-react";
 import { isWithinInterval, parseISO } from "date-fns";
 
 const currentUserId = "user_002"; // Mock current user ID
@@ -83,13 +85,14 @@ const chatColumns = [
 export default function MyChats() {
   const [selectedChat, setSelectedChat] = useState<Chat | null>(null);
   const [activeTab, setActiveTab] = useState("all");
+  const [filtersCollapsed, setFiltersCollapsed] = useState(false);
+  const [viewMode, setViewMode] = useState<'table' | 'console'>('console');
   const [filters, setFilters] = useState({
     search: '',
-    status: 'all',
-    agent: 'all',
-    dateRange: { from: undefined as Date | undefined, to: undefined as Date | undefined }
+    status: '',
+    agent: '',
+    dateRange: { from: undefined, to: undefined }
   });
-  const [filtersCollapsed, setFiltersCollapsed] = useState(true);
 
   const enableRealTimeUpdates = useFeatureFlag('realTime');
   const { data: chatsResponse, isLoading } = useChats();
@@ -158,9 +161,10 @@ export default function MyChats() {
     };
   }, [userChats]);
 
-  const handleRowClick = (chat: Chat) => {
-    setSelectedChat(chat);
-  };
+  // Filter queue chats (active/missed status for console view)
+  const queueChats = useMemo(() => {
+    return filteredChats.filter(chat => chat.status === 'active' || chat.status === 'missed');
+  }, [filteredChats]);
 
   if (isLoading) {
     return (
@@ -175,90 +179,124 @@ export default function MyChats() {
   }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">My Chats</h1>
-        <p className="text-muted-foreground">
-          View and manage chats assigned to you
-        </p>
-      </div>
-
-      {/* Filters */}
-      <div className="flex items-center justify-between">
-        <ChatFilters
-          filters={filters}
-          onFiltersChange={setFilters}
-          isCollapsed={filtersCollapsed}
-          onToggleCollapse={() => setFiltersCollapsed(!filtersCollapsed)}
-        />
-      </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            My Assigned Chats
-            {enableRealTimeUpdates && (
-              <Badge variant="outline">Live</Badge>
-            )}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {/* Tabs for different chat statuses */}
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
-            <TabsList className="grid w-full grid-cols-4">
-              <TabsTrigger value="all">
-                All ({statusCounts.all})
-              </TabsTrigger>
-              <TabsTrigger value="active">
-                Active ({statusCounts.active})
-              </TabsTrigger>
-              <TabsTrigger value="missed">
-                Missed ({statusCounts.missed})
-              </TabsTrigger>
-              <TabsTrigger value="closed">
-                Closed ({statusCounts.closed})
-              </TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value={activeTab} className="mt-6">
-              <EnhancedDataTable
-                data={filteredChats}
-                columns={chatColumns}
-                onRowClick={handleRowClick}
-                loading={isLoading}
-                emptyState={{
-                  title: filteredChats.length === 0 && userChats.length > 0 
-                    ? "No chats match your filters" 
-                    : "No chats assigned",
-                  description: filteredChats.length === 0 && userChats.length > 0
-                    ? "Try adjusting your search criteria or filters."
-                    : "You don't have any chats assigned to you at the moment."
-                }}
-                selectable={false}
-                searchable={false}
-              />
-            </TabsContent>
-          </Tabs>
-        </CardContent>
-      </Card>
-
-      {/* Chat Detail Sheet */}
-      <Sheet open={!!selectedChat} onOpenChange={(open) => !open && setSelectedChat(null)}>
-        <SheetContent className="w-2/3 max-w-[66vw] overflow-y-auto">
-          <SheetHeader>
-            <SheetTitle>
-              Chat Details - {selectedChat?.requesterName}
-            </SheetTitle>
-          </SheetHeader>
-          {selectedChat && (
-            <div className="mt-6">
-              <ErrorBoundary>
-                <ChatPanel chat={selectedChat} />
-              </ErrorBoundary>
+    <ErrorBoundary>
+      <AgentConsoleProvider>
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold">My Chats</h1>
+              <p className="text-muted-foreground">
+                Manage chats assigned to you
+              </p>
             </div>
+            
+            {/* View Mode Toggle */}
+            <div className="flex items-center gap-space-2">
+              <Button
+                variant={viewMode === 'console' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setViewMode('console')}
+              >
+                <Monitor className="h-4 w-4 mr-2" />
+                Console View
+              </Button>
+              <Button
+                variant={viewMode === 'table' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setViewMode('table')}
+              >
+                Table View
+              </Button>
+            </div>
+          </div>
+
+          {viewMode === 'console' ? (
+            <div className="h-[calc(100vh-12rem)]">
+              <AgentConsoleLayout 
+                queueChats={queueChats}
+                isLoading={isLoading}
+                users={users}
+              />
+            </div>
+          ) : (
+            <>
+              {/* Filters */}
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setFiltersCollapsed(!filtersCollapsed)}
+                  className="flex items-center gap-2"
+                >
+                  <Filter className="h-4 w-4" />
+                  {filtersCollapsed ? 'Show' : 'Hide'} Filters
+                </Button>
+              </div>
+
+              {!filtersCollapsed && (
+                <ChatFilters
+                  filters={filters}
+                  onFiltersChange={setFilters}
+                  isCollapsed={false}
+                  onToggleCollapse={() => {}}
+                />
+              )}
+
+              <Tabs value={activeTab} onValueChange={setActiveTab}>
+                <TabsList>
+                  <TabsTrigger value="all">All ({statusCounts.all})</TabsTrigger>
+                  <TabsTrigger value="active">Active ({statusCounts.active})</TabsTrigger>
+                  <TabsTrigger value="missed">Missed ({statusCounts.missed})</TabsTrigger>
+                  <TabsTrigger value="closed">Closed ({statusCounts.closed})</TabsTrigger>
+                </TabsList>
+
+                <TabsContent value={activeTab}>
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>
+                        {activeTab === "all" ? "All My Chats" : 
+                         activeTab === "active" ? "Active Chats" :
+                         activeTab === "missed" ? "Missed Chats" : "Closed Chats"}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      {isLoading ? (
+                        <div className="space-y-4">
+                          {[...Array(5)].map((_, i) => (
+                            <Skeleton key={i} className="h-16 w-full" />
+                          ))}
+                        </div>
+                      ) : (
+                        <EnhancedDataTable
+                          data={filteredChats}
+                          columns={chatColumns}
+                          onRowClick={setSelectedChat}
+                          loading={isLoading}
+                        />
+                      )}
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+              </Tabs>
+            </>
           )}
-        </SheetContent>
-      </Sheet>
-    </div>
+        </div>
+
+        {/* Chat Details Drawer - only show in table view */}
+        {viewMode === 'table' && (
+          <Sheet open={!!selectedChat} onOpenChange={() => setSelectedChat(null)}>
+            <SheetContent className="w-2/3 max-w-[66vw] overflow-y-auto">
+              <SheetHeader>
+                <SheetTitle>Chat Details</SheetTitle>
+              </SheetHeader>
+              {selectedChat && (
+                <ErrorBoundary>
+                  <ChatPanel key={selectedChat.id} chat={selectedChat} />
+                </ErrorBoundary>
+              )}
+            </SheetContent>
+          </Sheet>
+        )}
+      </AgentConsoleProvider>
+    </ErrorBoundary>
   );
 }
