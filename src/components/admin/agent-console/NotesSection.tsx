@@ -64,12 +64,12 @@ export function NotesSection({ chatId }: NotesSectionProps) {
       {/* Add Note Button */}
       {!showAddNote && (
         <Button
-          variant="outline"
+          variant="highlight"
           size="sm"
           onClick={() => setShowAddNote(true)}
-          className="mb-space-3 justify-start text-xs"
+          className="mb-space-3 gap-space-1 text-xs"
         >
-          <Plus className="h-3 w-3 mr-space-2" />
+          <Plus className="h-3 w-3" />
           Add Note
         </Button>
       )}
@@ -87,13 +87,13 @@ export function NotesSection({ chatId }: NotesSectionProps) {
           
           <div className="flex gap-space-2">
             <Button
-              variant="default"
+              variant="highlight"
               size="sm"
               onClick={handleSaveNote}
               disabled={!newNote.trim() || isSaving}
-              className="text-xs h-6"
+              className="text-xs h-6 gap-space-1"
             >
-              <Save className="h-3 w-3 mr-space-1" />
+              <Save className="h-3 w-3" />
               {isSaving ? 'Saving...' : 'Save'}
             </Button>
             <Button
@@ -112,7 +112,7 @@ export function NotesSection({ chatId }: NotesSectionProps) {
       )}
 
       {/* Notes List with Continuous Scroll */}
-      <ScrollArea className="flex-1">
+      <ScrollArea className="flex-1 [&>div>div]:!block">
         <div className="space-y-0">
           {mockNotes.map((note, index) => (
             <div key={note.id}>
