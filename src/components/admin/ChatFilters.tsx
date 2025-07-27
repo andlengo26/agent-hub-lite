@@ -40,8 +40,8 @@ export function ChatFilters({
   const clearFilters = () => {
     onFiltersChange({
       search: '',
-      status: '',
-      agent: '',
+      status: 'all',
+      agent: 'all',
       dateRange: { from: undefined, to: undefined }
     });
   };
@@ -107,7 +107,7 @@ export function ChatFilters({
                 <SelectValue placeholder="All statuses" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All statuses</SelectItem>
+                <SelectItem value="all">All statuses</SelectItem>
                 <SelectItem value="active">Active</SelectItem>
                 <SelectItem value="missed">Missed</SelectItem>
                 <SelectItem value="closed">Closed</SelectItem>
@@ -123,7 +123,7 @@ export function ChatFilters({
                 <SelectValue placeholder="All agents" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All agents</SelectItem>
+                <SelectItem value="all">All agents</SelectItem>
                 <SelectItem value="unassigned">Unassigned</SelectItem>
                 {mockUsers.map((user) => (
                   <SelectItem key={user.id} value={user.id}>
