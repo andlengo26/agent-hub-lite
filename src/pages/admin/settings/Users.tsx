@@ -46,7 +46,7 @@ export default function Users() {
 
   const createForm = useForm<UserFormData>({
     resolver: zodResolver(userFormSchema),
-    defaultValues: { firstName: "", lastName: "", email: "", role: "agent", organizationId: "" },
+    defaultValues: { firstName: "", lastName: "", email: "", role: "agent", organizationId: "unassigned" },
   });
 
   const editForm = useForm<UserFormData>({
@@ -110,13 +110,17 @@ export default function Users() {
 
   const handleEditUser = (user: User) => {
     setEditingUser(user);
-    editForm.reset({ ...user, organizationId: user.organizationId || "" });
+    editForm.reset({ ...user, organizationId: user.organizationId || "unassigned" });
     setIsEditModalOpen(true);
   };
 
   const handleUpdateUser = (data: UserFormData) => {
     if (!editingUser) return;
-    updateUserMutation.mutate({ userId: editingUser.id, data }, {
+    const processedData = {
+      ...data,
+      organizationId: data.organizationId === "unassigned" ? undefined : data.organizationId,
+    };
+    updateUserMutation.mutate({ userId: editingUser.id, data: processedData }, {
       onSuccess: () => {
         setIsEditModalOpen(false);
         setEditingUser(null);
@@ -256,7 +260,7 @@ export default function Users() {
                   <SelectValue placeholder="Select organization" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Unassigned</SelectItem>
+                  <SelectItem value="unassigned">Unassigned</SelectItem>
                   {organizations.map((org) => (
                     <SelectItem key={org.id} value={org.id}>
                       {org.name}
