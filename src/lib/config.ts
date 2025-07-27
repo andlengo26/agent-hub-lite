@@ -54,8 +54,8 @@ const config: AppConfig = {
     supportedFileTypes: ['.pdf', '.doc', '.docx', '.txt', '.md'],
   },
   mock: {
-    enabled: true, // Always enabled - MSW startup will handle environment detection
-    apiDelay: 500, // Reduced delay for better development experience
+    enabled: import.meta.env.MODE === 'development',
+    apiDelay: 800, // Simulate network delay in ms
   },
 };
 
