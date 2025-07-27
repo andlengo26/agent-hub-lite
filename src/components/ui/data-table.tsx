@@ -44,6 +44,14 @@ interface BulkAction<T = any> {
   onClick: (selectedRows: T[]) => void;
 }
 
+interface CustomAction<T = any> {
+  id: string;
+  label: string;
+  icon: React.ReactNode;
+  onClick: (row: T) => void;
+  variant?: 'default' | 'destructive';
+}
+
 export interface DataTableProps<T> {
   data: T[];
   columns: Column<T>[];
@@ -52,6 +60,8 @@ export interface DataTableProps<T> {
   onEdit?: (row: T) => void;
   onDelete?: (row: T) => void;
   onView?: (row: T) => void;
+  // Custom actions
+  customActions?: CustomAction<T>[];
   // Table features
   selectable?: boolean;
   searchable?: boolean;
@@ -74,6 +84,7 @@ export function DataTable<T extends { id: string }>({
   onEdit,
   onDelete,
   onView,
+  customActions = [],
   selectable = false,
   searchable = false,
   pagination = false,
@@ -210,7 +221,7 @@ export function DataTable<T extends { id: string }>({
     );
   }
 
-  const hasActions = onEdit || onDelete || onView;
+  const hasActions = onEdit || onDelete || onView || customActions.length > 0;
   const isAllSelected = paginatedData.length > 0 && paginatedData.every(row => selectedRows.includes(row.id));
   const isSomeSelected = selectedRows.length > 0 && selectedRows.length < paginatedData.length;
 
@@ -324,29 +335,39 @@ export function DataTable<T extends { id: string }>({
                           <span className="sr-only">Open menu</span>
                         </Button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        {onView && (
-                          <DropdownMenuItem onClick={() => onView(row)}>
-                            <Eye className="mr-2 h-4 w-4" />
-                            View
-                          </DropdownMenuItem>
-                        )}
-                        {onEdit && (
-                          <DropdownMenuItem onClick={() => onEdit(row)}>
-                            <Edit className="mr-2 h-4 w-4" />
-                            Edit
-                          </DropdownMenuItem>
-                        )}
-                        {onDelete && (
-                          <DropdownMenuItem 
-                            onClick={() => onDelete(row)}
-                            className="text-destructive"
-                          >
-                            <Trash2 className="mr-2 h-4 w-4" />
-                            Delete
-                          </DropdownMenuItem>
-                        )}
-                      </DropdownMenuContent>
+                       <DropdownMenuContent align="end">
+                         {customActions.map((action) => (
+                           <DropdownMenuItem 
+                             key={action.id}
+                             onClick={() => action.onClick(row)}
+                             className={action.variant === 'destructive' ? 'text-destructive' : ''}
+                           >
+                             <span className="mr-2">{action.icon}</span>
+                             {action.label}
+                           </DropdownMenuItem>
+                         ))}
+                         {onView && (
+                           <DropdownMenuItem onClick={() => onView(row)}>
+                             <Eye className="mr-2 h-4 w-4" />
+                             View
+                           </DropdownMenuItem>
+                         )}
+                         {onEdit && (
+                           <DropdownMenuItem onClick={() => onEdit(row)}>
+                             <Edit className="mr-2 h-4 w-4" />
+                             Edit
+                           </DropdownMenuItem>
+                         )}
+                         {onDelete && (
+                           <DropdownMenuItem 
+                             onClick={() => onDelete(row)}
+                             className="text-destructive"
+                           >
+                             <Trash2 className="mr-2 h-4 w-4" />
+                             Delete
+                           </DropdownMenuItem>
+                         )}
+                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>
                 )}

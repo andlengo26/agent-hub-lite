@@ -10,26 +10,9 @@ import { ErrorBoundary } from "@/components/common/ErrorBoundary";
 import { DataTable, Column } from "@/components/ui/data-table";
 import { FloatingPreview } from "@/components/admin/FloatingPreview";
 import { FormModal } from "@/components/common/FormModal";
+import { ManageMembersModal } from "@/components/admin/ManageMembersModal";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Drawer,
-  DrawerClose,
-  DrawerContent,
-  DrawerDescription,
-  DrawerFooter,
-  DrawerHeader,
-  DrawerTitle,
-} from "@/components/ui/drawer";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { MultiSelect, Option } from "@/components/ui/multi-select";
 import { useOrganizations, useCreateOrganization, useUpdateOrganization, useDeleteOrganization, useUsers } from "@/hooks/useApiQuery";
 import { Organization, User } from "@/types";
 import { toast } from "@/hooks/use-toast";
@@ -53,34 +36,18 @@ export default function Organizations() {
   const [selectedOrganizations, setSelectedOrganizations] = useState<Organization[]>([]);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isMembersModalOpen, setIsMembersModalOpen] = useState(false);
   const [editingOrganization, setEditingOrganization] = useState<Organization | null>(null);
-  const [managingOrganization, setManagingOrganization] = useState<Organization | null>(null);
-  const [isAddUsersModalOpen, setIsAddUsersModalOpen] = useState(false);
-  const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
-  const [orgMembers, setOrgMembers] = useState<{ [orgId: string]: User[] }>({});
+  const [selectedOrgForMembers, setSelectedOrgForMembers] = useState<Organization | null>(null);
 
-  const { data } = useOrganizations();
-  const { data: usersData } = useUsers();
+  const { data, isLoading: isLoadingOrganizations } = useOrganizations();
+  const { data: usersData, isLoading: isLoadingUsers } = useUsers();
   const createOrganizationMutation = useCreateOrganization();
   const updateOrganizationMutation = useUpdateOrganization();
   const deleteOrganizationMutation = useDeleteOrganization();
 
   const organizations = data?.data || [];
   const allUsers = usersData?.data || [];
-
-  // Get members for an organization
-  const getOrgMembers = (orgId: string): User[] => {
-    if (orgMembers[orgId]) {
-      return orgMembers[orgId];
-    }
-    return allUsers.filter(user => user.organizationId === orgId);
-  };
-
-  // Get available users (not in any organization)
-  const getAvailableUsers = (): User[] => {
-    const assignedUserIds = new Set(allUsers.filter(user => user.organizationId).map(user => user.id));
-    return allUsers.filter(user => !assignedUserIds.has(user.id));
-  };
 
   const orgColumns: Column<Organization>[] = [
     {
@@ -97,7 +64,7 @@ export default function Organizations() {
           <div>
             <div className="font-medium">{org.name}</div>
             <div className="text-sm text-muted-foreground">
-              {getOrgMembers(org.id).length} members
+              {org.members?.length || 0} members
             </div>
           </div>
         </div>
@@ -196,30 +163,30 @@ export default function Organizations() {
     });
   };
 
-  const handleManageUsers = (org: Organization) => {
-    setManagingOrganization(org);
+  const handleManageMembers = (org: Organization) => {
+    setSelectedOrgForMembers(org);
+    setIsMembersModalOpen(true);
   };
 
-  const handleAddUsers = () => {
-    setIsAddUsersModalOpen(true);
-  };
-
-  const handleSaveUserAssignments = () => {
-    if (!managingOrganization) return;
-
-    // Update local state to reflect new assignments
-    const newMembers = allUsers.filter(user => selectedUserIds.includes(user.id));
-    setOrgMembers(prev => ({
-      ...prev,
-      [managingOrganization.id]: [...getOrgMembers(managingOrganization.id), ...newMembers]
-    }));
-
-    setIsAddUsersModalOpen(false);
-    setSelectedUserIds([]);
-    
+  const handleAddMembers = async (organizationId: string, userIds: string[]) => {
+    // Mock implementation - in real app, this would call an API
+    console.log('Adding users to organization:', { organizationId, userIds });
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 1000));
     toast({
-      title: "Users assigned",
-      description: `${selectedUserIds.length} users assigned to ${managingOrganization.name}.`,
+      title: "Success",
+      description: "Members added successfully",
+    });
+  };
+
+  const handleRemoveMembers = async (organizationId: string, userIds: string[]) => {
+    // Mock implementation - in real app, this would call an API
+    console.log('Removing users from organization:', { organizationId, userIds });
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    toast({
+      title: "Success", 
+      description: "Members removed successfully",
     });
   };
 
@@ -266,11 +233,15 @@ export default function Organizations() {
     },
   ];
 
-  // Available users for the multi-select (users not in the current organization)
-  const availableUserOptions: Option[] = getAvailableUsers().map(user => ({
-    label: `${user.firstName} ${user.lastName} (${user.email})`,
-    value: user.id,
-  }));
+  // Custom actions for the data table
+  const customActions = [
+    {
+      id: 'manage-members',
+      label: 'Manage Members',
+      icon: <Users className="h-4 w-4" />,
+      onClick: handleManageMembers,
+    },
+  ];
 
   return (
     <ErrorBoundary>
@@ -299,11 +270,12 @@ export default function Organizations() {
             <DataTable
               data={organizations}
               columns={orgColumns}
+              loading={isLoadingOrganizations}
               searchable
               selectable
               onEdit={handleEditOrg}
               onDelete={handleDeleteOrg}
-              onRowClick={handleManageUsers}
+              customActions={customActions}
               bulkActions={bulkActions}
               emptyMessage="No organizations found"
               emptyDescription="Get started by creating your first organization."
@@ -389,105 +361,16 @@ export default function Organizations() {
           </div>
         </FormModal>
 
-        {/* Manage Users Drawer */}
-        <Drawer open={!!managingOrganization} onOpenChange={(open) => !open && setManagingOrganization(null)}>
-          <DrawerContent className="max-h-[80vh]">
-            <DrawerHeader>
-              <DrawerTitle>Manage Users - {managingOrganization?.name}</DrawerTitle>
-              <DrawerDescription>
-                View and manage users assigned to this organization.
-              </DrawerDescription>
-            </DrawerHeader>
-            <div className="px-4 pb-4 overflow-auto">
-              <div className="mb-4 flex justify-between items-center">
-                <h4 className="font-medium">Current Members ({managingOrganization ? getOrgMembers(managingOrganization.id).length : 0})</h4>
-                <Button onClick={handleAddUsers} size="sm">
-                  <UserPlus className="mr-2 h-4 w-4" />
-                  Add Users
-                </Button>
-              </div>
-              
-              <div className="border rounded-lg">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>User</TableHead>
-                      <TableHead>Email</TableHead>
-                      <TableHead>Role</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {managingOrganization && getOrgMembers(managingOrganization.id).length > 0 ? (
-                      getOrgMembers(managingOrganization.id).map((user) => (
-                        <TableRow key={user.id}>
-                          <TableCell>
-                            <div className="flex items-center space-x-3">
-                              <Avatar className="h-8 w-8">
-                                <AvatarImage src={user.avatarUrl} alt={`${user.firstName} ${user.lastName}`} />
-                                <AvatarFallback>
-                                  {user.firstName[0]}{user.lastName[0]}
-                                </AvatarFallback>
-                              </Avatar>
-                              <span className="font-medium">
-                                {user.firstName} {user.lastName}
-                              </span>
-                            </div>
-                          </TableCell>
-                          <TableCell>{user.email}</TableCell>
-                          <TableCell>
-                            <Badge variant="outline" className="capitalize">
-                              {user.role}
-                            </Badge>
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    ) : (
-                      <TableRow>
-                        <TableCell colSpan={3} className="text-center text-muted-foreground py-8">
-                          No users assigned to this organization yet.
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              </div>
-            </div>
-            <DrawerFooter>
-              <DrawerClose asChild>
-                <Button variant="outline">Close</Button>
-              </DrawerClose>
-            </DrawerFooter>
-          </DrawerContent>
-        </Drawer>
-
-        {/* Add Users Modal */}
-        <FormModal
-          isOpen={isAddUsersModalOpen}
-          onClose={() => {
-            setIsAddUsersModalOpen(false);
-            setSelectedUserIds([]);
-          }}
-          title="Add Users to Organization"
-          onSubmit={handleSaveUserAssignments}
-          submitLabel="Add Selected Users"
-          submitDisabled={selectedUserIds.length === 0}
-        >
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="users">Select Users</Label>
-              <MultiSelect
-                options={availableUserOptions}
-                selected={selectedUserIds}
-                onChange={setSelectedUserIds}
-                placeholder="Search and select users..."
-                className="mt-1"
-              />
-            </div>
-            <div className="text-sm text-muted-foreground">
-              {selectedUserIds.length} user{selectedUserIds.length !== 1 ? 's' : ''} selected
-            </div>
-          </div>
-        </FormModal>
+        {/* Manage Members Modal */}
+        <ManageMembersModal
+          isOpen={isMembersModalOpen}
+          onClose={() => setIsMembersModalOpen(false)}
+          organization={selectedOrgForMembers}
+          availableUsers={allUsers}
+          isLoading={isLoadingUsers}
+          onAddMembers={handleAddMembers}
+          onRemoveMembers={handleRemoveMembers}
+        />
 
         <FloatingPreview />
       </div>
