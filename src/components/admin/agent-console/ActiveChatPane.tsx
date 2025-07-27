@@ -2,6 +2,7 @@ import React from 'react';
 import { CardHeader, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { Chat } from '@/types';
@@ -141,29 +142,43 @@ export function ActiveChatPane({ currentChat }: ActiveChatPaneProps) {
         </ScrollArea>
 
         {/* Message Input */}
-        <div className="border-t p-4">
-          <div className="flex items-end gap-2">
-            <div className="flex-1">
-              <div className="flex items-center gap-2 mb-2">
-                <Button variant="ghost" size="sm">
-                  <Paperclip className="h-4 w-4" />
-                </Button>
-                <Button variant="ghost" size="sm">
-                  <Smile className="h-4 w-4" />
-                </Button>
+        <div className="border-t p-4 bg-surface">
+          <div className="space-y-3">
+            {/* Quick Actions */}
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" size="sm" className="h-8 px-3">
+                <Paperclip className="h-4 w-4 mr-1" />
+                Attach
+              </Button>
+              <Button variant="ghost" size="sm" className="h-8 px-3">
+                <Smile className="h-4 w-4 mr-1" />
+                Emoji
+              </Button>
+            </div>
+            
+            {/* Message Input Area */}
+            <div className="flex items-end gap-3">
+              <div className="flex-1">
+                <div className="relative">
+                  <Textarea
+                    placeholder="Type your message..."
+                    className="min-h-[44px] pr-12 resize-none"
+                    rows={2}
+                  />
+                  <Button
+                    size="sm"
+                    className="absolute right-2 top-2 h-8 w-8 p-0"
+                  >
+                    <Send className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
-              <div className="relative">
-                <Input
-                  placeholder="Type your message..."
-                  className="pr-12"
-                />
-                <Button
-                  size="sm"
-                  className="absolute right-1 top-1 h-8 w-8 p-0"
-                >
-                  <Send className="h-4 w-4" />
-                </Button>
-              </div>
+            </div>
+            
+            {/* Status indicator */}
+            <div className="flex items-center justify-between text-xs text-text-secondary">
+              <span>Customer is typing...</span>
+              <span>Press Enter to send</span>
             </div>
           </div>
         </div>

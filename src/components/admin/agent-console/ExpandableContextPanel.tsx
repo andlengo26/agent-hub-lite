@@ -70,7 +70,7 @@ export function ExpandableContextPanel({
 }: ExpandableContextPanelProps) {
   const [historyModalOpen, setHistoryModalOpen] = useState(false);
   const [notesModalOpen, setNotesModalOpen] = useState(false);
-  const [expandedSections, setExpandedSections] = useState<string | undefined>('details');
+  const [expandedSections, setExpandedSections] = useState<string | undefined>(undefined);
   const [engagements, setEngagements] = useState<Engagement[]>([]);
   const [engagementsLoading, setEngagementsLoading] = useState(false);
   const isMobile = useIsMobile();
@@ -216,7 +216,6 @@ export function ExpandableContextPanel({
             value={expandedSections}
             onValueChange={setExpandedSections}
             collapsible
-            defaultValue="details"
             className="w-full"
           >
             {/* Details Section */}
@@ -227,9 +226,6 @@ export function ExpandableContextPanel({
                     <UserIcon className="h-4 w-4" />
                     <span>Details</span>
                   </div>
-                  <Badge variant="secondary" className="text-xs">
-                    3
-                  </Badge>
                 </div>
               </AccordionTrigger>
               <AccordionContent className="px-space-4 pb-space-4">
@@ -357,7 +353,7 @@ export function ExpandableContextPanel({
                         return (
                           <div
                             key={engagement.id}
-                            className="p-space-3 border border-border rounded-radius-md bg-surface"
+                            className="p-space-3 border border-border rounded-radius-md bg-surface hover:bg-surface/80 transition-colors cursor-pointer"
                           >
                             <div className="flex items-start justify-between mb-space-2">
                               <div className="flex items-center gap-space-2">

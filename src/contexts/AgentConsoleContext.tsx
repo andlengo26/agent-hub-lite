@@ -64,7 +64,11 @@ export function AgentConsoleProvider({ children }: { children: React.ReactNode }
   }, []);
 
   const closeChat = useCallback((chatId: string) => {
+    // Update chat status to 'closed' instead of removing it
     setActiveChats(prev => prev.filter(chat => chat.id !== chatId));
+    
+    // TODO: Update the chat status in the backend to 'closed'
+    // This would typically involve an API call to update the chat status
     
     if (currentChatId === chatId) {
       const remainingChats = activeChats.filter(chat => chat.id !== chatId);

@@ -49,12 +49,32 @@
       "lastEngagedAt": "2025-01-25T11:30:00Z",
       "agentsInvolved": ["user_002"],
       "aiSummary": "Feature request discussion. Logged enhancement request for development team review."
+    },
+    {
+      "id": "eng_006",
+      "customerName": "Emma Davis",
+      "customerEmail": "emma@tech.org",
+      "contactNumber": "+1-555-0128",
+      "engagementCount": 6,
+      "lastEngagedAt": "2025-01-24T15:45:00Z",
+      "agentsInvolved": ["user_001", "user_003"],
+      "aiSummary": "Complex technical integration issue resolved. Provided custom API solution and implementation guide."
+    },
+    {
+      "id": "eng_007",
+      "customerName": "James Wilson",
+      "customerEmail": "james@enterprise.co",
+      "contactNumber": "+1-555-0129",
+      "engagementCount": 12,
+      "lastEngagedAt": "2025-01-23T10:20:00Z",
+      "agentsInvolved": ["user_002", "user_001"],
+      "aiSummary": "Enterprise account setup and training session. Successfully onboarded team of 50+ users with custom workflow."
     }
   ],
   "pagination": {
     "page": 1,
     "limit": 10,
-    "total": 5,
+    "total": 7,
     "totalPages": 1
   }
 }
