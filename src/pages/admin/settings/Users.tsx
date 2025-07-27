@@ -1,392 +1,287 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import * as z from "zod";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
-import { EnhancedDataTable, Column } from "@/components/common/EnhancedDataTable";
-import { FormModal } from "@/components/common/FormModal";
-import { FloatingPreview } from "@/components/admin/FloatingPreview";
-import { Plus, Users as UsersIcon, Download, Archive, Trash2, UserPlus } from "lucide-react";
-import { useUsers, useInviteUser, useUpdateUser, useDeleteUser } from "@/hooks/useApiQuery";
-import { inviteUserSchema, updateUserSchema, type InviteUserInput, type UpdateUserInput } from "@/lib/validations";
-import { useFeatureFlag } from "@/hooks/useFeatureFlag";
-import { User } from "@/types";
-import { toast } from "@/hooks/use-toast";
 import { ErrorBoundary } from "@/components/common/ErrorBoundary";
+import { EnhancedDataTable, Column } from "@/components/common/EnhancedDataTable";
+import { FloatingPreview } from "@/components/admin/FloatingPreview";
+import { FormModal } from "@/components/common/FormModal";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useUsers, useOrganizations, useUpdateUser, useInviteUser } from "@/hooks/useApiQuery";
+import { User, Organization } from "@/types";
+import { toast } from "@/hooks/use-toast";
+import { UserPlus, Users, Download, Archive } from "lucide-react";
 
-const userColumns: Column<User>[] = [
-  { 
-    key: "firstName", 
-    header: "User",
-    width: "300px",
-    cell: (value, row) => (
-      <div className="flex items-center gap-3">
-        <Avatar className="h-8 w-8">
-          <AvatarImage src={row.avatarUrl} />
-          <AvatarFallback>{value.charAt(0)}{row.lastName.charAt(0)}</AvatarFallback>
-        </Avatar>
-        <div>
-          <span className="font-medium">{value} {row.lastName}</span>
-          <p className="text-sm text-muted-foreground">{row.email}</p>
-        </div>
-      </div>
-    )
-  },
-  { 
-    key: "role", 
-    header: "Role",
-    hideOnMobile: true,
-    cell: (value) => (
-      <Badge variant="outline" className="capitalize">{value}</Badge>
-    )
-  },
-  { 
-    key: "onlineStatus", 
-    header: "Status",
-    cell: (value) => (
-      <Badge variant={value === "online" ? "default" : value === "away" ? "secondary" : "destructive"}>
-        <span className="w-2 h-2 rounded-full bg-current mr-1.5"></span>
-        {value}
-      </Badge>
-    )
-  },
-  { 
-    key: "createdAt", 
-    header: "Joined",
-    hideOnMobile: true,
-    cell: (value) => (
-      <span className="text-sm text-muted-foreground">
-        {new Date(value).toLocaleDateString()}
-      </span>
-    )
-  },
-];
+const userFormSchema = z.object({
+  firstName: z.string().min(1, "First name is required"),
+  lastName: z.string().min(1, "Last name is required"),
+  email: z.string().email("Invalid email address"),
+  role: z.enum(["admin", "agent", "manager"]),
+  organizationId: z.string().optional(),
+});
+
+type UserFormData = z.infer<typeof userFormSchema>;
 
 export default function Users() {
-  const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
-  const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
+  const [selectedUsers, setSelectedUsers] = useState<User[]>([]);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isBulkAssignModalOpen, setIsBulkAssignModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [bulkOrgId, setBulkOrgId] = useState<string>("");
 
-  const multiTenant = useFeatureFlag('multiTenant');
-  const { data: usersResponse, isLoading } = useUsers();
-  const inviteUserMutation = useInviteUser();
+  const { data: usersData } = useUsers();
+  const { data: orgsData } = useOrganizations();
   const updateUserMutation = useUpdateUser();
-  const deleteUserMutation = useDeleteUser();
+  const inviteUserMutation = useInviteUser();
 
-  const users = usersResponse?.data || [];
+  const users = usersData?.data || [];
+  const organizations = orgsData?.data || [];
 
-  const inviteForm = useForm<InviteUserInput>({
-    resolver: zodResolver(inviteUserSchema),
-    defaultValues: {
-      firstName: '',
-      lastName: '',
-      email: '',
-      role: 'agent',
+  const createForm = useForm<UserFormData>({
+    resolver: zodResolver(userFormSchema),
+    defaultValues: { firstName: "", lastName: "", email: "", role: "agent", organizationId: "" },
+  });
+
+  const editForm = useForm<UserFormData>({
+    resolver: zodResolver(userFormSchema),
+  });
+
+  const getOrgName = (orgId: string | undefined) => {
+    if (!orgId) return "Unassigned";
+    const org = organizations.find((o) => o.id === orgId);
+    return org?.name || "Unknown";
+  };
+
+  const userColumns: Column<User>[] = [
+    {
+      key: "firstName",
+      header: "User",
+      cell: (_, user) => (
+        <div className="flex items-center space-x-3">
+          <Avatar className="h-8 w-8">
+            <AvatarImage src={user.avatarUrl} alt={`${user.firstName} ${user.lastName}`} />
+            <AvatarFallback>{user.firstName[0]}{user.lastName[0]}</AvatarFallback>
+          </Avatar>
+          <div>
+            <div className="font-medium">{user.firstName} {user.lastName}</div>
+            <div className="text-sm text-muted-foreground">{user.email}</div>
+          </div>
+        </div>
+      ),
     },
-  });
+    {
+      key: "role",
+      header: "Role",
+      cell: (role) => <Badge variant="outline" className="capitalize">{role}</Badge>,
+    },
+    {
+      key: "organizationId",
+      header: "Organization",
+      cell: (orgId) => <span className="text-sm">{getOrgName(orgId)}</span>,
+    },
+    {
+      key: "onlineStatus",
+      header: "Status",
+      cell: (status) => (
+        <div className="flex items-center space-x-2">
+          <div className={`w-2 h-2 rounded-full ${status === "online" ? "bg-green-500" : status === "away" ? "bg-yellow-500" : "bg-gray-500"}`} />
+          <span className="text-sm capitalize">{status}</span>
+        </div>
+      ),
+    },
+  ];
 
-  const editForm = useForm<UpdateUserInput>({
-    resolver: zodResolver(updateUserSchema),
-  });
-
-  const handleInviteUser = async (data: InviteUserInput) => {
-    try {
-      await inviteUserMutation.mutateAsync(data);
-      inviteForm.reset();
-      setIsInviteModalOpen(false);
-      toast({ title: "Success", description: "User invitation sent successfully" });
-    } catch (error) {
-      toast({ title: "Error", description: "Failed to send user invitation", variant: "destructive" });
-    }
+  const handleCreateUser = (data: UserFormData) => {
+    inviteUserMutation.mutate(data, {
+      onSuccess: () => {
+        setIsCreateModalOpen(false);
+        createForm.reset();
+        toast({ title: "User invited", description: "User invitation sent successfully." });
+      },
+    });
   };
 
   const handleEditUser = (user: User) => {
     setEditingUser(user);
-    editForm.reset({
-      firstName: user.firstName,
-      lastName: user.lastName,
-      email: user.email,
-      role: user.role,
+    editForm.reset({ ...user, organizationId: user.organizationId || "" });
+    setIsEditModalOpen(true);
+  };
+
+  const handleUpdateUser = (data: UserFormData) => {
+    if (!editingUser) return;
+    updateUserMutation.mutate({ id: editingUser.id, ...data }, {
+      onSuccess: () => {
+        setIsEditModalOpen(false);
+        setEditingUser(null);
+        toast({ title: "User updated", description: "User information updated successfully." });
+      },
     });
   };
 
-  const handleUpdateUser = async (data: UpdateUserInput) => {
-    if (!editingUser) return;
-
-    try {
-      await updateUserMutation.mutateAsync({
-        userId: editingUser.id,
-        data,
-      });
-      editForm.reset();
-      setEditingUser(null);
-      toast({ title: "Success", description: "User updated successfully" });
-    } catch (error) {
-      toast({ title: "Error", description: "Failed to update user", variant: "destructive" });
-    }
-  };
-
-  const handleDeleteUser = async (user: User) => {
-    if (!confirm(`Are you sure you want to delete "${user.firstName} ${user.lastName}"?`)) return;
-    
-    try {
-      await deleteUserMutation.mutateAsync(user.id);
-      toast({ title: "Success", description: "User deleted successfully" });
-    } catch (error) {
-      toast({ title: "Error", description: "Failed to delete user", variant: "destructive" });
-    }
-  };
-
-  const handleBulkExport = (selectedUsers: User[]) => {
-    console.log('Exporting users:', selectedUsers);
-    toast({ title: "Export started", description: `Exporting ${selectedUsers.length} users` });
-  };
-
-  const handleBulkInvite = (selectedUsers: User[]) => {
-    console.log('Re-inviting users:', selectedUsers);
-    toast({ title: "Invitations sent", description: `Re-sent invitations to ${selectedUsers.length} users` });
-  };
-
-  const handleBulkDelete = (selectedUsers: User[]) => {
-    if (!confirm(`Are you sure you want to delete ${selectedUsers.length} users?`)) return;
-    console.log('Deleting users:', selectedUsers);
-    toast({ title: "Delete started", description: `Deleting ${selectedUsers.length} users` });
+  const handleBulkAssign = () => {
+    if (!bulkOrgId || selectedUsers.length === 0) return;
+    selectedUsers.forEach((user) => {
+      updateUserMutation.mutate({ id: user.id, organizationId: bulkOrgId });
+    });
+    setIsBulkAssignModalOpen(false);
+    setBulkOrgId("");
+    setSelectedUsers([]);
+    toast({ title: "Bulk assignment completed", description: `${selectedUsers.length} users assigned to organization.` });
   };
 
   const bulkActions = [
-    {
-      id: 'export',
-      label: 'Export',
-      icon: <Download className="h-4 w-4" />,
-      variant: 'outline' as const,
-      onClick: handleBulkExport,
-    },
-    {
-      id: 'reinvite',
-      label: 'Re-invite',
-      icon: <UserPlus className="h-4 w-4" />,
-      variant: 'outline' as const,
-      onClick: handleBulkInvite,
-    },
-    {
-      id: 'delete',
-      label: 'Delete',
-      icon: <Trash2 className="h-4 w-4" />,
-      variant: 'destructive' as const,
-      onClick: handleBulkDelete,
-    },
+    { id: "assign", label: "Bulk Assign to Org", icon: <Users className="w-4 h-4" />, onClick: () => setIsBulkAssignModalOpen(true) },
+    { id: "export", label: "Export Selected", icon: <Download className="w-4 h-4" />, onClick: () => toast({ title: "Export started" }) },
   ];
-
 
   return (
     <ErrorBoundary>
       <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold">User Management</h1>
-            <p className="text-muted-foreground">
-              Manage team members and their permissions
-            </p>
-          </div>
+        <div>
+          <h2 className="text-3xl font-bold tracking-tight">User Management</h2>
+          <p className="text-muted-foreground">Manage users and their organization assignments.</p>
         </div>
 
         <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle className="flex items-center gap-2">
-                <UsersIcon className="h-5 w-5" />
-                Team Members ({users.length})
-                {multiTenant && (
-                  <Badge variant="outline">Multi-Tenant</Badge>
-                )}
-              </CardTitle>
-              <Button 
-                variant="default" 
-                size="sm"
-                onClick={() => setIsInviteModalOpen(true)}
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Invite User
-              </Button>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-6">
+            <div>
+              <CardTitle>Users</CardTitle>
+              <CardDescription>View and manage all users in the system</CardDescription>
             </div>
+            <Button onClick={() => setIsCreateModalOpen(true)}>
+              <UserPlus className="mr-2 h-4 w-4" />
+              Invite User
+            </Button>
           </CardHeader>
-          <CardContent className="p-6">
+          <CardContent>
             <EnhancedDataTable
-              columns={userColumns}
               data={users}
+              columns={userColumns}
+              searchable
+              selectable
               onEdit={handleEditUser}
-              onDelete={handleDeleteUser}
-              selectable={true}
-              searchable={true}
-              searchPlaceholder="Search users by name or email..."
               bulkActions={bulkActions}
-              loading={isLoading}
-              emptyState={{
-                title: "No team members found",
-                description: "Get started by inviting your first team member to collaborate.",
-                illustration: "users",
-                actionLabel: "Invite User",
-                onAction: () => setIsInviteModalOpen(true),
-              }}
+              emptyState={{ title: "No users found", description: "Get started by inviting your first user." }}
             />
           </CardContent>
         </Card>
-      </div>
 
-      {/* Invite User Modal */}
-      <FormModal
-        isOpen={isInviteModalOpen}
-        onClose={() => {
-          setIsInviteModalOpen(false);
-          inviteForm.reset();
-        }}
-        title="Invite New User"
-        description="Send an invitation to add a new team member."
-        isLoading={inviteUserMutation.isPending}
-        submitLabel="Send Invitation"
-        onSubmit={inviteForm.handleSubmit(handleInviteUser)}
-        submitDisabled={!inviteForm.formState.isValid}
-      >
-        <form onSubmit={inviteForm.handleSubmit(handleInviteUser)} className="space-y-4">
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-2">
-              <Label>First Name *</Label>
-              <Input 
-                {...inviteForm.register('firstName')} 
-                placeholder="John"
-                aria-describedby={inviteForm.formState.errors.firstName ? 'first-name-error' : undefined}
-              />
-              {inviteForm.formState.errors.firstName && (
-                <p id="first-name-error" className="text-sm text-destructive">
-                  {inviteForm.formState.errors.firstName.message}
-                </p>
+        {/* Create/Edit/Bulk Assign Modals */}
+        <FormModal isOpen={isCreateModalOpen} onClose={() => setIsCreateModalOpen(false)} title="Invite User" onSubmit={createForm.handleSubmit(handleCreateUser)} submitLabel="Send Invitation">
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="firstName">First Name</Label>
+              <Input id="firstName" {...createForm.register("firstName")} />
+              {createForm.formState.errors.firstName && (
+                <p className="text-sm text-destructive">{createForm.formState.errors.firstName.message}</p>
               )}
             </div>
-            <div className="space-y-2">
-              <Label>Last Name *</Label>
-              <Input 
-                {...inviteForm.register('lastName')} 
-                placeholder="Doe"
-                aria-describedby={inviteForm.formState.errors.lastName ? 'last-name-error' : undefined}
-              />
-              {inviteForm.formState.errors.lastName && (
-                <p id="last-name-error" className="text-sm text-destructive">
-                  {inviteForm.formState.errors.lastName.message}
-                </p>
+            <div>
+              <Label htmlFor="lastName">Last Name</Label>
+              <Input id="lastName" {...createForm.register("lastName")} />
+              {createForm.formState.errors.lastName && (
+                <p className="text-sm text-destructive">{createForm.formState.errors.lastName.message}</p>
               )}
             </div>
+            <div>
+              <Label htmlFor="email">Email</Label>
+              <Input id="email" type="email" {...createForm.register("email")} />
+              {createForm.formState.errors.email && (
+                <p className="text-sm text-destructive">{createForm.formState.errors.email.message}</p>
+              )}
+            </div>
+            <div>
+              <Label htmlFor="role">Role</Label>
+              <Select {...createForm.register("role")} defaultValue="agent">
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a role" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="admin">Admin</SelectItem>
+                  <SelectItem value="agent">Agent</SelectItem>
+                  <SelectItem value="manager">Manager</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
-          <div className="space-y-2">
-            <Label>Email Address *</Label>
-            <Input 
-              {...inviteForm.register('email')} 
-              type="email" 
-              placeholder="john.doe@example.com"
-              aria-describedby={inviteForm.formState.errors.email ? 'email-error' : undefined}
-            />
-            {inviteForm.formState.errors.email && (
-              <p id="email-error" className="text-sm text-destructive">
-                {inviteForm.formState.errors.email.message}
-              </p>
-            )}
-          </div>
-          <div className="space-y-2">
-            <Label>Role</Label>
-            <Select 
-              value={inviteForm.watch('role')} 
-              onValueChange={(value) => inviteForm.setValue('role', value as any)}
-            >
-              <SelectTrigger><SelectValue placeholder="Select a role" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="agent">Agent</SelectItem>
-                <SelectItem value="manager">Manager</SelectItem>
-                <SelectItem value="admin">Admin</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </form>
-      </FormModal>
+        </FormModal>
 
-      {/* Edit User Modal */}
-      <FormModal
-        isOpen={!!editingUser}
-        onClose={() => {
-          setEditingUser(null);
-          editForm.reset();
-        }}
-        title="Edit User"
-        description="Update user information and role."
-        isLoading={updateUserMutation.isPending}
-        submitLabel="Update User"
-        onSubmit={editForm.handleSubmit(handleUpdateUser)}
-        submitDisabled={!editForm.formState.isValid}
-      >
-        <form onSubmit={editForm.handleSubmit(handleUpdateUser)} className="space-y-4">
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-2">
-              <Label>First Name</Label>
-              <Input 
-                {...editForm.register('firstName')} 
-                placeholder="John"
-                aria-describedby={editForm.formState.errors.firstName ? 'edit-first-name-error' : undefined}
-              />
+        <FormModal isOpen={isEditModalOpen} onClose={() => setIsEditModalOpen(false)} title="Edit User" onSubmit={editForm.handleSubmit(handleUpdateUser)} submitLabel="Update User">
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="firstName">First Name</Label>
+              <Input id="firstName" {...editForm.register("firstName")} />
               {editForm.formState.errors.firstName && (
-                <p id="edit-first-name-error" className="text-sm text-destructive">
-                  {editForm.formState.errors.firstName.message}
-                </p>
+                <p className="text-sm text-destructive">{editForm.formState.errors.firstName.message}</p>
               )}
             </div>
-            <div className="space-y-2">
-              <Label>Last Name</Label>
-              <Input 
-                {...editForm.register('lastName')} 
-                placeholder="Doe"
-                aria-describedby={editForm.formState.errors.lastName ? 'edit-last-name-error' : undefined}
-              />
+            <div>
+              <Label htmlFor="lastName">Last Name</Label>
+              <Input id="lastName" {...editForm.register("lastName")} />
               {editForm.formState.errors.lastName && (
-                <p id="edit-last-name-error" className="text-sm text-destructive">
-                  {editForm.formState.errors.lastName.message}
-                </p>
+                <p className="text-sm text-destructive">{editForm.formState.errors.lastName.message}</p>
               )}
             </div>
+            <div>
+              <Label htmlFor="email">Email</Label>
+              <Input id="email" type="email" {...editForm.register("email")} />
+              {editForm.formState.errors.email && (
+                <p className="text-sm text-destructive">{editForm.formState.errors.email.message}</p>
+              )}
+            </div>
+            <div>
+              <Label htmlFor="role">Role</Label>
+              <Select {...editForm.register("role")}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a role" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="admin">Admin</SelectItem>
+                  <SelectItem value="agent">Agent</SelectItem>
+                  <SelectItem value="manager">Manager</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Organization</Label>
+              <Select {...editForm.register("organizationId")}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select organization" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">Unassigned</SelectItem>
+                  {organizations.map((org) => (
+                    <SelectItem key={org.id} value={org.id}>
+                      {org.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
-          <div className="space-y-2">
-            <Label>Email Address</Label>
-            <Input 
-              {...editForm.register('email')} 
-              type="email" 
-              placeholder="john.doe@example.com"
-              aria-describedby={editForm.formState.errors.email ? 'edit-email-error' : undefined}
-            />
-            {editForm.formState.errors.email && (
-              <p id="edit-email-error" className="text-sm text-destructive">
-                {editForm.formState.errors.email.message}
-              </p>
-            )}
-          </div>
-          <div className="space-y-2">
-            <Label>Role</Label>
-            <Select 
-              value={editForm.watch('role')} 
-              onValueChange={(value) => editForm.setValue('role', value as any)}
-            >
-              <SelectTrigger><SelectValue placeholder="Select a role" /></SelectTrigger>
+        </FormModal>
+
+        <FormModal isOpen={isBulkAssignModalOpen} onClose={() => setIsBulkAssignModalOpen(false)} title="Bulk Assign to Organization" onSubmit={handleBulkAssign} submitLabel="Assign Users">
+          <div className="space-y-4">
+            <Label>Organization</Label>
+            <Select value={bulkOrgId} onValueChange={setBulkOrgId}>
+              <SelectTrigger><SelectValue placeholder="Select organization" /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="agent">Agent</SelectItem>
-                <SelectItem value="manager">Manager</SelectItem>
-                <SelectItem value="admin">Admin</SelectItem>
+                {organizations.map((org) => <SelectItem key={org.id} value={org.id}>{org.name}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
-        </form>
-      </FormModal>
+        </FormModal>
 
-      <FloatingPreview />
+        <FloatingPreview />
+      </div>
     </ErrorBoundary>
   );
 }

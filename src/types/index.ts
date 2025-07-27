@@ -8,6 +8,7 @@ export interface Organization {
   createdAt: string;
   status: 'active' | 'inactive';
   plan?: string;
+  members?: string[];
 }
 
 export interface User {
@@ -20,6 +21,7 @@ export interface User {
   role: 'admin' | 'agent' | 'manager';
   onlineStatus: 'online' | 'offline' | 'away';
   createdAt: string;
+  organizationId?: string;
 }
 
 export interface Chat {

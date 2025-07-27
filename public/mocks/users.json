@@ -8,7 +8,8 @@
       "email": "alice@techcorp.com", 
       "role": "admin",
       "onlineStatus": "online",
-      "createdAt": "2025-01-15T10:00:00Z"
+      "createdAt": "2025-01-15T10:00:00Z",
+      "organizationId": "org_001"
     },
     {
       "id": "user_002",
@@ -18,7 +19,8 @@
       "email": "bob@startupxyz.io",
       "role": "agent",
       "onlineStatus": "online",
-      "createdAt": "2025-01-20T12:00:00Z"
+      "createdAt": "2025-01-20T12:00:00Z",
+      "organizationId": "org_001"
     },
     {
       "id": "user_003",
@@ -28,7 +30,8 @@
       "email": "carol@retailco.com",
       "role": "manager", 
       "onlineStatus": "away",
-      "createdAt": "2025-01-22T14:00:00Z"
+      "createdAt": "2025-01-22T14:00:00Z",
+      "organizationId": "org_002"
     },
     {
       "id": "user_004",
@@ -38,7 +41,8 @@
       "email": "david@nonprofit.org",
       "role": "agent",
       "onlineStatus": "offline",
-      "createdAt": "2025-01-18T09:00:00Z"
+      "createdAt": "2025-01-18T09:00:00Z",
+      "organizationId": "org_003"
     },
     {
       "id": "user_005",
@@ -48,7 +52,8 @@
       "email": "eva@financegroup.net",
       "role": "admin",
       "onlineStatus": "offline",
-      "createdAt": "2025-01-10T16:00:00Z"
+      "createdAt": "2025-01-10T16:00:00Z",
+      "organizationId": "org_005"
     }
   ],
   "pagination": {
