@@ -58,8 +58,8 @@ export function useChats(params?: {
     },
     staleTime: 30000, // 30 seconds
     retry: (failureCount, error) => {
-      // Don't retry MSW errors, but retry network errors
-      return failureCount < 2 && !error.message.includes('MSW');
+      // Retry network errors, but not API errors
+      return failureCount < 2 && error.message.includes('fetch');
     }
   });
 }
@@ -140,8 +140,8 @@ export function useUsers(params?: {
     },
     staleTime: 60000, // 1 minute
     retry: (failureCount, error) => {
-      // Don't retry MSW errors, but retry network errors
-      return failureCount < 2 && !error.message.includes('MSW');
+      // Retry network errors, but not API errors
+      return failureCount < 2 && error.message.includes('fetch');
     }
   });
 }
@@ -222,8 +222,8 @@ export function useOrganizations() {
     },
     staleTime: 300000, // 5 minutes
     retry: (failureCount, error) => {
-      // Don't retry MSW errors, but retry network errors
-      return failureCount < 2 && !error.message.includes('MSW');
+      // Retry network errors, but not API errors
+      return failureCount < 2 && error.message.includes('fetch');
     }
   });
 }

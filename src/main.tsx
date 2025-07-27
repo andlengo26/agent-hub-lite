@@ -65,11 +65,6 @@ async function verifyStaticMocks(): Promise<boolean> {
   }
 }
 
-// Legacy function - no longer used
-// Kept for reference in case MSW needs to be re-enabled
-async function legacyMSWInit(): Promise<void> {
-  console.log('⚠️ MSW initialization has been removed - using static JSON mocks');
-}
 
 // Simplified bootstrap for static mock system
 async function bootstrap() {

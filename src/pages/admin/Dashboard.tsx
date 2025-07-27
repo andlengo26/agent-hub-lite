@@ -20,10 +20,6 @@ export default function Dashboard() {
   const getHealthStatus = () => {
     if (healthLoading || isRefreshing) return { status: 'checking', color: 'yellow', icon: AlertTriangle };
     if (healthError) {
-      // Check for specific MSW-related errors
-      if (healthError.message.includes('HTML') || healthError.message.includes('MSW')) {
-        return { status: 'msw-error', color: 'destructive', icon: XCircle };
-      }
       return { status: 'error', color: 'destructive', icon: XCircle };
     }
     return { status: 'healthy', color: 'success', icon: CheckCircle };
@@ -69,26 +65,7 @@ export default function Dashboard() {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          {healthStatus.status === 'msw-error' ? (
-            <Alert variant="destructive">
-              <Wrench className="h-4 w-4" />
-              <AlertDescription className="space-y-2">
-                <div>
-                  <strong>Mock Service Worker (MSW) Issue Detected</strong>
-                </div>
-                <div className="text-sm">
-                  The API is returning HTML instead of JSON, which usually means MSW is not intercepting requests properly.
-                </div>
-                <div className="text-xs mt-2 space-y-1">
-                  <div><strong>Troubleshooting steps:</strong></div>
-                  <div>1. Check that mockServiceWorker.js exists in the public directory</div>
-                  <div>2. Refresh the page to restart MSW</div>
-                  <div>3. Check browser console for MSW startup messages</div>
-                  <div>4. Verify no browser extensions are blocking service workers</div>
-                </div>
-              </AlertDescription>
-            </Alert>
-          ) : healthStatus.status === 'error' ? (
+          {healthStatus.status === 'error' ? (
             <Alert variant="destructive">
               <AlertDescription>
                 <div className="space-y-2">
@@ -123,7 +100,7 @@ export default function Dashboard() {
               {import.meta.env.DEV && (
                 <div className="text-xs text-muted-foreground">
                   <Badge variant="outline" className="mr-2">Development Mode</Badge>
-                  Mock Service Worker: {healthData ? 'Active' : 'Unknown'}
+                  Static Mock Data: Active
                 </div>
               )}
             </div>
