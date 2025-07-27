@@ -106,9 +106,9 @@ export function ExpandableContextPanel({
 
   // Collapsed icon strip component
   const IconStrip = () => (
-    <div className="w-12 h-full bg-surface border-l border-border flex flex-col">
+    <div className="w-12 h-full bg-background border-l border-border flex flex-col">
       {/* Toggle Button */}
-      <div className="p-space-2 border-b border-border">
+      <div className="p-4 border-b border-border">
         <Button
           variant="ghost"
           size="sm"
@@ -120,7 +120,7 @@ export function ExpandableContextPanel({
       </div>
       
       {/* Section Icons */}
-      <div className="flex-1 flex flex-col gap-space-1 p-space-2">
+      <div className="flex-1 flex flex-col gap-1 p-4">
         <Button
           variant="ghost"
           size="sm"
@@ -159,8 +159,8 @@ export function ExpandableContextPanel({
       <div className="h-full flex flex-col">
         {isExpanded ? (
           <>
-            <div className="flex items-center justify-between p-space-4 border-b border-border">
-              <h3 className="font-medium text-text-primary">Engagements</h3>
+            <div className="p-4 border-b border-border">
+              <h3 className="font-medium text-text-primary mb-3">Engagements</h3>
               {!isMobile && onToggleExpanded && (
                 <Button
                   variant="ghost"
@@ -172,7 +172,7 @@ export function ExpandableContextPanel({
                 </Button>
               )}
             </div>
-            <div className="flex-1 flex items-center justify-center p-space-4">
+            <div className="flex-1 flex items-center justify-center p-4">
               <div className="text-center text-text-secondary">
                 <UserIcon className="h-12 w-12 mx-auto mb-3 opacity-50" />
                 <p>Select a chat to view context</p>
@@ -190,8 +190,8 @@ export function ExpandableContextPanel({
 
   const ContextContent = () => (
     <div className="h-full flex flex-col">
-      <div className="flex items-center justify-between p-space-4 border-b border-border">
-        <h3 className="font-medium text-text-primary">Engagements</h3>
+      <div className="p-4 border-b border-border">
+        <h3 className="font-medium text-text-primary mb-3">Engagements</h3>
         {!isMobile && onToggleExpanded && (
           <Button
             variant="ghost"
@@ -206,10 +206,10 @@ export function ExpandableContextPanel({
 
       <ScrollArea className="flex-1">
         {isLoading ? (
-          <div className="p-space-4 space-y-space-4">
-            <Skeleton className="h-20 w-full" />
-            <Skeleton className="h-16 w-full" />
-            <Skeleton className="h-24 w-full" />
+          <div className="p-4 space-y-3">
+            {[1, 2, 3, 4].map((i) => (
+              <Skeleton key={i} className="h-12 w-full" />
+            ))}
           </div>
         ) : (
           <Accordion
@@ -220,24 +220,21 @@ export function ExpandableContextPanel({
             className="w-full"
           >
             {/* Details Section */}
-            <AccordionItem value="details" className="bg-surface/50">
-              <AccordionTrigger className="px-space-4 py-space-3 hover:bg-surface/80 transition-colors">
-                <div className="flex items-center justify-between w-full">
-                  <div className="flex items-center gap-space-2">
-                    <UserIcon className="h-4 w-4" />
-                    <span>Details</span>
-                  </div>
+            <AccordionItem value="details">
+              <AccordionTrigger className="flex items-center justify-between w-full p-3 hover:bg-surface/50 transition-colors">
+                <div className="flex items-center gap-2">
+                  <span className="font-medium text-text-primary">Details</span>
                 </div>
               </AccordionTrigger>
-              <AccordionContent className="px-space-4 pb-space-4 bg-background">
-                <div className="space-y-space-4">
+              <AccordionContent>
+                <div className="p-4 space-y-4">
                   {/* Customer Information */}
                   <div>
-                    <div className="flex items-center gap-space-2 mb-space-2">
+                    <div className="flex items-center gap-2 mb-2">
                       <UserIcon className="h-3 w-3 text-text-secondary" />
                       <span className="text-sm font-medium text-text-secondary">Customer</span>
                     </div>
-                    <div className="space-y-space-2 ml-space-5">
+                    <div className="space-y-2 ml-5">
                       <p className="font-medium text-text-primary">{currentChat.requesterName}</p>
                       <div className="flex items-center gap-space-2">
                         <Mail className="h-3 w-3 text-text-secondary" />
@@ -325,28 +322,25 @@ export function ExpandableContextPanel({
             </AccordionItem>
 
             {/* History Section */}
-            <AccordionItem value="history" className="bg-surface/50">
-              <AccordionTrigger className="px-space-4 py-space-3 hover:bg-surface/80 transition-colors">
-                <div className="flex items-center justify-between w-full">
-                  <div className="flex items-center gap-space-2">
-                    <History className="h-4 w-4" />
-                    <span>History</span>
-                  </div>
+            <AccordionItem value="history">
+              <AccordionTrigger className="flex items-center justify-between w-full p-3 hover:bg-surface/50 transition-colors">
+                <div className="flex items-center gap-2">
+                  <span className="font-medium text-text-primary">History</span>
                   <Badge variant="secondary" className="text-xs">
                     {engagements.length}
                   </Badge>
                 </div>
               </AccordionTrigger>
-              <AccordionContent className="px-space-4 pb-space-4 bg-background">
-                <div>
+              <AccordionContent>
+                <div className="p-4">
                   {engagementsLoading ? (
-                    <div className="space-y-space-3">
+                    <div className="space-y-3">
                       {[1, 2, 3].map((i) => (
                         <Skeleton key={i} className="h-16 w-full" />
                       ))}
                     </div>
                   ) : engagements.length > 0 ? (
-                    <div className="space-y-space-3">
+                    <div className="space-y-3">
                       {engagements.map((engagement, index) => {
                         const channelType = mockChannelTypes[index % mockChannelTypes.length];
                         const ChannelIcon = getChannelIcon(channelType);
@@ -391,8 +385,8 @@ export function ExpandableContextPanel({
                       })}
                     </div>
                   ) : (
-                    <div className="text-center py-space-6 text-text-secondary">
-                      <History className="h-8 w-8 mx-auto mb-space-2 opacity-50" />
+                    <div className="text-center py-6 text-text-secondary">
+                      <History className="h-8 w-8 mx-auto mb-2 opacity-50" />
                       <p className="text-sm">No previous engagements</p>
                     </div>
                   )}
@@ -401,20 +395,19 @@ export function ExpandableContextPanel({
             </AccordionItem>
 
             {/* Notes Section */}
-            <AccordionItem value="notes" className="bg-surface/50">
-              <AccordionTrigger className="px-space-4 py-space-3 hover:bg-surface/80 transition-colors">
-                <div className="flex items-center justify-between w-full">
-                  <div className="flex items-center gap-space-2">
-                    <FileText className="h-4 w-4" />
-                    <span>Notes</span>
-                  </div>
+            <AccordionItem value="notes">
+              <AccordionTrigger className="flex items-center justify-between w-full p-3 hover:bg-surface/50 transition-colors">
+                <div className="flex items-center gap-2">
+                  <span className="font-medium text-text-primary">Notes</span>
                   <Badge variant="secondary" className="text-xs">
                     {mockNotesCount}
                   </Badge>
                 </div>
               </AccordionTrigger>
-              <AccordionContent className="px-space-4 pb-space-4 bg-background">
-                <NotesSection chatId={currentChat.id} />
+              <AccordionContent>
+                <div className="p-4">
+                  <NotesSection chatId={currentChat.id} />
+                </div>
               </AccordionContent>
             </AccordionItem>
           </Accordion>
