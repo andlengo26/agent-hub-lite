@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
 import { Chat } from '@/types';
+import { toast } from '@/components/ui/use-toast';
 
 interface ActiveChat extends Chat {
   isActive?: boolean;
@@ -64,15 +65,31 @@ export function AgentConsoleProvider({ children }: { children: React.ReactNode }
   }, []);
 
   const closeChat = useCallback((chatId: string) => {
-    // Update chat status to 'closed' instead of removing it
-    setActiveChats(prev => prev.filter(chat => chat.id !== chatId));
+    const chatToClose = activeChats.find(chat => chat.id === chatId);
+    
+    // Update chat status to 'closed' and mark as inactive
+    setActiveChats(prev => 
+      prev.map(chat => 
+        chat.id === chatId 
+          ? { ...chat, status: 'closed' as const, isActive: false }
+          : chat
+      )
+    );
+    
+    // Show success notification
+    if (chatToClose) {
+      toast({
+        title: "Chat Closed",
+        description: `Chat with ${chatToClose.requesterName} has been closed successfully.`,
+      });
+    }
     
     // TODO: Update the chat status in the backend to 'closed'
     // This would typically involve an API call to update the chat status
     
     if (currentChatId === chatId) {
-      const remainingChats = activeChats.filter(chat => chat.id !== chatId);
-      setCurrentChatId(remainingChats.length > 0 ? remainingChats[0].id : null);
+      const remainingActiveChats = activeChats.filter(chat => chat.id !== chatId && chat.isActive);
+      setCurrentChatId(remainingActiveChats.length > 0 ? remainingActiveChats[0].id : null);
     }
   }, [currentChatId, activeChats]);
 

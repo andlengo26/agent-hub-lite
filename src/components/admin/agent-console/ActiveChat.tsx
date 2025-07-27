@@ -167,10 +167,37 @@ export function ActiveChat({
                 className="border-0 shadow-none focus-visible:ring-0 p-0"
               />
               <div className="flex items-center gap-space-1">
-                <Button variant="ghost" size="sm">
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={() => {
+                    const input = document.createElement('input');
+                    input.type = 'file';
+                    input.accept = 'image/*,.pdf,.doc,.docx,.txt';
+                    input.onchange = (e) => {
+                      const file = (e.target as HTMLInputElement).files?.[0];
+                      if (file) {
+                        console.log('File selected:', file.name);
+                        // TODO: Handle file upload
+                      }
+                    };
+                    input.click();
+                  }}
+                  title="Attach file"
+                >
                   <Paperclip className="h-4 w-4" />
                 </Button>
-                <Button variant="ghost" size="sm">
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={() => {
+                    // Simple emoji insertion
+                    const emojis = ['😊', '👍', '❤️', '😢', '😮', '😡'];
+                    const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
+                    setMessage(prev => prev + randomEmoji);
+                  }}
+                  title="Add emoji"
+                >
                   <Smile className="h-4 w-4" />
                 </Button>
               </div>

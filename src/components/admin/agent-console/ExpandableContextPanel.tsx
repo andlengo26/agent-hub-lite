@@ -70,7 +70,7 @@ export function ExpandableContextPanel({
 }: ExpandableContextPanelProps) {
   const [historyModalOpen, setHistoryModalOpen] = useState(false);
   const [notesModalOpen, setNotesModalOpen] = useState(false);
-  const [expandedSections, setExpandedSections] = useState<string | undefined>(undefined);
+  const [expandedSections, setExpandedSections] = useState<string | undefined>('details');
   const [engagements, setEngagements] = useState<Engagement[]>([]);
   const [engagementsLoading, setEngagementsLoading] = useState(false);
   const isMobile = useIsMobile();
@@ -83,9 +83,10 @@ export function ExpandableContextPanel({
       fetch('/mocks/engagements.json')
         .then(res => res.json())
         .then(data => {
-          // Filter engagements for current customer
+          // Filter engagements for current customer or show Sarah Lee's data for demo
           const customerEngagements = data.data.filter((eng: Engagement) => 
-            eng.customerEmail === currentChat.requesterEmail
+            eng.customerEmail === currentChat.requesterEmail || 
+            (currentChat.requesterName === 'Sarah Lee' && eng.customerName === 'Sarah Lee')
           );
           setEngagements(customerEngagements);
         })
@@ -219,8 +220,8 @@ export function ExpandableContextPanel({
             className="w-full"
           >
             {/* Details Section */}
-            <AccordionItem value="details">
-              <AccordionTrigger className="px-space-4 py-space-3">
+            <AccordionItem value="details" className="bg-surface/50">
+              <AccordionTrigger className="px-space-4 py-space-3 hover:bg-surface/80 transition-colors">
                 <div className="flex items-center justify-between w-full">
                   <div className="flex items-center gap-space-2">
                     <UserIcon className="h-4 w-4" />
@@ -228,7 +229,7 @@ export function ExpandableContextPanel({
                   </div>
                 </div>
               </AccordionTrigger>
-              <AccordionContent className="px-space-4 pb-space-4">
+              <AccordionContent className="px-space-4 pb-space-4 bg-background">
                 <div className="space-y-space-4">
                   {/* Customer Information */}
                   <div>
@@ -324,8 +325,8 @@ export function ExpandableContextPanel({
             </AccordionItem>
 
             {/* History Section */}
-            <AccordionItem value="history">
-              <AccordionTrigger className="px-space-4 py-space-3">
+            <AccordionItem value="history" className="bg-surface/50">
+              <AccordionTrigger className="px-space-4 py-space-3 hover:bg-surface/80 transition-colors">
                 <div className="flex items-center justify-between w-full">
                   <div className="flex items-center gap-space-2">
                     <History className="h-4 w-4" />
@@ -336,7 +337,7 @@ export function ExpandableContextPanel({
                   </Badge>
                 </div>
               </AccordionTrigger>
-              <AccordionContent className="px-space-4 pb-space-4">
+              <AccordionContent className="px-space-4 pb-space-4 bg-background">
                 <div>
                   {engagementsLoading ? (
                     <div className="space-y-space-3">
@@ -400,8 +401,8 @@ export function ExpandableContextPanel({
             </AccordionItem>
 
             {/* Notes Section */}
-            <AccordionItem value="notes">
-              <AccordionTrigger className="px-space-4 py-space-3">
+            <AccordionItem value="notes" className="bg-surface/50">
+              <AccordionTrigger className="px-space-4 py-space-3 hover:bg-surface/80 transition-colors">
                 <div className="flex items-center justify-between w-full">
                   <div className="flex items-center gap-space-2">
                     <FileText className="h-4 w-4" />
@@ -412,7 +413,7 @@ export function ExpandableContextPanel({
                   </Badge>
                 </div>
               </AccordionTrigger>
-              <AccordionContent className="px-space-4 pb-space-4">
+              <AccordionContent className="px-space-4 pb-space-4 bg-background">
                 <NotesSection chatId={currentChat.id} />
               </AccordionContent>
             </AccordionItem>
