@@ -7,6 +7,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import { EnhancedDataTable } from "@/components/common/EnhancedDataTable";
 import { ChatFilters } from "@/components/admin/ChatFilters";
 import { ChatPanel } from "@/components/admin/ChatPanel";
+import { ErrorBoundary } from "@/components/common/ErrorBoundary";
 import { mockChats, mockUsers, Chat } from "@/lib/mock-data";
 import { useChats, useUsers } from "@/hooks/useApiQuery";
 import { useFeatureFlag } from "@/hooks/useFeatureFlag";
@@ -251,7 +252,9 @@ export default function MyChats() {
           </SheetHeader>
           {selectedChat && (
             <div className="mt-6">
-              <ChatPanel chat={selectedChat} />
+              <ErrorBoundary>
+                <ChatPanel chat={selectedChat} />
+              </ErrorBoundary>
             </div>
           )}
         </SheetContent>

@@ -27,10 +27,12 @@ interface ChatPanelProps {
 }
 
 export const ChatPanel = memo<ChatPanelProps>(({ chat }) => {
+  console.log('ChatPanel: Rendering chat panel', { chatId: chat.id, status: chat.status, assignedAgent: chat.assignedAgentId });
+  
   const [message, setMessage] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [isRetrying, setIsRetrying] = useState(false);
-  const [selectedAgentId, setSelectedAgentId] = useState(chat.assignedAgentId || "");
+  const [selectedAgentId, setSelectedAgentId] = useState(chat.assignedAgentId || "unassigned");
 
   const assignedAgent = mockUsers.find(u => u.id === chat.assignedAgentId);
 
@@ -78,15 +80,25 @@ export const ChatPanel = memo<ChatPanelProps>(({ chat }) => {
 
   const handleAgentChange = async (agentId: string) => {
     try {
+      console.log('ChatPanel: Assigning agent', { agentId, chatId: chat.id });
       setSelectedAgentId(agentId);
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 500));
-      const agent = mockUsers.find(u => u.id === agentId);
-      toast({
-        title: "Agent assigned",
-        description: `Chat assigned to ${agent?.firstName} ${agent?.lastName}`
-      });
+      
+      if (agentId === "unassigned") {
+        toast({
+          title: "Agent unassigned",
+          description: "Chat is now unassigned"
+        });
+      } else {
+        const agent = mockUsers.find(u => u.id === agentId);
+        toast({
+          title: "Agent assigned",
+          description: `Chat assigned to ${agent?.firstName} ${agent?.lastName}`
+        });
+      }
     } catch (error) {
+      console.error('ChatPanel: Failed to assign agent', error);
       toast({
         title: "Failed to assign agent",
         description: "Please try again",
@@ -177,7 +189,7 @@ export const ChatPanel = memo<ChatPanelProps>(({ chat }) => {
                   <SelectValue placeholder="Select agent" />
                 </SelectTrigger>
                 <SelectContent className="bg-background border shadow-md z-50">
-                  <SelectItem value="">Unassigned</SelectItem>
+                  <SelectItem value="unassigned">Unassigned</SelectItem>
                   {mockUsers.filter(user => user.role === 'agent' || user.role === 'admin').map((user) => (
                     <SelectItem key={user.id} value={user.id}>
                       <div className="flex items-center gap-2">

@@ -401,7 +401,11 @@ export default function AllChats() {
             <SheetHeader>
               <SheetTitle>Chat Details</SheetTitle>
             </SheetHeader>
-            {selectedChat && <ChatPanel key={selectedChat.id} chat={selectedChat} />}
+            {selectedChat && (
+              <ErrorBoundary>
+                <ChatPanel key={selectedChat.id} chat={selectedChat} />
+              </ErrorBoundary>
+            )}
           </SheetContent>
         </Sheet>
 
