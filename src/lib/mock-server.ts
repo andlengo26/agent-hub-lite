@@ -312,9 +312,7 @@ export const startMockServer = async (): Promise<boolean> => {
     console.log('🎭 Starting worker with enhanced configuration...');
     
     await worker.start({
-      onUnhandledRequest: ({ method, url }) => {
-        console.warn(`🎭 Unhandled ${method} request to ${url}`);
-      },
+      onUnhandledRequest: 'bypass',
       serviceWorker: {
         url: '/mockServiceWorker.js',
         options: {
