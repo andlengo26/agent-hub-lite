@@ -10,6 +10,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Chat } from '@/types';
 import { formatDistanceToNow, format, isToday, isSameDay, isYesterday, isThisWeek, isThisMonth } from 'date-fns';
@@ -160,80 +161,46 @@ export function QueuePreview({
 
   return (
     <div className="h-full flex flex-col">
-      {/* Header with enhanced date filter */}
+      {/* Header with simplified date filter */}
       <div className="p-4 border-b border-border">
         <h3 className="font-medium text-text-primary mb-3">Queue</h3>
-        <div className="space-y-2">
-          {/* Quick filter options */}
-          <div className="grid grid-cols-2 gap-2">
-            <Button
-              variant={dateFilter === 'today' ? 'default' : 'outline'}
-              size="sm"
-              className="text-xs"
-              onClick={() => setDateFilter('today')}
-            >
-              Today
-            </Button>
-            <Button
-              variant={dateFilter === 'yesterday' ? 'default' : 'outline'}
-              size="sm"
-              className="text-xs"
-              onClick={() => setDateFilter('yesterday')}
-            >
-              Yesterday
-            </Button>
-            <Button
-              variant={dateFilter === 'this-week' ? 'default' : 'outline'}
-              size="sm"
-              className="text-xs"
-              onClick={() => setDateFilter('this-week')}
-            >
-              This Week
-            </Button>
-            <Button
-              variant={dateFilter === 'this-month' ? 'default' : 'outline'}
-              size="sm"
-              className="text-xs"
-              onClick={() => setDateFilter('this-month')}
-            >
-              This Month
-            </Button>
-          </div>
-          
-          {/* All dates and custom date picker */}
-          <div className="space-y-2">
-            <Button
-              variant={dateFilter === 'all' ? 'default' : 'outline'}
-              size="sm"
-              className="w-full text-xs"
-              onClick={() => setDateFilter('all')}
-            >
-              All Dates
-            </Button>
-            
+        
+        {/* Compact date filter dropdown */}
+        <Select value={dateFilter} onValueChange={(value: DateFilterOption) => setDateFilter(value)}>
+          <SelectTrigger className="w-full h-8 text-xs">
+            <SelectValue placeholder="Filter by date" />
+          </SelectTrigger>
+          <SelectContent className="z-50">
+            <SelectItem value="today">Today</SelectItem>
+            <SelectItem value="yesterday">Yesterday</SelectItem>
+            <SelectItem value="this-week">This Week</SelectItem>
+            <SelectItem value="this-month">This Month</SelectItem>
+            <SelectItem value="all">All Dates</SelectItem>
+            <SelectItem value="custom">Custom Date</SelectItem>
+          </SelectContent>
+        </Select>
+        
+        {/* Custom date picker - only show when custom is selected */}
+        {dateFilter === 'custom' && (
+          <div className="mt-2">
             <Popover>
               <PopoverTrigger asChild>
                 <Button
-                  variant={dateFilter === 'custom' ? 'default' : 'outline'}
+                  variant="outline"
                   size="sm"
-                  className={cn(
-                    "w-full justify-start text-left font-normal text-xs",
-                    dateFilter !== 'custom' && "text-text-secondary"
-                  )}
-                  onClick={() => setDateFilter('custom')}
+                  className="w-full justify-start text-left font-normal text-xs"
                 >
                   <CalendarIcon className="mr-2 h-3 w-3" />
-                  {dateFilter === 'custom' ? format(customDate, "MMM dd") : "Custom Date"}
+                  {format(customDate, "MMM dd, yyyy")}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
+              <PopoverContent className="w-auto p-0 z-50" align="start">
                 <Calendar
                   mode="single"
                   selected={customDate}
                   onSelect={(date) => {
                     if (date) {
                       setCustomDate(date);
-                      setDateFilter('custom');
                     }
                   }}
                   initialFocus
@@ -242,7 +209,7 @@ export function QueuePreview({
               </PopoverContent>
             </Popover>
           </div>
-        </div>
+        )}
       </div>
 
       {/* Queue sections */}

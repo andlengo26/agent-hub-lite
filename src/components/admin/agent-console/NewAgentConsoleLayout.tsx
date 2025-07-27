@@ -30,6 +30,10 @@ export function NewAgentConsoleLayout({
   const { isConnected } = useWebSocketChats();
 
   const currentChat = activeChats.find(chat => chat.id === currentChatId);
+  const selectedQueueChat = queueChats.find(chat => chat.id === selectedQueueChatId);
+  
+  // Use selected queue chat if no active chat is current
+  const displayChat = currentChat || selectedQueueChat;
 
   const handleChatAccept = (chatId: string) => {
     const chatToAccept = queueChats.find(chat => chat.id === chatId);
@@ -75,16 +79,19 @@ export function NewAgentConsoleLayout({
       <div className="flex-1 min-w-0">
         <Card className="h-full p-0 overflow-hidden">
           <ActiveChat
-            currentChat={currentChat}
+            currentChat={displayChat}
             onCloseChat={handleCloseChat}
             onSendMessage={handleSendMessage}
+            onAcceptChat={handleChatAccept}
+            onCancelChat={(chatId) => setSelectedQueueChatId(undefined)}
+            onEmailTranscript={(chatId) => console.log('Email transcript:', chatId)}
           />
         </Card>
       </div>
 
       {/* Right Pane - Expandable Context Panel */}
       <ExpandableContextPanel
-        currentChat={currentChat}
+        currentChat={displayChat}
         users={users}
         width={320}
         isExpanded={contextPanelExpanded}
