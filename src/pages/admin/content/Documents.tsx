@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { DataTable, Column } from "@/components/admin/DataTable";
+import { DataTable, Column } from "@/components/ui/data-table";
 import { Document } from "@/types";
 import { Upload, FileText } from "lucide-react";
 import { useDocuments } from "@/hooks/useApiQuery";
@@ -8,17 +8,17 @@ import { useDocuments } from "@/hooks/useApiQuery";
 const documentColumns: Column<Document>[] = [
   { 
     key: "title", 
-    header: "Document",
-    cell: (value) => (
+    label: "Document",
+    render: (value) => (
       <div className="flex items-center gap-2">
         <FileText className="h-4 w-4" />
         <span>{value}</span>
       </div>
     )
   },
-  { key: "fileType", header: "Type" },
-  { key: "fileSizeKb", header: "Size (KB)" },
-  { key: "uploadedAt", header: "Uploaded" },
+  { key: "fileType", label: "Type" },
+  { key: "fileSizeKb", label: "Size (KB)" },
+  { key: "uploadedAt", label: "Uploaded" },
 ];
 
 export default function Documents() {
