@@ -1,21 +1,36 @@
-import React, { useState } from "react";
+import React, { useState, memo } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Separator } from "@/components/ui/separator";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Send, Paperclip, Loader2, Play, Download } from "lucide-react";
-import { Chat } from "@/lib/mock-data";
+import { Textarea } from "@/components/ui/textarea";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Chat, mockUsers } from "@/lib/mock-data";
 import { toast } from "@/hooks/use-toast";
+import { 
+  MapPin, 
+  Mail, 
+  Phone, 
+  Globe, 
+  Clock, 
+  User, 
+  Bot, 
+  MessageSquare,
+  CheckCircle,
+  AlertCircle
+} from "lucide-react";
 
 interface ChatPanelProps {
   chat: Chat;
 }
 
-export const ChatPanel = React.memo<ChatPanelProps>(({ chat }) => {
+export const ChatPanel = memo<ChatPanelProps>(({ chat }) => {
   const [message, setMessage] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [isRetrying, setIsRetrying] = useState(false);
+
+  const assignedAgent = mockUsers.find(u => u.id === chat.assignedAgentId);
 
   const handleSendMessage = async () => {
     if (!message.trim()) return;
@@ -60,107 +75,266 @@ export const ChatPanel = React.memo<ChatPanelProps>(({ chat }) => {
   };
 
   return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <p className="text-sm font-medium">Customer</p>
-          <p className="text-sm text-muted-foreground">{chat.requesterName}</p>
-        </div>
-        <div>
-          <p className="text-sm font-medium">Email</p>
-          <p className="text-sm text-muted-foreground">{chat.requesterEmail}</p>
-        </div>
-        <div>
-          <p className="text-sm font-medium">Phone</p>
-          <p className="text-sm text-muted-foreground">{chat.requesterPhone}</p>
-        </div>
-        <div>
-          <p className="text-sm font-medium">Browser</p>
-          <p className="text-sm text-muted-foreground">{chat.browser}</p>
-        </div>
-      </div>
-      
-      <div className="border rounded-lg p-4 min-h-[300px]">
-        <h4 className="font-medium mb-3">Chat Transcript</h4>
-        <div className="space-y-3 text-sm">
-          <div key="msg-1" className="bg-muted p-3 rounded-lg">
-            <p><strong>Customer:</strong> Hi, I need help with my account settings.</p>
-            <span className="text-xs text-muted-foreground">10:30 AM</span>
+    <div className="space-y-6">
+      {/* Customer Details */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <User className="h-5 w-5" />
+            Customer Information
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <User className="h-4 w-4 text-muted-foreground" />
+                <div>
+                  <div className="text-sm text-muted-foreground">Name</div>
+                  <div className="font-medium">{chat.requesterName}</div>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-2">
+                <Mail className="h-4 w-4 text-muted-foreground" />
+                <div>
+                  <div className="text-sm text-muted-foreground">Email</div>
+                  <div className="font-medium">{chat.requesterEmail}</div>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-2">
+                <Phone className="h-4 w-4 text-muted-foreground" />
+                <div>
+                  <div className="text-sm text-muted-foreground">Phone</div>
+                  <div className="font-medium">{chat.requesterPhone}</div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <MapPin className="h-4 w-4 text-muted-foreground" />
+                <div>
+                  <div className="text-sm text-muted-foreground">Location</div>
+                  <div className="font-medium">{chat.geo}</div>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-2">
+                <Globe className="h-4 w-4 text-muted-foreground" />
+                <div>
+                  <div className="text-sm text-muted-foreground">IP Address</div>
+                  <div className="font-medium">{chat.ipAddress}</div>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-2">
+                <Clock className="h-4 w-4 text-muted-foreground" />
+                <div>
+                  <div className="text-sm text-muted-foreground">Started</div>
+                  <div className="font-medium">{new Date(chat.createdAt).toLocaleString()}</div>
+                </div>
+              </div>
+            </div>
           </div>
-          <div key="msg-2" className="bg-primary/10 p-3 rounded-lg ml-4">
-            <p><strong>AI Agent:</strong> I'd be happy to help you with your account settings. What specific setting would you like to modify?</p>
-            <span className="text-xs text-muted-foreground">10:31 AM</span>
+          
+          <Separator />
+          
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">Status:</span>
+              <Badge variant={chat.status === "active" ? "default" : chat.status === "missed" ? "destructive" : "secondary"}>
+                {chat.status}
+              </Badge>
+            </div>
+            
+            <div className="flex items-center gap-2">
+              {assignedAgent ? (
+                <div className="flex items-center gap-2">
+                  <Avatar className="h-6 w-6">
+                    <AvatarImage src={assignedAgent.avatar || assignedAgent.avatarUrl} />
+                    <AvatarFallback>
+                      {assignedAgent.firstName[0]}{assignedAgent.lastName[0]}
+                    </AvatarFallback>
+                  </Avatar>
+                  <span className="text-sm font-medium">
+                    {assignedAgent.firstName} {assignedAgent.lastName}
+                  </span>
+                </div>
+              ) : (
+                <Badge variant="outline">Unassigned</Badge>
+              )}
+            </div>
           </div>
-          <div key="msg-3" className="bg-muted p-3 rounded-lg">
-            <p><strong>Customer:</strong> I want to change my email address.</p>
-            <span className="text-xs text-muted-foreground">10:32 AM</span>
+        </CardContent>
+      </Card>
+
+      {/* AI Summary */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Bot className="h-5 w-5" />
+            AI Summary
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-start gap-3">
+            <div className="flex-shrink-0">
+              <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
+                <Bot className="h-4 w-4 text-primary" />
+              </div>
+            </div>
+            <div className="flex-1">
+              <p className="text-sm leading-relaxed">{chat.summary}</p>
+              <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
+                <CheckCircle className="h-3 w-3" />
+                Auto-generated summary
+              </div>
+            </div>
           </div>
-          <div key="msg-4" className="bg-primary/10 p-3 rounded-lg ml-4">
-            <p><strong>AI Agent:</strong> I can help you update your email address. For security reasons, I'll need to verify your current information first. Can you please confirm your current email address?</p>
-            <span className="text-xs text-muted-foreground">10:33 AM</span>
-          </div>
-          <div key="msg-5" className="bg-muted p-3 rounded-lg">
-            <p><strong>Customer:</strong> Sure, it's {chat.requesterEmail}</p>
-            <span className="text-xs text-muted-foreground">10:34 AM</span>
-          </div>
-        </div>
-      </div>
-      
-      <div className="grid grid-cols-2 gap-4 text-sm">
-        <div>
-          <p className="font-medium">Browser Info</p>
-          <p className="text-muted-foreground">{chat.browser}</p>
-        </div>
-        <div>
-          <p className="font-medium">Page URL</p>
-          <p className="text-muted-foreground truncate">{chat.pageUrl}</p>
-        </div>
-        <div>
-          <p className="font-medium">IP Address</p>
-          <p className="text-muted-foreground">{chat.ipAddress}</p>
-        </div>
-        <div>
-          <p className="font-medium">Chat Duration</p>
-          <p className="text-muted-foreground">4 minutes</p>
-        </div>
-      </div>
-      
+        </CardContent>
+      </Card>
+      {/* Chat Transcript */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <MessageSquare className="h-5 w-5" />
+            Chat Transcript
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ScrollArea className="h-96">
+            <div className="space-y-4">
+              <div className="flex flex-col space-y-1">
+                <div className="flex items-center space-x-2">
+                  <Avatar className="h-6 w-6">
+                    <AvatarFallback>
+                      {chat.requesterName[0]}
+                    </AvatarFallback>
+                  </Avatar>
+                  <span className="text-sm font-medium">{chat.requesterName}</span>
+                  <span className="text-xs text-muted-foreground">
+                    {new Date(chat.createdAt).toLocaleTimeString()}
+                  </span>
+                </div>
+                <div className="bg-muted p-3 rounded-lg max-w-xs ml-8">
+                  <p className="text-sm">
+                    Hi, I'm having trouble with my account login. Can you help me?
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex flex-col space-y-1 items-end">
+                <div className="flex items-center space-x-2">
+                  <span className="text-xs text-muted-foreground">
+                    {new Date(Date.now() - 600000).toLocaleTimeString()}
+                  </span>
+                  <span className="text-sm font-medium">
+                    {assignedAgent ? `${assignedAgent.firstName} ${assignedAgent.lastName}` : "Agent"}
+                  </span>
+                  {assignedAgent && (
+                    <Avatar className="h-6 w-6">
+                      <AvatarImage src={assignedAgent.avatar || assignedAgent.avatarUrl} />
+                      <AvatarFallback>
+                        {assignedAgent.firstName[0]}{assignedAgent.lastName[0]}
+                      </AvatarFallback>
+                    </Avatar>
+                  )}
+                </div>
+                <div className="bg-primary text-primary-foreground p-3 rounded-lg max-w-xs mr-8">
+                  <p className="text-sm">
+                    Hello! I'd be happy to help you with your login issue. Can you tell me what specific error you're seeing?
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex flex-col space-y-1">
+                <div className="flex items-center space-x-2">
+                  <Avatar className="h-6 w-6">
+                    <AvatarFallback>
+                      {chat.requesterName[0]}
+                    </AvatarFallback>
+                  </Avatar>
+                  <span className="text-sm font-medium">{chat.requesterName}</span>
+                  <span className="text-xs text-muted-foreground">
+                    {new Date(Date.now() - 300000).toLocaleTimeString()}
+                  </span>
+                </div>
+                <div className="bg-muted p-3 rounded-lg max-w-xs ml-8">
+                  <p className="text-sm">
+                    It says "Invalid credentials" but I'm sure my password is correct.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex flex-col space-y-1 items-end">
+                <div className="flex items-center space-x-2">
+                  <span className="text-xs text-muted-foreground">
+                    {new Date(Date.now() - 120000).toLocaleTimeString()}
+                  </span>
+                  <span className="text-sm font-medium">
+                    {assignedAgent ? `${assignedAgent.firstName} ${assignedAgent.lastName}` : "Agent"}
+                  </span>
+                  {assignedAgent && (
+                    <Avatar className="h-6 w-6">
+                      <AvatarImage src={assignedAgent.avatar || assignedAgent.avatarUrl} />
+                      <AvatarFallback>
+                        {assignedAgent.firstName[0]}{assignedAgent.lastName[0]}
+                      </AvatarFallback>
+                    </Avatar>
+                  )}
+                </div>
+                <div className="bg-primary text-primary-foreground p-3 rounded-lg max-w-xs mr-8">
+                  <p className="text-sm">
+                    Let me help you reset your password. I'll send you a secure reset link to your email address.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex justify-center">
+                <div className="bg-muted/50 px-3 py-1 rounded-full">
+                  <span className="text-xs text-muted-foreground flex items-center gap-1">
+                    <AlertCircle className="h-3 w-3" />
+                    {chat.status === "active" ? "Chat is ongoing" : "Chat ended"}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </ScrollArea>
+        </CardContent>
+      </Card>
       {/* Chat Input Box */}
       {chat.status === "active" && (
-        <div className="border rounded-lg p-4 bg-muted/50">
-          <h4 className="font-medium mb-3">Send Message</h4>
-          <div className="flex gap-2">
-            <Input
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Send Message</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Textarea
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               placeholder="Type your message..."
-              onKeyPress={(e) => e.key === 'Enter' && !isSending && handleSendMessage()}
+              rows={3}
               disabled={isSending}
             />
-            <Button
-              onClick={handleSendMessage}
-              disabled={isSending || !message.trim()}
-              size="sm"
-            >
-              {isSending ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Send className="h-4 w-4" />
-              )}
-            </Button>
-            <Button variant="outline" size="sm" disabled={isSending}>
-              <Paperclip className="h-4 w-4" />
-            </Button>
-          </div>
-          <p className="text-xs text-muted-foreground mt-2">
-            Attachments: Images, PDFs, Documents (placeholder)
-          </p>
-        </div>
+            <div className="flex gap-2">
+              <Button
+                onClick={handleSendMessage}
+                disabled={isSending || !message.trim()}
+                size="sm"
+                className="flex-1"
+              >
+                {isSending ? "Sending..." : "Send Message"}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       )}
 
       {/* Additional sections for closed chats */}
       {chat.status === "closed" && (
-        <div className="space-y-4">
+        <>
           <Separator />
           
           {/* Call Recordings Section */}
@@ -174,10 +348,10 @@ export const ChatPanel = React.memo<ChatPanelProps>(({ chat }) => {
                   <span className="text-sm">Recording_2025-01-26_10:30.mp3</span>
                   <div className="flex gap-2">
                     <Button variant="outline" size="sm">
-                      <Play className="h-4 w-4" />
+                      Play
                     </Button>
                     <Button variant="outline" size="sm">
-                      <Download className="h-4 w-4" />
+                      Download
                     </Button>
                   </div>
                 </div>
@@ -196,22 +370,22 @@ export const ChatPanel = React.memo<ChatPanelProps>(({ chat }) => {
                 <div className="flex items-center justify-between p-2 border rounded">
                   <span className="text-sm">account_screenshot.png</span>
                   <Button variant="outline" size="sm">
-                    <Download className="h-4 w-4" />
+                    Download
                   </Button>
                 </div>
                 <div className="flex items-center justify-between p-2 border rounded">
                   <span className="text-sm">support_document.pdf</span>
                   <Button variant="outline" size="sm">
-                    <Download className="h-4 w-4" />
+                    Download
                   </Button>
                 </div>
               </div>
             </CardContent>
           </Card>
-        </div>
+        </>
       )}
 
-      <div className="flex gap-2">
+      <div className="flex gap-2 pt-4 border-t">
         {chat.status === "active" && (
           <>
             <Button variant="secondary">Escalate to Agent</Button>
@@ -221,14 +395,7 @@ export const ChatPanel = React.memo<ChatPanelProps>(({ chat }) => {
               onClick={handleRetry}
               disabled={isRetrying}
             >
-              {isRetrying ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                  Retrying...
-                </>
-              ) : (
-                "Retry Connection"
-              )}
+              {isRetrying ? "Retrying..." : "Retry Connection"}
             </Button>
           </>
         )}

@@ -1,11 +1,15 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { EnhancedTable, Column } from "@/components/admin/EnhancedTable";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { EnhancedDataTable } from "@/components/common/EnhancedDataTable";
 import { ChatPanel } from "@/components/admin/ChatPanel";
+import { ChatFilters, ChatFilters as ChatFiltersType } from "@/components/admin/ChatFilters";
+import { ChatPagination } from "@/components/admin/ChatPagination";
+import { AgentAssignmentModal } from "@/components/admin/AgentAssignmentModal";
 import { ErrorBoundary } from "@/components/common/ErrorBoundary";
 import { mockChats, mockUsers, Chat } from "@/lib/mock-data";
 import { useChats } from "@/hooks/useApiQuery";
@@ -13,33 +17,82 @@ import { useFeatureFlag } from "@/hooks/useFeatureFlag";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "@/hooks/use-toast";
 import { performanceMonitor } from "@/lib/performance-monitor";
+import { MoreHorizontal, UserPlus, MessageSquareX, XCircle, Trash2, MapPin } from "lucide-react";
+import { isWithinInterval, parseISO } from "date-fns";
 
-const chatColumns: Column<Chat>[] = [
-  { key: "requesterName", label: "Customer" },
-  { key: "requesterEmail", label: "Email" },
-  { key: "requesterPhone", label: "Phone" },
-  { key: "ipAddress", label: "IP Address" },
-  { key: "browser", label: "Browser/OS" },
-  { key: "pageUrl", label: "Page URL", cell: (value) => (
-    <div className="max-w-32 truncate" title={value}>
-      {value}
-    </div>
-  )},
-  { key: "status", label: "Status", cell: (value) => (
-    <Badge variant={value === "active" ? "default" : value === "missed" ? "destructive" : "secondary"}>
-      {value}
-    </Badge>
-  )},
-  { key: "assignedAgentId", label: "Agent", cell: (value) => {
-    const agent = mockUsers.find(u => u.id === value);
-    return agent ? `${agent.firstName} ${agent.lastName}` : "Unassigned";
-  }},
-  { key: "createdAt", label: "Started" },
+const chatColumns = [
+  { 
+    key: "requesterName", 
+    header: "Customer",
+    sortable: true
+  },
+  { 
+    key: "requesterEmail", 
+    header: "Email",
+    cell: (chat: Chat) => (
+      <div className="max-w-48 truncate" title={chat.requesterEmail}>
+        {chat.requesterEmail}
+      </div>
+    ),
+    mobileHidden: true
+  },
+  { 
+    key: "geo", 
+    header: "Location",
+    cell: (chat: Chat) => (
+      <div className="flex items-center gap-1">
+        <MapPin className="h-3 w-3 text-muted-foreground" />
+        <span className="truncate max-w-24" title={chat.geo}>
+          {chat.geo}
+        </span>
+      </div>
+    ),
+    mobileHidden: true
+  },
+  { 
+    key: "status", 
+    header: "Status",
+    cell: (chat: Chat) => (
+      <Badge variant={chat.status === "active" ? "default" : chat.status === "missed" ? "destructive" : "secondary"}>
+        {chat.status}
+      </Badge>
+    ),
+    sortable: true
+  },
+  { 
+    key: "assignedAgentId", 
+    header: "Agent",
+    cell: (chat: Chat) => {
+      const agent = mockUsers.find(u => u.id === chat.assignedAgentId);
+      return agent ? `${agent.firstName} ${agent.lastName}` : "Unassigned";
+    },
+    mobileHidden: true
+  },
+  { 
+    key: "createdAt", 
+    header: "Started",
+    cell: (chat: Chat) => new Date(chat.createdAt).toLocaleDateString(),
+    sortable: true
+  }
 ];
 
 export default function AllChats() {
   const [selectedChat, setSelectedChat] = useState<Chat | null>(null);
   const [activeTab, setActiveTab] = useState("all");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
+  const [filtersCollapsed, setFiltersCollapsed] = useState(false);
+  const [assignmentModal, setAssignmentModal] = useState<{
+    isOpen: boolean;
+    chat: Chat | null;
+  }>({ isOpen: false, chat: null });
+  
+  const [filters, setFilters] = useState<ChatFiltersType>({
+    search: '',
+    status: '',
+    agent: '',
+    dateRange: { from: undefined, to: undefined }
+  });
   
   // Performance monitoring - always call
   performanceMonitor.startTiming('chatLoadTime');
@@ -57,16 +110,60 @@ export default function AllChats() {
   // Memoized filtered chats for performance - always call
   const filteredChats = useMemo(() => {
     performanceMonitor.startTiming('filterTime');
-    const result = (() => {
-      const filterChats = (status?: string) => {
-        if (!status || status === "all") return chats;
-        return chats.filter(chat => chat.status === status);
-      };
-      return filterChats(activeTab);
-    })();
+    
+    let result = chats;
+
+    // Filter by tab
+    if (activeTab !== "all") {
+      result = result.filter(chat => chat.status === activeTab);
+    }
+
+    // Apply additional filters
+    if (filters.search) {
+      const searchLower = filters.search.toLowerCase();
+      result = result.filter(chat => 
+        chat.requesterName.toLowerCase().includes(searchLower) ||
+        chat.requesterEmail.toLowerCase().includes(searchLower) ||
+        chat.geo.toLowerCase().includes(searchLower)
+      );
+    }
+
+    if (filters.status && filters.status !== activeTab) {
+      result = result.filter(chat => chat.status === filters.status);
+    }
+
+    if (filters.agent) {
+      if (filters.agent === "unassigned") {
+        result = result.filter(chat => !chat.assignedAgentId);
+      } else {
+        result = result.filter(chat => chat.assignedAgentId === filters.agent);
+      }
+    }
+
+    if (filters.dateRange.from) {
+      result = result.filter(chat => {
+        const chatDate = parseISO(chat.createdAt);
+        if (filters.dateRange.to) {
+          return isWithinInterval(chatDate, {
+            start: filters.dateRange.from!,
+            end: filters.dateRange.to
+          });
+        }
+        return chatDate >= filters.dateRange.from!;
+      });
+    }
+
     performanceMonitor.endTiming('filterTime');
     return result;
-  }, [chats, activeTab]);
+  }, [chats, activeTab, filters]);
+
+  // Pagination logic
+  const paginatedChats = useMemo(() => {
+    const startIndex = (currentPage - 1) * pageSize;
+    return filteredChats.slice(startIndex, startIndex + pageSize);
+  }, [filteredChats, currentPage, pageSize]);
+
+  const totalPages = Math.ceil(filteredChats.length / pageSize);
 
   // Memoized status counts - always call
   const statusCounts = useMemo(() => ({
@@ -134,6 +231,71 @@ export default function AllChats() {
     }
   }, [chats]);
 
+  // Reset to first page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filters, activeTab]);
+
+  // Callbacks for actions
+  const handleAssignAgent = useCallback((chat: Chat) => {
+    setAssignmentModal({ isOpen: true, chat });
+  }, []);
+
+  const handleAgentAssigned = useCallback((chatId: string, agentId: string) => {
+    // In a real app, this would update the chat via API
+    toast({
+      title: "Success",
+      description: "Agent assigned successfully",
+    });
+  }, []);
+
+  const handleCancelChat = useCallback(async (chat: Chat) => {
+    toast({
+      title: "Chat Cancelled",
+      description: `Chat with ${chat.requesterName} has been cancelled`,
+    });
+  }, []);
+
+  const handleCloseChat = useCallback(async (chat: Chat) => {
+    toast({
+      title: "Chat Closed",
+      description: `Chat with ${chat.requesterName} has been closed`,
+    });
+  }, []);
+
+  const handleDeleteChat = useCallback(async (chat: Chat) => {
+    toast({
+      title: "Chat Deleted",
+      description: `Chat with ${chat.requesterName} has been deleted`,
+      variant: "destructive"
+    });
+  }, []);
+
+  const bulkActions = [
+    {
+      id: "archive",
+      label: "Archive Selected",
+      onClick: async (selectedChats: Chat[]) => {
+        toast({
+          title: "Chats Archived",
+          description: `${selectedChats.length} chats have been archived`,
+        });
+      }
+    },
+    {
+      id: "delete",
+      label: "Delete Selected",
+      variant: "destructive" as const,
+      onClick: async (selectedChats: Chat[]) => {
+        toast({
+          title: "Chats Deleted",
+          description: `${selectedChats.length} chats have been deleted`,
+          variant: "destructive"
+        });
+      }
+    }
+  ];
+
   // Handle loading state in render return
   if (isLoading) {
     return (
@@ -158,6 +320,14 @@ export default function AllChats() {
           </p>
         </div>
 
+        {/* Filters */}
+        <ChatFilters
+          filters={filters}
+          onFiltersChange={setFilters}
+          isCollapsed={filtersCollapsed}
+          onToggleCollapse={() => setFiltersCollapsed(!filtersCollapsed)}
+        />
+
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList>
             <TabsTrigger value="all">All Chats ({statusCounts.all})</TabsTrigger>
@@ -174,31 +344,78 @@ export default function AllChats() {
           <TabsContent value={activeTab} key={`tab-${activeTab}`}>
             <Card>
               <CardHeader>
-                <CardTitle>
-                  {activeTab === "all" ? "All Conversations" : 
-                   activeTab === "active" ? "Active Chats" :
-                   activeTab === "missed" ? "Missed Chats" : "Closed Chats"}
+                <CardTitle className="flex items-center justify-between">
+                  <span>
+                    {activeTab === "all" ? "All Conversations" : 
+                     activeTab === "active" ? "Active Chats" :
+                     activeTab === "missed" ? "Missed Chats" : "Closed Chats"}
+                  </span>
+                  <span className="text-sm font-normal text-muted-foreground">
+                    {filteredChats.length} total
+                  </span>
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <EnhancedTable
-                  data={filteredChats}
+                <EnhancedDataTable
+                  data={paginatedChats}
                   columns={chatColumns}
                   onRowClick={setSelectedChat}
+                  onEdit={(chat) => setSelectedChat(chat)}
+                  onView={(chat) => setSelectedChat(chat)}
                   loading={isLoading}
-                  error={error?.message}
-                  showActions={true}
-                  onEmailReply={async (chat) => {
-                    toast({
-                      title: "Email Reply",
-                      description: `Preparing email reply for ${chat.requesterName}`,
-                    });
-                  }}
-                  onArchive={async (chats) => {
-                    console.log('Archiving chats:', chats);
-                  }}
-                  onExport={async (chats) => {
-                    console.log('Exporting chats:', chats);
+                  emptyTitle="No chats found"
+                  emptyDescription="No chats match your current filters."
+                  selectable={true}
+                  searchable={false}
+                  bulkActions={bulkActions}
+                  renderRowActions={(chat) => (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" className="h-8 w-8 p-0">
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        {!chat.assignedAgentId && (
+                          <DropdownMenuItem onClick={() => handleAssignAgent(chat)}>
+                            <UserPlus className="mr-2 h-4 w-4" />
+                            Assign Agent
+                          </DropdownMenuItem>
+                        )}
+                        {chat.status === "active" && (
+                          <>
+                            <DropdownMenuItem onClick={() => handleCancelChat(chat)}>
+                              <MessageSquareX className="mr-2 h-4 w-4" />
+                              Cancel Chat
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleCloseChat(chat)}>
+                              <XCircle className="mr-2 h-4 w-4" />
+                              Close Chat
+                            </DropdownMenuItem>
+                          </>
+                        )}
+                        <DropdownMenuItem 
+                          onClick={() => handleDeleteChat(chat)}
+                          className="text-destructive"
+                        >
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          Delete Chat
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  )}
+                />
+
+                {/* Pagination */}
+                <ChatPagination
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  pageSize={pageSize}
+                  totalItems={filteredChats.length}
+                  onPageChange={setCurrentPage}
+                  onPageSizeChange={(size) => {
+                    setPageSize(size);
+                    setCurrentPage(1);
                   }}
                 />
               </CardContent>
@@ -206,14 +423,23 @@ export default function AllChats() {
           </TabsContent>
         </Tabs>
 
+        {/* Chat Details Drawer */}
         <Sheet open={!!selectedChat} onOpenChange={() => setSelectedChat(null)}>
-          <SheetContent className="w-[600px] sm:w-[600px]">
+          <SheetContent className="w-[700px] sm:w-[700px]">
             <SheetHeader>
               <SheetTitle>Chat Details</SheetTitle>
             </SheetHeader>
             {selectedChat && <ChatPanel key={selectedChat.id} chat={selectedChat} />}
           </SheetContent>
         </Sheet>
+
+        {/* Agent Assignment Modal */}
+        <AgentAssignmentModal
+          isOpen={assignmentModal.isOpen}
+          onClose={() => setAssignmentModal({ isOpen: false, chat: null })}
+          chat={assignmentModal.chat}
+          onAssign={handleAgentAssigned}
+        />
       </div>
     </ErrorBoundary>
   );

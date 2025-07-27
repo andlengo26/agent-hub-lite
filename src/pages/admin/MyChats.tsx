@@ -1,31 +1,68 @@
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { DataTable, Column } from "@/components/admin/DataTable";
-import { fallbackData, Chat } from "@/lib/mock-data";
+import { EnhancedDataTable } from "@/components/common/EnhancedDataTable";
+import { mockChats, mockUsers, Chat } from "@/lib/mock-data";
 import { useChats } from "@/hooks/useApiQuery";
 import { useFeatureFlag } from "@/hooks/useFeatureFlag";
 import { Skeleton } from "@/components/ui/skeleton";
+import { MapPin } from "lucide-react";
 
 const currentUserId = "user_002"; // Mock current user ID
 
-const chatColumns: Column<Chat>[] = [
-  { key: "requesterName", header: "Customer" },
-  { key: "requesterEmail", header: "Email" },
-  { key: "status", header: "Status", cell: (value) => (
-    <Badge variant={value === "active" ? "default" : value === "missed" ? "destructive" : "secondary"}>
-      {value}
-    </Badge>
-  )},
-  { key: "createdAt", header: "Started" },
+const chatColumns = [
+  { 
+    key: "requesterName", 
+    header: "Customer",
+    sortable: true
+  },
+  { 
+    key: "requesterEmail", 
+    header: "Email",
+    cell: (chat: Chat) => (
+      <div className="max-w-48 truncate" title={chat.requesterEmail}>
+        {chat.requesterEmail}
+      </div>
+    ),
+    mobileHidden: true
+  },
+  { 
+    key: "geo", 
+    header: "Location",
+    cell: (chat: Chat) => (
+      <div className="flex items-center gap-1">
+        <MapPin className="h-3 w-3 text-muted-foreground" />
+        <span className="truncate max-w-24" title={chat.geo}>
+          {chat.geo}
+        </span>
+      </div>
+    ),
+    mobileHidden: true
+  },
+  { 
+    key: "status", 
+    header: "Status",
+    cell: (chat: Chat) => (
+      <Badge variant={chat.status === "active" ? "default" : chat.status === "missed" ? "destructive" : "secondary"}>
+        {chat.status}
+      </Badge>
+    ),
+    sortable: true
+  },
+  { 
+    key: "createdAt", 
+    header: "Started",
+    cell: (chat: Chat) => new Date(chat.createdAt).toLocaleDateString(),
+    sortable: true
+  }
 ];
 
 export default function MyChats() {
   const enableRealTimeUpdates = useFeatureFlag('realTime');
   const { data: chatsResponse, isLoading } = useChats();
   
-  const allChats = chatsResponse?.data || fallbackData.chats;
-  const myChats = allChats.filter(chat => chat.assignedAgentId === currentUserId);
+  const allChats = chatsResponse?.data || mockChats;
+  const userChats = allChats.filter(chat => chat.assignedAgentId === currentUserId);
 
   if (isLoading) {
     return (
@@ -51,16 +88,21 @@ export default function MyChats() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            My Assigned Chats ({myChats.length})
+            My Assigned Chats ({userChats.length})
             {enableRealTimeUpdates && (
               <Badge variant="outline">Live</Badge>
             )}
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <DataTable
-            data={myChats}
+          <EnhancedDataTable
+            data={userChats}
             columns={chatColumns}
+            loading={isLoading}
+            emptyTitle="No chats assigned"
+            emptyDescription="You don't have any chats assigned to you at the moment."
+            selectable={false}
+            searchable={true}
           />
         </CardContent>
       </Card>

@@ -12,6 +12,7 @@ export interface Organization {
 
 export interface User {
   id: string;
+  avatar?: string;
   avatarUrl: string;
   firstName: string;
   lastName: string;
@@ -30,9 +31,11 @@ export interface Chat {
   browser: string;
   pageUrl: string;
   status: 'active' | 'missed' | 'closed';
-  assignedAgentId: string;
+  assignedAgentId?: string;
   createdAt: string;
   lastUpdatedAt: string;
+  geo: string;
+  summary: string;
 }
 
 export interface Engagement {
@@ -110,6 +113,7 @@ export const fallbackData = {
   users: [
     {
       id: "fallback_001",
+      avatar: "/placeholder.svg",
       avatarUrl: "/placeholder.svg",
       firstName: "Sample",
       lastName: "User",
@@ -132,7 +136,9 @@ export const fallbackData = {
       status: "active" as const,
       assignedAgentId: "fallback_001",
       createdAt: "2025-01-01T00:00:00Z",
-      lastUpdatedAt: "2025-01-01T00:00:00Z"
+      lastUpdatedAt: "2025-01-01T00:00:00Z",
+      geo: "Unknown",
+      summary: "Sample chat conversation"
     }
   ] as Chat[],
   
