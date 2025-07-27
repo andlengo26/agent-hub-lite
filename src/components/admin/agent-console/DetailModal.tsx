@@ -9,9 +9,22 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Separator } from '@/components/ui/separator';
 import { Section } from '@/components/common/Section';
+import { Engagement } from '@/types';
 import { formatDistanceToNow } from 'date-fns';
-import { History, FileText, Save } from 'lucide-react';
+import { 
+  History, 
+  FileText, 
+  Save, 
+  MessageCircle, 
+  Mail, 
+  Phone, 
+  Video,
+  User,
+  Clock,
+  Star
+} from 'lucide-react';
 
 interface DetailModalProps {
   isOpen: boolean;
@@ -19,7 +32,22 @@ interface DetailModalProps {
   title: string;
   mode: 'history' | 'notes';
   chatId: string;
+  engagements?: Engagement[];
 }
+
+// Channel icons mapping
+const getChannelIcon = (type: string) => {
+  switch (type) {
+    case 'chat': return MessageCircle;
+    case 'email': return Mail;
+    case 'phone': return Phone;
+    case 'video': return Video;
+    default: return MessageCircle;
+  }
+};
+
+// Mock channel types for detailed engagements
+const mockDetailedChannelTypes = ['chat', 'email', 'phone', 'video'];
 
 // Mock data for demo
 const mockHistory = [
@@ -62,6 +90,7 @@ export function DetailModal({
   title,
   mode,
   chatId,
+  engagements = [],
 }: DetailModalProps) {
   const [newNote, setNewNote] = useState('');
   const [isSaving, setIsSaving] = useState(false);
@@ -80,39 +109,75 @@ export function DetailModal({
     <Section padding="none">
       <ScrollArea className="h-96">
         <div className="space-y-space-4">
-          {mockHistory.map((item) => (
-            <div
-              key={item.id}
-              className="p-space-4 border border-border rounded-radius-md"
-            >
-              <div className="flex items-start justify-between mb-space-2">
-                <div className="flex items-center gap-space-2">
-                  <History className="h-4 w-4 text-text-secondary" />
-                  <span className="font-medium text-text-primary">
-                    {item.type}
-                  </span>
-                </div>
-                <Badge 
-                  variant={item.status === 'resolved' ? 'default' : 'secondary'}
-                  className="text-xs"
+          {engagements.length > 0 ? (
+            engagements.map((engagement, index) => {
+              const channelType = mockDetailedChannelTypes[index % mockDetailedChannelTypes.length];
+              const ChannelIcon = getChannelIcon(channelType);
+              
+              return (
+                <div
+                  key={engagement.id}
+                  className="p-space-4 border border-border rounded-radius-md bg-surface"
                 >
-                  {item.status}
-                </Badge>
-              </div>
-              
-              <p className="text-sm text-text-primary mb-space-2">
-                {item.summary}
-              </p>
-              
-              <div className="text-xs text-text-secondary">
-                <span>{item.agent}</span>
-                <span className="mx-space-2">•</span>
-                <span>
-                  {formatDistanceToNow(new Date(item.timestamp), { addSuffix: true })}
-                </span>
-              </div>
+                  <div className="flex items-start justify-between mb-space-3">
+                    <div className="flex items-center gap-space-3">
+                      <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10">
+                        <ChannelIcon className="h-4 w-4 text-primary" />
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-space-2 mb-space-1">
+                          <Badge variant="outline" className="text-xs capitalize">
+                            {channelType}
+                          </Badge>
+                          <Badge variant="secondary" className="text-xs">
+                            {engagement.engagementCount} interactions
+                          </Badge>
+                        </div>
+                        <p className="text-sm font-medium text-text-primary">
+                          {engagement.customerName}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-xs text-text-secondary text-right">
+                      {formatDistanceToNow(new Date(engagement.lastEngagedAt), { addSuffix: true })}
+                    </div>
+                  </div>
+
+                  <Separator className="my-space-3" />
+                  
+                  <div className="mb-space-3">
+                    <h4 className="text-sm font-medium text-text-primary mb-space-2">AI Summary</h4>
+                    <p className="text-sm text-text-secondary leading-relaxed">
+                      {engagement.aiSummary}
+                    </p>
+                  </div>
+
+                  <Separator className="my-space-3" />
+
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-space-2">
+                      <User className="h-3 w-3 text-text-secondary" />
+                      <span className="text-xs text-text-secondary">
+                        Agents: {engagement.agentsInvolved.length}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-space-2">
+                      <Star className="h-3 w-3 text-highlight" />
+                      <span className="text-xs text-text-secondary">
+                        Contact: {engagement.contactNumber}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })
+          ) : (
+            <div className="text-center py-space-8 text-text-secondary">
+              <History className="h-12 w-12 mx-auto mb-space-4 opacity-50" />
+              <h3 className="font-medium mb-space-2">No engagement history</h3>
+              <p className="text-sm">This customer has no previous interactions</p>
             </div>
-          ))}
+          )}
         </div>
       </ScrollArea>
     </Section>
