@@ -38,9 +38,9 @@ export function QueuePreview({
   const [customDate, setCustomDate] = useState<Date>(new Date());
   const [openSections, setOpenSections] = useState({
     waiting: true,
-    active: true,
-    missed: true,
-    closed: true,
+    active: false,
+    missed: false,
+    closed: false,
   });
 
   // Filter chats by date filter option
@@ -74,7 +74,17 @@ export function QueuePreview({
   };
 
   const toggleSection = (section: keyof typeof openSections) => {
-    setOpenSections(prev => ({ ...prev, [section]: !prev[section] }));
+    setOpenSections(prev => {
+      // Close all sections first, then open the clicked one
+      const newState = {
+        waiting: false,
+        active: false,
+        missed: false,
+        closed: false,
+      };
+      newState[section] = !prev[section];
+      return newState;
+    });
   };
 
   const renderChatItem = (chat: Chat) => (

@@ -173,7 +173,7 @@ export function ActiveChat({
           
           <div className="flex flex-wrap items-center gap-space-2">
             {/* Status-specific actions */}
-            {!currentChat.assignedAgentId && currentChat.status !== 'closed' && (
+            {!currentChat.assignedAgentId && currentChat.status !== 'closed' && currentChat.status !== 'missed' && (
               <>
                 <Button 
                   variant="default" 

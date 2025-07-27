@@ -26,7 +26,8 @@ import {
   Mail,
   Loader2,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  Paperclip
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -45,6 +46,7 @@ export function EmailComposer({
 }: EmailComposerProps) {
   const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
   const [isSending, setIsSending] = useState(false);
+  const [attachments, setAttachments] = useState<File[]>([]);
   const [formData, setFormData] = useState({
     from: 'support@yourcompany.com',
     to: chat.requesterEmail,
@@ -56,6 +58,13 @@ export function EmailComposer({
 I hope this email finds you well. I noticed that we weren't able to connect during your recent chat session on ${new Date(chat.createdAt).toLocaleDateString()}.
 
 I wanted to personally reach out to ensure your question or concern is addressed. Please feel free to reply to this email with any details about what you were looking for, and I'll be happy to assist you.
+
+ORIGINAL CHAT CONTEXT:
+Chat ID: ${chat.id}
+Date: ${new Date(chat.createdAt).toLocaleString()}
+Page: ${chat.pageUrl}
+Browser: ${chat.browser}
+Customer: ${chat.requesterName} (${chat.requesterEmail})
 
 Alternatively, you can:
 - Visit our website to start a new chat session
@@ -99,12 +108,21 @@ Customer Support Team`
     // Additional logic for closing the chat could go here
   };
 
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files || []);
+    setAttachments(prev => [...prev, ...files]);
+  };
+
+  const removeAttachment = (index: number) => {
+    setAttachments(prev => prev.filter((_, i) => i !== index));
+  };
+
   const isFormValid = formData.to.trim() && formData.subject.trim() && formData.body.trim();
 
   return (
     <Drawer open={isOpen} onOpenChange={onClose}>
       <DrawerContent className="max-h-[90vh]">
-        <DrawerHeader className="pb-space-4">
+        <DrawerHeader className="pb-space-6 px-space-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-space-3">
               <Mail className="h-5 w-5 text-primary" />
@@ -121,12 +139,12 @@ Customer Support Team`
           </div>
         </DrawerHeader>
 
-        <div className="px-space-4 flex-1 min-h-0 overflow-y-auto">
-          <div className="space-y-space-4 pb-space-6">
+        <div className="px-space-6 flex-1 min-h-0 overflow-y-auto">
+          <div className="space-y-space-6 pb-space-8">
             {/* Basic Email Fields */}
-            <div className="space-y-space-3">
-              <div className="grid grid-cols-2 gap-space-3">
-                <div>
+            <div className="space-y-space-4">
+              <div className="grid grid-cols-2 gap-space-4">
+                <div className="space-y-space-2">
                   <Label htmlFor="from">From</Label>
                   <Input
                     id="from"
@@ -135,7 +153,7 @@ Customer Support Team`
                     placeholder="support@yourcompany.com"
                   />
                 </div>
-                <div>
+                <div className="space-y-space-2">
                   <Label htmlFor="to">To</Label>
                   <Input
                     id="to"
@@ -152,7 +170,7 @@ Customer Support Team`
                 variant="ghost"
                 size="sm"
                 onClick={() => setIsAdvancedOpen(!isAdvancedOpen)}
-                className="w-full justify-between p-space-2 h-auto"
+                className="w-full justify-between p-space-3 h-auto"
               >
                 <span className="text-sm text-text-secondary">
                   Advanced Options (CC/BCC)
@@ -166,8 +184,8 @@ Customer Support Team`
 
               {/* Advanced Fields */}
               {isAdvancedOpen && (
-                <div className="grid grid-cols-2 gap-space-3 animate-fade-in">
-                  <div>
+                <div className="grid grid-cols-2 gap-space-4 animate-fade-in">
+                  <div className="space-y-space-2">
                     <Label htmlFor="cc">CC</Label>
                     <Input
                       id="cc"
@@ -176,7 +194,7 @@ Customer Support Team`
                       placeholder="Optional CC recipients"
                     />
                   </div>
-                  <div>
+                  <div className="space-y-space-2">
                     <Label htmlFor="bcc">BCC</Label>
                     <Input
                       id="bcc"
@@ -188,7 +206,7 @@ Customer Support Team`
                 </div>
               )}
 
-              <div>
+              <div className="space-y-space-2">
                 <Label htmlFor="subject">Subject</Label>
                 <Input
                   id="subject"
@@ -199,7 +217,7 @@ Customer Support Team`
                 />
               </div>
 
-              <div>
+              <div className="space-y-space-2">
                 <Label htmlFor="body">Message</Label>
                 <Textarea
                   id="body"
@@ -210,16 +228,61 @@ Customer Support Team`
                   required
                 />
               </div>
+
+              {/* File Attachments */}
+              <div className="space-y-space-2">
+                <Label>Attachments</Label>
+                <div className="flex flex-col gap-space-2">
+                  <input
+                    type="file"
+                    id="file-input"
+                    multiple
+                    onChange={handleFileSelect}
+                    className="hidden"
+                    accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png,.gif"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => document.getElementById('file-input')?.click()}
+                    className="w-fit"
+                  >
+                    <Paperclip className="h-4 w-4 mr-2" />
+                    Attach Files
+                  </Button>
+                  
+                  {/* Display attached files */}
+                  {attachments.length > 0 && (
+                    <div className="space-y-space-1">
+                      {attachments.map((file, index) => (
+                        <div key={index} className="flex items-center justify-between p-space-2 bg-surface rounded-radius-sm">
+                          <span className="text-sm text-text-primary truncate">{file.name}</span>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => removeAttachment(index)}
+                            className="h-6 w-6 p-0"
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
 
-            <Separator />
+            <Separator className="my-space-6" />
 
             {/* Chat Context */}
-            <div className="bg-surface p-space-3 rounded-radius-md">
-              <h4 className="text-sm font-medium text-text-primary mb-space-2">
+            <div className="bg-surface p-space-4 rounded-radius-md">
+              <h4 className="text-sm font-medium text-text-primary mb-space-3">
                 Original Chat Context
               </h4>
-              <div className="text-xs text-text-secondary space-y-1">
+              <div className="text-xs text-text-secondary space-y-space-2">
                 <p><strong>Chat ID:</strong> {chat.id}</p>
                 <p><strong>Date:</strong> {new Date(chat.createdAt).toLocaleString()}</p>
                 <p><strong>Page:</strong> {chat.pageUrl}</p>
@@ -229,8 +292,8 @@ Customer Support Team`
           </div>
         </div>
 
-        <DrawerFooter className="pt-space-4">
-          <div className="flex flex-col sm:flex-row gap-space-2">
+        <DrawerFooter className="pt-space-6 px-space-6">
+          <div className="flex flex-col sm:flex-row gap-space-3">
             <Button
               variant="default"
               onClick={handleSendAndClose}
