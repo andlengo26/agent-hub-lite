@@ -61,18 +61,26 @@ const mockMessages: Message[] = [
 ];
 
 export function TranscriptViewer({ chatId }: TranscriptViewerProps) {
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollIntoView({ behavior: 'smooth' });
+    const container = messagesContainerRef.current;
+    if (container) {
+      container.scrollTo({ 
+        top: container.scrollHeight, 
+        behavior: 'smooth' 
+      });
     }
-  }, [mockMessages]);
+  }, [mockMessages, chatId]);
 
   return (
-    <ScrollArea className="h-full p-space-4">
-      <div className="space-y-space-4">
+    <div className="h-full flex flex-col">
+      <div 
+        ref={messagesContainerRef}
+        className="flex-1 overflow-y-auto p-space-4"
+      >
+        <div className="space-y-space-4">
         {mockMessages.map((message) => (
           <div
             key={message.id}
@@ -126,9 +134,8 @@ export function TranscriptViewer({ chatId }: TranscriptViewerProps) {
             </div>
           </div>
         ))}
-        {/* Invisible element for auto-scroll */}
-        <div ref={scrollRef} />
+        </div>
       </div>
-    </ScrollArea>
+    </div>
   );
 }
