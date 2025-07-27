@@ -12,6 +12,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/co
 import { Skeleton } from '@/components/ui/skeleton';
 import { Section } from '@/components/common/Section';
 import { DetailModal } from './DetailModal';
+import { NotesSection } from './NotesSection';
 import { Chat, User } from '@/types';
 import { 
   ChevronLeft, 
@@ -47,8 +48,7 @@ export function ExpandableContextPanel({
   isLoading = false,
 }: ExpandableContextPanelProps) {
   const [historyModalOpen, setHistoryModalOpen] = useState(false);
-  const [notesModalOpen, setNotesModalOpen] = useState(false);
-  const [expandedSections, setExpandedSections] = useState(['customer', 'session']);
+  const [expandedSections, setExpandedSections] = useState(['customer', 'session', 'notes']);
   const isMobile = useIsMobile();
 
   if (!currentChat) {
@@ -216,6 +216,19 @@ export function ExpandableContextPanel({
               </AccordionItem>
             )}
 
+            {/* Notes Section with Continuous Scroll */}
+            <AccordionItem value="notes">
+              <AccordionTrigger className="px-space-4 py-space-3">
+                <div className="flex items-center gap-space-2">
+                  <FileText className="h-4 w-4" />
+                  <span>Notes</span>
+                </div>
+              </AccordionTrigger>
+              <AccordionContent className="px-space-4 pb-space-4 max-h-64">
+                <NotesSection chatId={currentChat.id} />
+              </AccordionContent>
+            </AccordionItem>
+
             {/* Quick Actions */}
             <AccordionItem value="actions">
               <AccordionTrigger className="px-space-4 py-space-3">
@@ -231,15 +244,6 @@ export function ExpandableContextPanel({
                   >
                     <History className="h-4 w-4 mr-space-2" />
                     View History
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setNotesModalOpen(true)}
-                    className="justify-start"
-                  >
-                    <FileText className="h-4 w-4 mr-space-2" />
-                    Manage Notes
                   </Button>
                 </div>
               </AccordionContent>
@@ -276,13 +280,6 @@ export function ExpandableContextPanel({
           chatId={currentChat.id}
         />
 
-        <DetailModal
-          isOpen={notesModalOpen}
-          onClose={() => setNotesModalOpen(false)}
-          title="Manage Notes"
-          mode="notes"
-          chatId={currentChat.id}
-        />
       </>
     );
   }
@@ -321,13 +318,6 @@ export function ExpandableContextPanel({
         chatId={currentChat.id}
       />
 
-      <DetailModal
-        isOpen={notesModalOpen}
-        onClose={() => setNotesModalOpen(false)}
-        title="Manage Notes"
-        mode="notes"
-        chatId={currentChat.id}
-      />
     </>
   );
 }
