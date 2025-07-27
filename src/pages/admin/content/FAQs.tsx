@@ -2,8 +2,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { DataTable, Column } from "@/components/admin/DataTable";
-import { mockFAQs, FAQ } from "@/lib/mock-data";
+import { FAQ } from "@/types";
 import { Plus } from "lucide-react";
+import { useFAQs } from "@/hooks/useApiQuery";
 
 const faqColumns: Column<FAQ>[] = [
   { key: "question", header: "Question" },
@@ -24,6 +25,17 @@ const faqColumns: Column<FAQ>[] = [
 ];
 
 export default function FAQs() {
+  const { data: faqsResponse, isLoading, error } = useFAQs();
+  const faqs = faqsResponse?.data || [];
+
+  if (isLoading) {
+    return <div>Loading FAQs...</div>;
+  }
+
+  if (error) {
+    return <div>Error loading FAQs: {error.message}</div>;
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -38,7 +50,7 @@ export default function FAQs() {
           <CardTitle>FAQ Database</CardTitle>
         </CardHeader>
         <CardContent>
-          <DataTable data={mockFAQs} columns={faqColumns} onEdit={() => {}} onDelete={() => {}} />
+          <DataTable data={faqs} columns={faqColumns} onEdit={() => {}} onDelete={() => {}} />
         </CardContent>
       </Card>
     </div>

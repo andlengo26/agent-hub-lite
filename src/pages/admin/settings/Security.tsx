@@ -2,9 +2,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DataTable, Column } from "@/components/admin/DataTable";
-import { mockData, Domain } from "@/lib/mock-data";
+import { Domain } from "@/types";
 import { Plus } from "lucide-react";
 import { FloatingPreview } from "@/components/admin/FloatingPreview";
+import { useDomains } from "@/hooks/useApiQuery";
 
 const domainColumns: Column<Domain>[] = [
   { key: "domain", header: "Domain" },
@@ -12,6 +13,17 @@ const domainColumns: Column<Domain>[] = [
 ];
 
 export default function Security() {
+  const { data: domainsResponse, isLoading, error } = useDomains();
+  const domains = domainsResponse?.data || [];
+
+  if (isLoading) {
+    return <div>Loading domains...</div>;
+  }
+
+  if (error) {
+    return <div>Error loading domains: {error.message}</div>;
+  }
+
   return (
     <>
       <div className="space-y-6">
@@ -28,7 +40,7 @@ export default function Security() {
             <Input placeholder="example.com" />
             <Button className="gap-2"><Plus className="h-4 w-4" />Add</Button>
           </div>
-          <DataTable data={mockData.domains} columns={domainColumns} onDelete={() => {}} />
+          <DataTable data={domains} columns={domainColumns} onDelete={() => {}} />
         </CardContent>
       </Card>
     </div>

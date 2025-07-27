@@ -209,6 +209,76 @@ class ApiClient {
     });
   }
 
+  // Documents
+  async getDocuments(params?: { page?: number; limit?: number; }): Promise<ApiResponse<any[]>> {
+    if (config.mock.enabled) {
+      return this.request(`/documents`);
+    }
+    
+    const searchParams = new URLSearchParams();
+    if (params?.page) searchParams.set('page', params.page.toString());
+    if (params?.limit) searchParams.set('limit', params.limit.toString());
+
+    const query = searchParams.toString();
+    return this.request(`/documents${query ? `?${query}` : ''}`);
+  }
+
+  // FAQs
+  async getFAQs(params?: { page?: number; limit?: number; }): Promise<ApiResponse<any[]>> {
+    if (config.mock.enabled) {
+      return this.request(`/faqs`);
+    }
+    
+    const searchParams = new URLSearchParams();
+    if (params?.page) searchParams.set('page', params.page.toString());
+    if (params?.limit) searchParams.set('limit', params.limit.toString());
+
+    const query = searchParams.toString();
+    return this.request(`/faqs${query ? `?${query}` : ''}`);
+  }
+
+  // Scraper Jobs
+  async getScraperJobs(params?: { page?: number; limit?: number; }): Promise<ApiResponse<any[]>> {
+    if (config.mock.enabled) {
+      return this.request(`/scraper-jobs`);
+    }
+    
+    const searchParams = new URLSearchParams();
+    if (params?.page) searchParams.set('page', params.page.toString());
+    if (params?.limit) searchParams.set('limit', params.limit.toString());
+
+    const query = searchParams.toString();
+    return this.request(`/scraper-jobs${query ? `?${query}` : ''}`);
+  }
+
+  // Domains
+  async getDomains(params?: { page?: number; limit?: number; }): Promise<ApiResponse<any[]>> {
+    if (config.mock.enabled) {
+      return this.request(`/domains`);
+    }
+    
+    const searchParams = new URLSearchParams();
+    if (params?.page) searchParams.set('page', params.page.toString());
+    if (params?.limit) searchParams.set('limit', params.limit.toString());
+
+    const query = searchParams.toString();
+    return this.request(`/domains${query ? `?${query}` : ''}`);
+  }
+
+  // Resources
+  async getResources(params?: { page?: number; limit?: number; }): Promise<ApiResponse<any[]>> {
+    if (config.mock.enabled) {
+      return this.request(`/resources`);
+    }
+    
+    const searchParams = new URLSearchParams();
+    if (params?.page) searchParams.set('page', params.page.toString());
+    if (params?.limit) searchParams.set('limit', params.limit.toString());
+
+    const query = searchParams.toString();
+    return this.request(`/resources${query ? `?${query}` : ''}`);
+  }
+
   // Health check
   async healthCheck(): Promise<{ status: string; timestamp: string; version: string }> {
     return this.request('/health');

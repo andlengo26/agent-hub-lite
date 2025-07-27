@@ -15,7 +15,7 @@ import { Plus, Users as UsersIcon, Download, Archive, Trash2, UserPlus } from "l
 import { useUsers, useInviteUser, useUpdateUser, useDeleteUser } from "@/hooks/useApiQuery";
 import { inviteUserSchema, updateUserSchema, type InviteUserInput, type UpdateUserInput } from "@/lib/validations";
 import { useFeatureFlag } from "@/hooks/useFeatureFlag";
-import { User } from "@/lib/mock-data";
+import { User } from "@/types";
 import { toast } from "@/hooks/use-toast";
 import { ErrorBoundary } from "@/components/common/ErrorBoundary";
 

@@ -1,0 +1,40 @@
+{
+  "data": [
+    {
+      "id": "domain_001",
+      "domain": "techcorp.com",
+      "addedById": "user_001",
+      "addedAt": "2025-01-15T10:30:00Z"
+    },
+    {
+      "id": "domain_002",
+      "domain": "startupxyz.io",
+      "addedById": "user_002",
+      "addedAt": "2025-01-20T12:45:00Z"
+    },
+    {
+      "id": "domain_003",
+      "domain": "retailco.com",
+      "addedById": "user_003",
+      "addedAt": "2025-01-22T14:15:00Z"
+    },
+    {
+      "id": "domain_004",
+      "domain": "nonprofit.org",
+      "addedById": "user_004",
+      "addedAt": "2025-01-18T09:30:00Z"
+    },
+    {
+      "id": "domain_005",
+      "domain": "financegroup.net",
+      "addedById": "user_005",
+      "addedAt": "2025-01-10T16:00:00Z"
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "limit": 10,
+    "total": 5,
+    "totalPages": 1
+  }
+}

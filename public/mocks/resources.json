@@ -1,0 +1,65 @@
+{
+  "data": [
+    {
+      "id": "resource_001",
+      "title": "Customer Service Guidelines",
+      "tags": ["customer-service", "guidelines", "training"],
+      "type": "document",
+      "url": "/resources/customer-service-guidelines.pdf",
+      "aiInstructions": "Use this document to guide customer service interactions and maintain consistent service quality.",
+      "uploadedById": "user_001",
+      "uploadedAt": "2025-01-15T11:00:00Z",
+      "updatedAt": "2025-01-25T14:30:00Z"
+    },
+    {
+      "id": "resource_002",
+      "title": "Product Demo Video",
+      "tags": ["product", "demo", "onboarding"],
+      "type": "video",
+      "url": "https://videos.techcorp.com/product-demo",
+      "aiInstructions": "Reference this video when customers need product demonstrations or onboarding assistance.",
+      "uploadedById": "user_002",
+      "uploadedAt": "2025-01-20T13:15:00Z",
+      "updatedAt": "2025-01-20T13:15:00Z"
+    },
+    {
+      "id": "resource_003",
+      "title": "Troubleshooting Knowledge Base",
+      "tags": ["troubleshooting", "technical", "support"],
+      "type": "link",
+      "url": "https://help.startupxyz.io/troubleshooting",
+      "aiInstructions": "Direct customers to this knowledge base for technical issues and self-service support.",
+      "uploadedById": "user_003",
+      "uploadedAt": "2025-01-22T15:00:00Z",
+      "updatedAt": "2025-01-26T10:45:00Z"
+    },
+    {
+      "id": "resource_004",
+      "title": "Email Response Template",
+      "tags": ["template", "email", "communication"],
+      "type": "template",
+      "url": "/templates/email-response.html",
+      "aiInstructions": "Use this template structure for formal email responses to customer inquiries.",
+      "uploadedById": "user_004",
+      "uploadedAt": "2025-01-18T10:30:00Z",
+      "updatedAt": "2025-01-24T16:20:00Z"
+    },
+    {
+      "id": "resource_005",
+      "title": "API Documentation",
+      "tags": ["api", "documentation", "integration"],
+      "type": "document",
+      "url": "/resources/api-documentation.pdf",
+      "aiInstructions": "Reference this documentation when helping customers with API integration questions.",
+      "uploadedById": "user_005",
+      "uploadedAt": "2025-01-10T17:00:00Z",
+      "updatedAt": "2025-01-27T09:15:00Z"
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "limit": 10,
+    "total": 5,
+    "totalPages": 1
+  }
+}

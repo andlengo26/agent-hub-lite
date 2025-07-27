@@ -3,14 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { DataTable, Column } from "@/components/admin/DataTable";
 import { FileText, Video, Link, File, Plus } from "lucide-react";
-
-interface Resource {
-  id: string;
-  title: string;
-  type: string;
-  tags: string[];
-  updatedAt: string;
-}
+import { Resource } from "@/types";
+import { useResources } from "@/hooks/useApiQuery";
 
 const getTypeIcon = (type: string) => {
   switch (type) {
@@ -52,32 +46,32 @@ const resourceColumns: Column<Resource>[] = [
 ];
 
 export default function Resources() {
+  const { data: resourcesResponse, isLoading, error } = useResources();
+  const resources = resourcesResponse?.data || [];
+
+  if (isLoading) {
+    return <div>Loading resources...</div>;
+  }
+
+  if (error) {
+    return <div>Error loading resources: {error.message}</div>;
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold">Resources</h1>
-          <p className="text-muted-foreground">Manage shareable resources for customer support</p>
+          <p className="text-muted-foreground">Manage AI training resources and content</p>
         </div>
-        <Button disabled>
-          <Plus className="h-4 w-4 mr-2" />
-          Add Resource
-        </Button>
+        <Button className="gap-2"><Plus className="h-4 w-4" />Add Resource</Button>
       </div>
       <Card>
         <CardHeader>
           <CardTitle>Resource Library</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-center py-8">
-            <p className="text-muted-foreground mb-6">
-              No resources yet. Upload documents, videos, or links to get started.
-            </p>
-            <DataTable 
-              data={[]} 
-              columns={resourceColumns}
-            />
-          </div>
+          <DataTable data={resources} columns={resourceColumns} onEdit={() => {}} onDelete={() => {}} />
         </CardContent>
       </Card>
     </div>

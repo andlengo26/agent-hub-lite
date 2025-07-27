@@ -1,35 +1,37 @@
 import { createContext, useContext, useState, ReactNode } from "react";
-
-interface Organization {
-  id: string;
-  name: string;
-  domain: string;
-  plan: string;
-}
+import { useOrganizations } from "@/hooks/useApiQuery";
+import { Organization } from "@/types";
 
 interface TenantContextType {
   currentOrg: Organization | null;
   organizations: Organization[];
   setCurrentOrg: (org: Organization) => void;
   orgId: string | null;
+  isLoading: boolean;
+  error: any;
 }
 
 const TenantContext = createContext<TenantContextType | undefined>(undefined);
 
-const mockOrganizations: Organization[] = [
-  { id: "org_001", name: "Acme Corp", domain: "acme.com", plan: "Enterprise" },
-  { id: "org_002", name: "TechStart Inc", domain: "techstart.io", plan: "Pro" },
-  { id: "org_003", name: "Global Services", domain: "global.net", plan: "Basic" },
-];
-
 export function TenantProvider({ children }: { children: ReactNode }) {
-  const [currentOrg, setCurrentOrg] = useState<Organization | null>(mockOrganizations[0]);
+  const { data: orgsResponse, isLoading, error } = useOrganizations();
+  const organizations = orgsResponse?.data || [];
+  const [currentOrg, setCurrentOrg] = useState<Organization | null>(
+    organizations.length > 0 ? organizations[0] : null
+  );
+
+  // Update currentOrg when organizations are loaded
+  if (!currentOrg && organizations.length > 0) {
+    setCurrentOrg(organizations[0]);
+  }
 
   const value: TenantContextType = {
     currentOrg,
-    organizations: mockOrganizations,
+    organizations,
     setCurrentOrg,
     orgId: currentOrg?.id || null,
+    isLoading,
+    error,
   };
 
   return (

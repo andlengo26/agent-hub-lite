@@ -1,8 +1,9 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { DataTable, Column } from "@/components/admin/DataTable";
-import { mockDocuments, Document } from "@/lib/mock-data";
+import { Document } from "@/types";
 import { Upload, FileText } from "lucide-react";
+import { useDocuments } from "@/hooks/useApiQuery";
 
 const documentColumns: Column<Document>[] = [
   { 
@@ -21,6 +22,17 @@ const documentColumns: Column<Document>[] = [
 ];
 
 export default function Documents() {
+  const { data: documentsResponse, isLoading, error } = useDocuments();
+  const documents = documentsResponse?.data || [];
+
+  if (isLoading) {
+    return <div>Loading documents...</div>;
+  }
+
+  if (error) {
+    return <div>Error loading documents: {error.message}</div>;
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -35,7 +47,7 @@ export default function Documents() {
           <CardTitle>Document Library</CardTitle>
         </CardHeader>
         <CardContent>
-          <DataTable data={mockDocuments} columns={documentColumns} onView={() => {}} onDelete={() => {}} />
+          <DataTable data={documents} columns={documentColumns} onView={() => {}} onDelete={() => {}} />
         </CardContent>
       </Card>
     </div>

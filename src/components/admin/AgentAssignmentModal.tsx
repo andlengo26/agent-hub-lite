@@ -4,8 +4,9 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { mockUsers, Chat } from '@/lib/mock-data';
+import { Chat } from '@/types';
 import { toast } from '@/hooks/use-toast';
+import { useUsers } from '@/hooks/useApiQuery';
 
 interface AgentAssignmentModalProps {
   isOpen: boolean;
@@ -22,6 +23,8 @@ export function AgentAssignmentModal({
 }: AgentAssignmentModalProps) {
   const [selectedAgentId, setSelectedAgentId] = useState<string>('');
   const [isAssigning, setIsAssigning] = useState(false);
+  const { data: usersResponse } = useUsers();
+  const users = usersResponse?.data || [];
 
   const handleAssign = async () => {
     if (!chat || !selectedAgentId) return;
@@ -34,7 +37,7 @@ export function AgentAssignmentModal({
       
       onAssign(chat.id, selectedAgentId);
       
-      const selectedAgent = mockUsers.find(u => u.id === selectedAgentId);
+      const selectedAgent = users.find(u => u.id === selectedAgentId);
       toast({
         title: "Agent Assigned",
         description: `Chat has been assigned to ${selectedAgent?.firstName} ${selectedAgent?.lastName}`,
@@ -53,7 +56,7 @@ export function AgentAssignmentModal({
     }
   };
 
-  const selectedAgent = mockUsers.find(u => u.id === selectedAgentId);
+  const selectedAgent = users.find(u => u.id === selectedAgentId);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -82,7 +85,7 @@ export function AgentAssignmentModal({
                   <SelectValue placeholder="Choose an agent" />
                 </SelectTrigger>
                 <SelectContent>
-                  {mockUsers.map((user) => (
+                  {users.map((user) => (
                     <SelectItem key={user.id} value={user.id}>
                       <div className="flex items-center gap-2">
                         <Avatar className="h-6 w-6">

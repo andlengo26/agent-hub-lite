@@ -1,0 +1,50 @@
+{
+  "data": [
+    {
+      "id": "scraper_001",
+      "url": "https://docs.techcorp.com",
+      "linkDepth": 3,
+      "frequency": "daily",
+      "lastScrapedAt": "2025-01-27T06:00:00Z",
+      "status": "completed"
+    },
+    {
+      "id": "scraper_002",
+      "url": "https://help.startupxyz.io",
+      "linkDepth": 2,
+      "frequency": "weekly",
+      "lastScrapedAt": "2025-01-25T18:30:00Z",
+      "status": "running"
+    },
+    {
+      "id": "scraper_003",
+      "url": "https://support.retailco.com",
+      "linkDepth": 4,
+      "frequency": "daily",
+      "lastScrapedAt": "2025-01-26T12:15:00Z",
+      "status": "failed"
+    },
+    {
+      "id": "scraper_004",
+      "url": "https://knowledge.nonprofit.org",
+      "linkDepth": 1,
+      "frequency": "monthly",
+      "lastScrapedAt": "2025-01-20T08:45:00Z",
+      "status": "pending"
+    },
+    {
+      "id": "scraper_005",
+      "url": "https://wiki.financegroup.net",
+      "linkDepth": 5,
+      "frequency": "weekly",
+      "lastScrapedAt": "2025-01-27T03:20:00Z",
+      "status": "completed"
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "limit": 10,
+    "total": 5,
+    "totalPages": 1
+  }
+}

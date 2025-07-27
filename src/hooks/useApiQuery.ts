@@ -250,6 +250,91 @@ export function useInviteUser() {
   });
 }
 
+// Documents hooks
+export function useDocuments(params?: { page?: number; limit?: number; }) {
+  return useQuery({
+    queryKey: ['documents', params],
+    queryFn: async () => {
+      console.log('🔄 useDocuments: Fetching documents with params:', params);
+      const result = await apiClient.getDocuments(params);
+      console.log('✅ useDocuments: Successfully fetched documents via API client:', result);
+      return result;
+    },
+    staleTime: 60000, // 1 minute
+    retry: (failureCount, error) => {
+      return failureCount < 2 && error.message.includes('fetch');
+    }
+  });
+}
+
+// FAQs hooks
+export function useFAQs(params?: { page?: number; limit?: number; }) {
+  return useQuery({
+    queryKey: ['faqs', params],
+    queryFn: async () => {
+      console.log('🔄 useFAQs: Fetching FAQs with params:', params);
+      const result = await apiClient.getFAQs(params);
+      console.log('✅ useFAQs: Successfully fetched FAQs via API client:', result);
+      return result;
+    },
+    staleTime: 60000, // 1 minute
+    retry: (failureCount, error) => {
+      return failureCount < 2 && error.message.includes('fetch');
+    }
+  });
+}
+
+// Scraper Jobs hooks
+export function useScraperJobs(params?: { page?: number; limit?: number; }) {
+  return useQuery({
+    queryKey: ['scraper-jobs', params],
+    queryFn: async () => {
+      console.log('🔄 useScraperJobs: Fetching scraper jobs with params:', params);
+      const result = await apiClient.getScraperJobs(params);
+      console.log('✅ useScraperJobs: Successfully fetched scraper jobs via API client:', result);
+      return result;
+    },
+    staleTime: 60000, // 1 minute
+    retry: (failureCount, error) => {
+      return failureCount < 2 && error.message.includes('fetch');
+    }
+  });
+}
+
+// Domains hooks
+export function useDomains(params?: { page?: number; limit?: number; }) {
+  return useQuery({
+    queryKey: ['domains', params],
+    queryFn: async () => {
+      console.log('🔄 useDomains: Fetching domains with params:', params);
+      const result = await apiClient.getDomains(params);
+      console.log('✅ useDomains: Successfully fetched domains via API client:', result);
+      return result;
+    },
+    staleTime: 60000, // 1 minute
+    retry: (failureCount, error) => {
+      return failureCount < 2 && error.message.includes('fetch');
+    }
+  });
+}
+
+// Resources hooks
+export function useResources(params?: { page?: number; limit?: number; }) {
+  return useQuery({
+    queryKey: ['resources', params],
+    queryFn: async () => {
+      console.log('🔄 useResources: Fetching resources with params:', params);
+      const result = await apiClient.getResources(params);
+      console.log('✅ useResources: Successfully fetched resources via API client:', result);
+      return result;
+    },
+    staleTime: 60000, // 1 minute
+    retry: (failureCount, error) => {
+      return failureCount < 2 && error.message.includes('fetch');
+    }
+  });
+}
+
 // Health check
 export function useHealthCheck() {
   return useQuery({

@@ -14,7 +14,7 @@ import { Plus, Download, Archive, Trash2 } from "lucide-react";
 import { useOrganizations, useCreateOrganization, useUpdateOrganization, useDeleteOrganization } from "@/hooks/useApiQuery";
 import { createOrganizationSchema, updateOrganizationSchema, type CreateOrganizationInput, type UpdateOrganizationInput } from "@/lib/validations";
 import { useFeatureFlag } from "@/hooks/useFeatureFlag";
-import { Organization } from "@/lib/mock-data";
+import { Organization } from "@/types";
 import { toast } from "@/hooks/use-toast";
 import { ErrorBoundary } from "@/components/common/ErrorBoundary";
 

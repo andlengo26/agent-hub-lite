@@ -1,5 +1,4 @@
-// Mock data interfaces for Customer Support AI Agent Admin Portal
-// Static JSON files now serve as the primary data source
+// TypeScript interfaces for Customer Support AI Agent Admin Portal
 
 export interface Organization {
   id: string;
@@ -8,6 +7,7 @@ export interface Organization {
   activeAgents: number;
   createdAt: string;
   status: 'active' | 'inactive';
+  plan?: string;
 }
 
 export interface User {
@@ -95,30 +95,3 @@ export interface Domain {
   addedById: string;
   addedAt: string;
 }
-
-// DEPRECATED: These exports are deprecated and should not be used in new code
-// All data now comes from static JSON files via the API client
-// These are kept only for legacy compatibility during migration
-
-export const mockOrganizations: Organization[] = [];
-export const mockUsers: User[] = [];
-export const mockChats: Chat[] = [];
-export const mockEngagements: Engagement[] = [];
-export const mockDocuments: Document[] = [];
-export const mockScraperJobs: ScraperJob[] = [];
-export const mockFAQs: FAQ[] = [];
-export const mockResources: Resource[] = [];
-export const mockDomains: Domain[] = [];
-
-// DEPRECATED: Use API endpoints instead
-export const mockData = {
-  organizations: mockOrganizations,
-  users: mockUsers,
-  chats: mockChats,
-  engagements: mockEngagements,
-  documents: mockDocuments,
-  scraperJobs: mockScraperJobs,
-  faqs: mockFAQs,
-  resources: mockResources,
-  domains: mockDomains
-};

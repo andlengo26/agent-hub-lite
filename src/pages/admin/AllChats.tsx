@@ -11,7 +11,7 @@ import { ChatFilters, ChatFilters as ChatFiltersType } from "@/components/admin/
 import { ChatPagination } from "@/components/admin/ChatPagination";
 import { AgentAssignmentModal } from "@/components/admin/AgentAssignmentModal";
 import { ErrorBoundary } from "@/components/common/ErrorBoundary";
-import { Chat } from "@/lib/mock-data";
+import { Chat } from "@/types";
 import { useChats, useUsers } from "@/hooks/useApiQuery";
 import { useFeatureFlag } from "@/hooks/useFeatureFlag";
 import { Skeleton } from "@/components/ui/skeleton";
