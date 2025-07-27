@@ -2,73 +2,38 @@
 
 ## Overview
 
-The Customer Support AI Agent Admin Portal uses a **single source of truth** for data management. All data is sourced from static JSON files located in `/public/mocks/` directory and accessed through the API client.
+The Customer Support AI Agent Admin Portal uses a **single source of truth** for all its data. In development, every UI fetches data over HTTP from static JSON files in the `/public/mocks/` directory. There are **no in‑code fallback objects**—if a JSON file fails to load, the UI shows a proper error state.
 
 ## Data Sources
 
-### Primary Data Source
-- **Static JSON Files**: Located in `/public/mocks/`
-  - `chats.json` - Chat conversations data
-  - `users.json` - User profiles and agent information
-  - `organizations.json` - Organization details
-  - `engagements.json` - Customer engagement history
-  - `documents.json` - Document metadata
-  - `faqs.json` - FAQ content
-  - `health.json` - System health status
+### Static JSON Mocks (Development)
 
-### Data Access Pattern
-1. **API Client**: All data access goes through `src/lib/api-client.ts`
-2. **React Query Hooks**: Data fetching via `src/hooks/useApiQuery.ts`
-3. **Component Integration**: Components use hooks to access data
+Files under **`public/mocks/`**:
 
-## Data Flow
+- `chats.json`           — Chat conversation records  
+- `users.json`           — User profiles and agent info  
+- `organizations.json`   — Organization details (including `members: [...]`)  
+- `engagements.json`     — Customer engagement history logs  
+- `documents.json`       — Document metadata for Content Management  
+- `faqs.json`            — FAQ entries for AI knowledge  
+- `resources.json`       — Shareable resources list  
+- `scraperJobs.json`     — URL scraper job definitions  
+- `domains.json`         — Whitelisted domain lists for widget security  
+- `health.json`          — System health endpoints  
 
-```
-JSON Files → API Client → React Query Hooks → Components
-```
+> **Note:** you may add more files here (e.g. `settings.json`) as new features require.
 
-## Error Handling
+### Production (Future)
 
-When JSON files fail to load:
-- React Query will retry the request (up to 2 times for network errors)
-- Components will display loading states during fetch attempts
-- On complete failure, components will show appropriate error states
-- No fallback to mock data objects
+- Replace mock URLs with real API base URLs via your environment config.  
+- All endpoints should mirror the same shape as these JSON mocks.
 
-## Migration Notes
+## Data Access Pattern
 
-### Deprecated Patterns
-- ❌ Direct import of mock data objects from `src/lib/mock-data.ts`
-- ❌ Fallback mechanisms in `useApiQuery.ts` hooks
-- ❌ Mixed data sources (JSON + object fallbacks)
+1. **API Client** (`src/lib/api-client.ts`)  
+   - Chooses `/mocks/*.json` in development or real endpoints in production.  
+2. **React Query Hooks** (`src/hooks/useApiQuery.ts`)  
+   - Expose `useChats()`, `useUsers()`, `useOrganizations()`, `useEngagements()`, `useDocuments()`, `useFAQs()`, `useResources()`, `useScraperJobs()`, `useDomains()`, `useHealth()`…  
+3. **Component Integration**  
+   - Components call these hooks, handle `isLoading` / `isError` and render data accordingly.
 
-### Current Best Practices
-- ✅ Use `useChats()`, `useUsers()`, etc. hooks for data access
-- ✅ Handle loading and error states in components
-- ✅ Rely solely on JSON files for development data
-- ✅ Use proper TypeScript interfaces for type safety
-
-## Configuration
-
-The application detects JSON file usage and displays "Static Mock Active" badge in development mode when using static JSON files.
-
-## Troubleshooting
-
-### Data Not Appearing
-1. Check if JSON files exist in `/public/mocks/`
-2. Verify JSON file format matches interface definitions
-3. Check browser network tab for 404 errors on JSON files
-4. Ensure React Query hooks are used instead of direct imports
-
-### Type Errors
-1. Verify interfaces in `src/lib/mock-data.ts` match JSON structure
-2. Check that components handle empty arrays gracefully
-3. Ensure proper error boundary implementation
-
-## Future Considerations
-
-This static JSON strategy is designed for development and testing. For production:
-- Replace API client endpoints with real backend URLs
-- Implement proper authentication and authorization
-- Add data validation and error handling for network failures
-- Consider implementing data caching strategies
