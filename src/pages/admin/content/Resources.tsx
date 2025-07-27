@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { DataTable, Column } from "@/components/admin/DataTable";
+import { DataTable, Column } from "@/components/ui/data-table";
 import { FileText, Video, Link, File, Plus } from "lucide-react";
 import { Resource } from "@/types";
 import { useResources } from "@/hooks/useApiQuery";
@@ -18,8 +18,8 @@ const getTypeIcon = (type: string) => {
 const resourceColumns: Column<Resource>[] = [
   { 
     key: "title", 
-    header: "Resource",
-    cell: (value, row) => (
+    label: "Resource",
+    render: (value, row) => (
       <div className="flex items-center gap-2">
         {getTypeIcon(row.type)}
         <span>{value}</span>
@@ -28,13 +28,13 @@ const resourceColumns: Column<Resource>[] = [
   },
   { 
     key: "type", 
-    header: "Type",
-    cell: (value) => <Badge variant="outline">{value}</Badge>
+    label: "Type",
+    render: (value) => <Badge variant="outline">{value}</Badge>
   },
   { 
     key: "tags", 
-    header: "Tags",
-    cell: (value) => (
+    label: "Tags",
+    render: (value) => (
       <div className="flex gap-1">
         {value.slice(0, 2).map((tag: string) => (
           <Badge key={tag} variant="secondary" className="text-xs">{tag}</Badge>
@@ -42,7 +42,7 @@ const resourceColumns: Column<Resource>[] = [
       </div>
     )
   },
-  { key: "updatedAt", header: "Updated" },
+  { key: "updatedAt", label: "Updated" },
 ];
 
 export default function Resources() {

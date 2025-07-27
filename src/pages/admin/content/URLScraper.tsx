@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { DataTable, Column } from "@/components/admin/DataTable";
+import { DataTable, Column } from "@/components/ui/data-table";
 import { ScraperJob } from "@/types";
 import { Play, Edit } from "lucide-react";
 import { useScraperJobs } from "@/hooks/useApiQuery";

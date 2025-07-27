@@ -1,18 +1,18 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { DataTable, Column } from "@/components/admin/DataTable";
+import { DataTable, Column } from "@/components/ui/data-table";
 import { FAQ } from "@/types";
 import { Plus } from "lucide-react";
 import { useFAQs } from "@/hooks/useApiQuery";
 
 const faqColumns: Column<FAQ>[] = [
-  { key: "question", header: "Question" },
-  { key: "answer", header: "Answer", cell: (value) => value.substring(0, 100) + "..." },
+  { key: "question", label: "Question" },
+  { key: "answer", label: "Answer", render: (value) => value.substring(0, 100) + "..." },
   { 
     key: "tags", 
-    header: "Tags",
-    cell: (value) => (
+    label: "Tags",
+    render: (value) => (
       <div className="flex gap-1">
         {value.slice(0, 2).map((tag: string) => (
           <Badge key={tag} variant="outline" className="text-xs">{tag}</Badge>
@@ -21,7 +21,7 @@ const faqColumns: Column<FAQ>[] = [
       </div>
     )
   },
-  { key: "updatedAt", header: "Updated" },
+  { key: "updatedAt", label: "Updated" },
 ];
 
 export default function FAQs() {
