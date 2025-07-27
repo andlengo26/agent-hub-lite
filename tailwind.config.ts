@@ -90,6 +90,26 @@ export default {
         '5': 'var(--space-5)',
         '6': 'var(--space-6)',
       },
+      width: {
+        'xs': 'var(--width-xs)',
+        'sm': 'var(--width-sm)', 
+        'md': 'var(--width-md)',
+        'lg': 'var(--width-lg)',
+        'xl': 'var(--width-xl)',
+        'select-trigger': 'var(--width-sm)', // 200px equivalent
+      },
+      height: {
+        'xs': 'var(--height-xs)',
+        'sm': 'var(--height-sm)',
+        'md': 'var(--height-md)',
+        'lg': 'var(--height-lg)',
+      },
+      margin: {
+        'viewport-xs': 'var(--viewport-xs)',
+        'viewport-sm': 'var(--viewport-sm)',
+        'viewport-md': 'var(--viewport-md)',
+        'viewport-lg': 'var(--viewport-lg)',
+      },
       borderRadius: {
         'sm': 'var(--radius-sm)',
         'md': 'var(--radius-md)',

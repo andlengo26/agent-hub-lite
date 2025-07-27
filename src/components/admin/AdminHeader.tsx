@@ -51,7 +51,7 @@ export function AdminHeader() {
       <div className="flex items-center gap-4">
         {/* Organization Selector */}
         <Select value={currentOrg?.id || ''} onValueChange={handleOrgChange}>
-          <SelectTrigger className="w-[200px]">
+          <SelectTrigger className="w-select-trigger">
             <SelectValue>
               <div className="flex items-center gap-2">
                 <Avatar className="h-6 w-6">

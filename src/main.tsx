@@ -10,18 +10,7 @@ function MockStatus() {
   if (!import.meta.env.DEV) return null;
   
   return (
-    <div style={{
-      position: 'fixed',
-      top: '10px',
-      right: '10px',
-      background: '#0066cc',
-      color: 'white',
-      padding: '8px 12px',
-      borderRadius: '6px',
-      fontSize: '12px',
-      zIndex: 9999,
-      fontFamily: 'monospace'
-    }}>
+    <div className="fixed top-2 right-2 bg-primary text-primary-foreground px-3 py-2 rounded-md text-xs z-50 font-mono">
       📁 Static Mocks Active
     </div>
   );

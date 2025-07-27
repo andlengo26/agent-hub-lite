@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { EnhancedDataTable } from "@/components/common/EnhancedDataTable";
+import { DataTable } from "@/components/ui/data-table";
 import { ChatFilters } from "@/components/admin/ChatFilters";
 import { ChatPanel } from "@/components/admin/ChatPanel";
 import { ErrorBoundary } from "@/components/common/ErrorBoundary";
@@ -19,26 +19,26 @@ import { isWithinInterval, parseISO } from "date-fns";
 
 const currentUserId = "user_002"; // Mock current user ID
 
-const chatColumns = [
+const createChatColumns = (users: any[]) => [
   { 
     key: "requesterName", 
-    header: "Customer",
+    label: "Customer",
     sortable: true
   },
   { 
     key: "requesterEmail", 
-    header: "Email",
-    cell: (chat: Chat) => (
+    label: "Email",
+    render: (_, chat: Chat) => (
       <div className="max-w-48 truncate" title={chat.requesterEmail}>
         {chat.requesterEmail}
       </div>
     ),
-    mobileHidden: true
+    hideOnMobile: true
   },
   { 
     key: "geo", 
-    header: "Location",
-    cell: (chat: Chat) => (
+    label: "Location",
+    render: (_, chat: Chat) => (
       <div className="flex items-center gap-1">
         <MapPin className="h-3 w-3 text-muted-foreground" />
         <span className="truncate max-w-24" title={chat.geo}>
@@ -46,28 +46,28 @@ const chatColumns = [
         </span>
       </div>
     ),
-    mobileHidden: true
+    hideOnMobile: true
   },
   {
     key: "assignedAgentId",
-    header: "Assigned Agent",
-    cell: (chat: Chat, users: any[]) => {
+    label: "Assigned Agent",
+    render: (_, chat: Chat) => {
       if (!chat.assignedAgentId) {
         return <Badge variant="outline">Unassigned</Badge>;
       }
       const agent = users.find(u => u.id === chat.assignedAgentId);
       return agent ? `${agent.firstName} ${agent.lastName}` : "Unknown";
     },
-    mobileHidden: true
+    hideOnMobile: true
   },
   { 
     key: "status", 
-    header: "Status",
-    cell: (chat: Chat) => (
+    label: "Status",
+    render: (_, chat: Chat) => (
       <span className={`capitalize ${
-        chat.status === 'active' ? 'text-green-600 font-medium' :
-        chat.status === 'missed' ? 'text-red-600 font-medium' : 
-        'text-gray-600 font-medium'
+        chat.status === 'active' ? 'text-success font-medium' :
+        chat.status === 'missed' ? 'text-destructive font-medium' : 
+        'text-text-secondary font-medium'
       }`}>
         {chat.status}
       </span>
@@ -76,8 +76,8 @@ const chatColumns = [
   },
   { 
     key: "createdAt", 
-    header: "Started",
-    cell: (chat: Chat) => new Date(chat.createdAt).toLocaleDateString(),
+    label: "Started",
+    render: (_, chat: Chat) => new Date(chat.createdAt).toLocaleDateString(),
     sortable: true
   }
 ];
@@ -266,9 +266,9 @@ export default function MyChats() {
                           ))}
                         </div>
                       ) : (
-                        <EnhancedDataTable
+                        <DataTable
                           data={filteredChats}
-                          columns={chatColumns}
+                          columns={createChatColumns(users)}
                           onRowClick={setSelectedChat}
                           loading={isLoading}
                         />

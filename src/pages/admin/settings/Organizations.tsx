@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { ErrorBoundary } from "@/components/common/ErrorBoundary";
-import { EnhancedDataTable, Column } from "@/components/common/EnhancedDataTable";
+import { DataTable, Column } from "@/components/ui/data-table";
 import { FloatingPreview } from "@/components/admin/FloatingPreview";
 import { FormModal } from "@/components/common/FormModal";
 import { Input } from "@/components/ui/input";
@@ -296,7 +296,7 @@ export default function Organizations() {
             </Button>
           </CardHeader>
           <CardContent>
-            <EnhancedDataTable
+            <DataTable
               data={organizations}
               columns={orgColumns}
               searchable

@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { DataTable, Column } from "@/components/admin/DataTable";
+import { DataTable, Column } from "@/components/ui/data-table";
 
 interface Engagement {
   id: string;
@@ -11,11 +11,11 @@ interface Engagement {
 }
 
 const engagementColumns: Column<Engagement>[] = [
-  { key: "customerName", header: "Customer" },
-  { key: "customerEmail", header: "Email" },
-  { key: "engagementCount", header: "Engagements" },
-  { key: "lastEngagedAt", header: "Last Contact" },
-  { key: "agentsInvolved", header: "Agents", cell: (value) => value.length },
+  { key: "customerName", label: "Customer" },
+  { key: "customerEmail", label: "Email" },
+  { key: "engagementCount", label: "Engagements" },
+  { key: "lastEngagedAt", label: "Last Contact" },
+  { key: "agentsInvolved", label: "Agents", render: (value) => value.length },
 ];
 
 export default function EngagementHistory() {

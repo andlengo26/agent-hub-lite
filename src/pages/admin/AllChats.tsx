@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { EnhancedDataTable } from "@/components/common/EnhancedDataTable";
+import { DataTable } from "@/components/ui/data-table";
 import { ChatPanel } from "@/components/admin/ChatPanel";
 import { ChatFilters, ChatFilters as ChatFiltersType } from "@/components/admin/ChatFilters";
 import { ChatPagination } from "@/components/admin/ChatPagination";
@@ -22,26 +22,27 @@ import { performanceMonitor } from "@/lib/performance-monitor";
 import { MoreHorizontal, UserPlus, MessageSquareX, XCircle, Trash2, MapPin, Archive, Monitor } from "lucide-react";
 import { isWithinInterval, parseISO } from "date-fns";
 
-const chatColumns = [
+// Move this inside component to access users
+const createChatColumns = (users: any[]) => [
   { 
     key: "requesterName", 
-    header: "Customer",
+    label: "Customer",
     sortable: true
   },
   { 
     key: "requesterEmail", 
-    header: "Email",
-    cell: (chat: Chat) => (
+    label: "Email",
+    render: (_, chat: Chat) => (
       <div className="max-w-48 truncate" title={chat.requesterEmail}>
         {chat.requesterEmail}
       </div>
     ),
-    mobileHidden: true
+    hideOnMobile: true
   },
   { 
     key: "geo", 
-    header: "Location",
-    cell: (chat: Chat) => (
+    label: "Location",
+    render: (_, chat: Chat) => (
       <div className="flex items-center gap-1">
         <MapPin className="h-3 w-3 text-muted-foreground" />
         <span className="truncate max-w-24" title={chat.geo}>
@@ -49,16 +50,16 @@ const chatColumns = [
         </span>
       </div>
     ),
-    mobileHidden: true
+    hideOnMobile: true
   },
   { 
     key: "status", 
-    header: "Status",
-    cell: (chat: Chat) => (
+    label: "Status",
+    render: (_, chat: Chat) => (
       <span className={`capitalize ${
-        chat.status === 'active' ? 'text-green-600 font-medium' :
-        chat.status === 'missed' ? 'text-red-600 font-medium' : 
-        'text-gray-600 font-medium'
+        chat.status === 'active' ? 'text-success font-medium' :
+        chat.status === 'missed' ? 'text-destructive font-medium' : 
+        'text-text-secondary font-medium'
       }`}>
         {chat.status}
       </span>
@@ -67,17 +68,17 @@ const chatColumns = [
   },
   { 
     key: "assignedAgentId", 
-    header: "Agent",
-    cell: (chat: Chat, users: any[]) => {
-      const agent = users.find(u => u.id === chat.assignedAgentId);
+    label: "Agent",
+    render: (_, chat: Chat) => {
+      const agent = users.find((u: any) => u.id === chat.assignedAgentId);
       return agent ? `${agent.firstName} ${agent.lastName}` : "Unassigned";
     },
-    mobileHidden: true
+    hideOnMobile: true
   },
   { 
     key: "createdAt", 
-    header: "Started",
-    cell: (chat: Chat) => new Date(chat.createdAt).toLocaleDateString(),
+    label: "Started",
+    render: (_, chat: Chat) => new Date(chat.createdAt).toLocaleDateString(),
     sortable: true
   }
 ];
@@ -403,20 +404,15 @@ export default function AllChats() {
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <EnhancedDataTable
+                      <DataTable
                         data={paginatedChats}
-                        columns={chatColumns.map(col => ({
-                          ...col,
-                          cell: col.cell ? (chat: Chat) => col.cell(chat, users) : undefined
-                        }))}
+                        columns={createChatColumns(users)}
                         onRowClick={setSelectedChat}
                         onEdit={(chat) => setSelectedChat(chat)}
                         onView={(chat) => setSelectedChat(chat)}
                         loading={isLoading}
-                        emptyState={{
-                          title: "No chats found",
-                          description: "No chats match your current filters."
-                        }}
+                        emptyMessage="No chats found"
+                        emptyDescription="No chats match your current filters."
                         selectable={true}
                         searchable={false}
                         bulkActions={bulkActions}

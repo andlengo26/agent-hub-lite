@@ -73,6 +73,25 @@
     --line-height-normal: 1.5;
     --line-height-tight: 1.25;
     
+    /* Common Width Tokens */
+    --width-xs: 8rem;    /* 128px - for small dropdowns */
+    --width-sm: 12rem;   /* 192px - for medium dropdowns */
+    --width-md: 16rem;   /* 256px - for large dropdowns */
+    --width-lg: 20rem;   /* 320px - for side panels */
+    --width-xl: 24rem;   /* 384px - for modal dialogs */
+    
+    /* Viewport tokens for common measurements */
+    --viewport-xs: 2rem;    /* 32px - small viewport margins */
+    --viewport-sm: 4rem;    /* 64px - medium viewport margins */
+    --viewport-md: 6rem;    /* 96px - large viewport margins */
+    --viewport-lg: 8rem;    /* 128px - extra large viewport margins */
+    
+    /* Height tokens for components */
+    --height-xs: 2rem;    /* 32px - small components */
+    --height-sm: 2.5rem;  /* 40px - medium components */
+    --height-md: 3rem;    /* 48px - large components */
+    --height-lg: 4rem;    /* 64px - extra large components */
+
     /* Component Specific */
     --card: 0 0% 100%;
     --card-foreground: 218 30% 18%;
