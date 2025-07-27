@@ -49,11 +49,11 @@ const chatColumns = [
   {
     key: "assignedAgentId",
     header: "Assigned Agent",
-    cell: (chat: Chat) => {
+    cell: (chat: Chat, users: any[]) => {
       if (!chat.assignedAgentId) {
         return <Badge variant="outline">Unassigned</Badge>;
       }
-      const agent = mockUsers.find(u => u.id === chat.assignedAgentId);
+      const agent = users.find(u => u.id === chat.assignedAgentId);
       return agent ? `${agent.firstName} ${agent.lastName}` : "Unknown";
     },
     mobileHidden: true
@@ -223,7 +223,10 @@ export default function MyChats() {
             <TabsContent value={activeTab} className="mt-6">
               <EnhancedDataTable
                 data={filteredChats}
-                columns={chatColumns}
+                columns={chatColumns.map(col => ({
+                  ...col,
+                  cell: col.cell ? (chat: Chat) => col.cell(chat, users) : undefined
+                }))}
                 onRowClick={handleRowClick}
                 loading={isLoading}
                 emptyState={{

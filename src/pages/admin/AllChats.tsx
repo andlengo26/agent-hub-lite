@@ -12,7 +12,7 @@ import { ChatPagination } from "@/components/admin/ChatPagination";
 import { AgentAssignmentModal } from "@/components/admin/AgentAssignmentModal";
 import { ErrorBoundary } from "@/components/common/ErrorBoundary";
 import { mockChats, mockUsers, Chat } from "@/lib/mock-data";
-import { useChats } from "@/hooks/useApiQuery";
+import { useChats, useUsers } from "@/hooks/useApiQuery";
 import { useFeatureFlag } from "@/hooks/useFeatureFlag";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "@/hooks/use-toast";
@@ -66,8 +66,8 @@ const chatColumns = [
   { 
     key: "assignedAgentId", 
     header: "Agent",
-    cell: (chat: Chat) => {
-      const agent = mockUsers.find(u => u.id === chat.assignedAgentId);
+    cell: (chat: Chat, users: any[]) => {
+      const agent = users.find(u => u.id === chat.assignedAgentId);
       return agent ? `${agent.firstName} ${agent.lastName}` : "Unassigned";
     },
     mobileHidden: true
@@ -107,9 +107,11 @@ export default function AllChats() {
     page: 1,
     limit: 50,
   });
+  const { data: usersResponse } = useUsers();
 
   // Data processing - always call
   const chats = chatsResponse?.data || mockChats;
+  const users = usersResponse?.data || mockUsers;
 
   // Memoized filtered chats for performance - always call
   const filteredChats = useMemo(() => {
@@ -364,7 +366,10 @@ export default function AllChats() {
               <CardContent>
                 <EnhancedDataTable
                   data={paginatedChats}
-                  columns={chatColumns}
+                  columns={chatColumns.map(col => ({
+                    ...col,
+                    cell: col.cell ? (chat: Chat) => col.cell(chat, users) : undefined
+                  }))}
                   onRowClick={setSelectedChat}
                   onEdit={(chat) => setSelectedChat(chat)}
                   onView={(chat) => setSelectedChat(chat)}

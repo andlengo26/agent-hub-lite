@@ -8,6 +8,7 @@ import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Chat, mockUsers } from "@/lib/mock-data";
+import { useUsers } from '@/hooks/useApiQuery';
 import { toast } from "@/hooks/use-toast";
 import { 
   MapPin, 
@@ -33,8 +34,10 @@ export const ChatPanel = memo<ChatPanelProps>(({ chat }) => {
   const [isSending, setIsSending] = useState(false);
   const [isRetrying, setIsRetrying] = useState(false);
   const [selectedAgentId, setSelectedAgentId] = useState(chat.assignedAgentId || "unassigned");
-
-  const assignedAgent = mockUsers.find(u => u.id === chat.assignedAgentId);
+  const { data: usersResponse } = useUsers();
+  
+  const users = usersResponse?.data || mockUsers;
+  const assignedAgent = users.find(u => u.id === chat.assignedAgentId);
 
   const handleSendMessage = async () => {
     if (!message.trim()) return;
@@ -91,7 +94,7 @@ export const ChatPanel = memo<ChatPanelProps>(({ chat }) => {
           description: "Chat is now unassigned"
         });
       } else {
-        const agent = mockUsers.find(u => u.id === agentId);
+        const agent = users.find(u => u.id === agentId);
         toast({
           title: "Agent assigned",
           description: `Chat assigned to ${agent?.firstName} ${agent?.lastName}`
@@ -190,7 +193,7 @@ export const ChatPanel = memo<ChatPanelProps>(({ chat }) => {
                 </SelectTrigger>
                 <SelectContent className="bg-background border shadow-md z-50">
                   <SelectItem value="unassigned">Unassigned</SelectItem>
-                  {mockUsers.filter(user => user.role === 'agent').map((user) => (
+                  {users.filter(user => user.role === 'agent').map((user) => (
                     <SelectItem key={user.id} value={user.id}>
                       <div className="flex items-center gap-2">
                         <Avatar className="h-5 w-5">
