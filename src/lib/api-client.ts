@@ -1,5 +1,5 @@
 /**
- * API client with mock integration
+ * API client with static mock integration
  * Provides a consistent interface for all API calls
  */
 
@@ -28,8 +28,8 @@ class ApiClient {
   private baseUrl: string;
 
   constructor() {
-    // Always use relative URLs for same-origin requests
-    this.baseUrl = config.mock.enabled ? '/api/mock' : '/api';
+    // Use static mocks in development, real API in production
+    this.baseUrl = config.mock.enabled ? '/mocks' : '/api';
   }
 
   private async request<T>(
@@ -37,8 +37,13 @@ class ApiClient {
     options: RequestInit = {},
     retryCount = 0
   ): Promise<T> {
-    const url = `${this.baseUrl}${endpoint}`;
+    let url = `${this.baseUrl}${endpoint}`;
     const maxRetries = 2;
+    
+    // For static mocks, append .json to the endpoint
+    if (config.mock.enabled) {
+      url = `${this.baseUrl}${endpoint}.json`;
+    }
     
     console.log(`🌐 API Request: ${options.method || 'GET'} ${endpoint} (attempt ${retryCount + 1})`);
     
@@ -54,39 +59,6 @@ class ApiClient {
       const response = await fetch(url, defaultOptions);
       
       console.log(`🌐 API Response: ${response.status} ${response.statusText}`);
-      console.log(`🌐 Response headers:`, Object.fromEntries(response.headers.entries()));
-      
-      // Enhanced MSW failure detection
-      const contentType = response.headers.get('content-type') || '';
-      const responseText = await response.clone().text();
-      
-      // Check for HTML responses (MSW not working)
-      if (contentType.includes('text/html') || responseText.includes('<!DOCTYPE html>')) {
-        const mswError = new Error(
-          `API returned HTML instead of JSON for ${endpoint}. ` +
-          `This indicates MSW is not intercepting requests. ` +
-          `Response preview: ${responseText.substring(0, 200)}...`
-        );
-        mswError.name = 'MSWNotWorkingError';
-        
-        console.error('❌ MSW Failure Detected:', {
-          url,
-          contentType,
-          responsePreview: responseText.substring(0, 500),
-          responseStatus: response.status
-        });
-        
-        throw mswError;
-      }
-      
-      // Check for 404 on health check (common MSW issue)
-      if (endpoint === '/health' && response.status === 404) {
-        const error = new Error(
-          'Health check endpoint not found. MSW may not be properly configured or started.'
-        );
-        error.name = 'MSWHealthCheckError';
-        throw error;
-      }
       
       if (!response.ok) {
         let errorMessage = `HTTP ${response.status}`;
@@ -97,9 +69,8 @@ class ApiClient {
           errorMessage = errorResponse.message || errorMessage;
           errorDetails = errorResponse.details;
         } catch (parseError) {
-          // If response is not JSON, use status text and response preview
           errorMessage = response.statusText || errorMessage;
-          errorDetails = { responsePreview: responseText.substring(0, 200) };
+          errorDetails = { status: response.status };
         }
         
         const apiError = new Error(errorMessage);
@@ -110,20 +81,9 @@ class ApiClient {
         throw apiError;
       }
 
-      // Parse JSON response
-      let data: T;
-      try {
-        data = await response.json();
-        console.log(`🌐 API Success:`, data);
-        return data;
-      } catch (parseError) {
-        console.error('❌ Failed to parse JSON response:', parseError);
-        console.error('❌ Response text:', responseText);
-        throw new Error(
-          `Failed to parse API response as JSON for ${endpoint}. ` +
-          `Response: ${responseText.substring(0, 200)}...`
-        );
-      }
+      const data: T = await response.json();
+      console.log(`🌐 API Success:`, data);
+      return data;
       
     } catch (error) {
       console.error(`❌ API Error: ${endpoint}`, {
@@ -133,12 +93,11 @@ class ApiClient {
         maxRetries: maxRetries + 1
       });
       
-      // Retry logic for certain types of errors
+      // Retry logic for network errors or server errors (500+)
       const shouldRetry = (
         retryCount < maxRetries &&
         (
           error.name === 'TypeError' || // Network errors
-          error.name === 'MSWNotWorkingError' ||
           (error.name === 'ApiError' && (error as any).status >= 500)
         )
       );
@@ -147,15 +106,6 @@ class ApiClient {
         console.log(`🔄 Retrying API request in ${(retryCount + 1) * 1000}ms...`);
         await new Promise(resolve => setTimeout(resolve, (retryCount + 1) * 1000));
         return this.request<T>(endpoint, options, retryCount + 1);
-      }
-      
-      // Add helpful context to MSW errors
-      if (error.name === 'MSWNotWorkingError' || error.name === 'MSWHealthCheckError') {
-        console.error('🔧 MSW Troubleshooting Tips:');
-        console.error('   1. Check that mockServiceWorker.js is in the public directory');
-        console.error('   2. Verify MSW started successfully in browser console');
-        console.error('   3. Try refreshing the page to restart MSW');
-        console.error('   4. Check network tab for intercepted requests');
       }
       
       throw error;
@@ -168,6 +118,10 @@ class ApiClient {
     limit?: number;
     status?: 'active' | 'resolved' | 'pending';
   }): Promise<ApiResponse<any[]>> {
+    if (config.mock.enabled) {
+      return this.request(`/chats`);
+    }
+    
     const searchParams = new URLSearchParams();
     if (params?.page) searchParams.set('page', params.page.toString());
     if (params?.limit) searchParams.set('limit', params.limit.toString());
@@ -197,6 +151,10 @@ class ApiClient {
     page?: number;
     limit?: number;
   }): Promise<ApiResponse<any[]>> {
+    if (config.mock.enabled) {
+      return this.request(`/users`);
+    }
+    
     const searchParams = new URLSearchParams();
     if (params?.page) searchParams.set('page', params.page.toString());
     if (params?.limit) searchParams.set('limit', params.limit.toString());

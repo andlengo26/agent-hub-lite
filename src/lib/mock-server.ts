@@ -36,7 +36,7 @@ export const handlers = [
   // GET /api/mock/chats
   http.get('/api/mock/chats', async ({ request }) => {
     console.log('🎭 Mock server intercepted GET /api/mock/chats');
-    await delay(config.mock.apiDelay);
+    await delay(500); // Static delay since apiDelay was removed
     
     const url = new URL(request.url);
     const page = parseInt(url.searchParams.get('page') || '1');
@@ -67,7 +67,7 @@ export const handlers = [
 
   // GET /api/mock/chats/:chatId
   http.get('/api/mock/chats/:chatId', async ({ params }) => {
-    await delay(config.mock.apiDelay);
+    await delay(500);
     
     const chat = mockData.chats.find(c => c.id === params.chatId);
     if (!chat) {
@@ -82,7 +82,7 @@ export const handlers = [
 
   // POST /api/mock/chats
   http.post('/api/mock/chats', async ({ request }) => {
-    await delay(config.mock.apiDelay);
+    await delay(500);
     
     const body = await request.json() as any;
     const newChat = {
@@ -114,7 +114,7 @@ export const handlers = [
 
   // GET /api/mock/users
   http.get('/api/mock/users', async ({ request }) => {
-    await delay(config.mock.apiDelay);
+    await delay(500);
     
     const url = new URL(request.url);
     const page = parseInt(url.searchParams.get('page') || '1');
@@ -136,13 +136,13 @@ export const handlers = [
 
   // GET /api/mock/organizations
   http.get('/api/mock/organizations', async () => {
-    await delay(config.mock.apiDelay);
+    await delay(500);
     return HttpResponse.json(createApiResponse(mockData.organizations));
   }),
 
   // POST /api/mock/organizations
   http.post('/api/mock/organizations', async ({ request }) => {
-    await delay(config.mock.apiDelay);
+    await delay(500);
     
     const body = await request.json() as any;
     const newOrganization = {
@@ -162,7 +162,7 @@ export const handlers = [
 
   // PUT /api/mock/organizations/:orgId
   http.put('/api/mock/organizations/:orgId', async ({ params, request }) => {
-    await delay(config.mock.apiDelay);
+    await delay(500);
     
     const body = await request.json() as any;
     const orgIndex = mockData.organizations.findIndex(o => o.id === params.orgId);
@@ -185,7 +185,7 @@ export const handlers = [
 
   // DELETE /api/mock/organizations/:orgId
   http.delete('/api/mock/organizations/:orgId', async ({ params }) => {
-    await delay(config.mock.apiDelay);
+    await delay(500);
     
     const orgIndex = mockData.organizations.findIndex(o => o.id === params.orgId);
     if (orgIndex === -1) {
@@ -201,7 +201,7 @@ export const handlers = [
 
   // POST /api/mock/users (invite user)
   http.post('/api/mock/users', async ({ request }) => {
-    await delay(config.mock.apiDelay);
+    await delay(500);
     
     const body = await request.json() as any;
     const newUser = {
@@ -223,7 +223,7 @@ export const handlers = [
 
   // PUT /api/mock/users/:userId
   http.put('/api/mock/users/:userId', async ({ params, request }) => {
-    await delay(config.mock.apiDelay);
+    await delay(500);
     
     const body = await request.json() as any;
     const userIndex = mockData.users.findIndex(u => u.id === params.userId);
@@ -246,7 +246,7 @@ export const handlers = [
 
   // DELETE /api/mock/users/:userId
   http.delete('/api/mock/users/:userId', async ({ params }) => {
-    await delay(config.mock.apiDelay);
+    await delay(500);
     
     const userIndex = mockData.users.findIndex(u => u.id === params.userId);
     if (userIndex === -1) {

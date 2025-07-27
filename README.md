@@ -60,6 +60,29 @@ This project is built with:
 - shadcn-ui
 - Tailwind CSS
 
+## Mock System Migration Notice
+
+⚠️ **IMPORTANT**: This project has been migrated from Mock Service Worker (MSW) to a simpler static JSON mock system for improved stability and development experience.
+
+### Current Setup (Static Mocks)
+- Mock data is served from static JSON files in `/public/mocks/`
+- Automatically used in development mode (`npm run dev`)
+- No service worker setup or initialization required
+- More reliable and faster than MSW
+
+### Files:
+- `/public/mocks/health.json` - API health check response
+- `/public/mocks/organizations.json` - Organizations data
+- `/public/mocks/users.json` - Users data  
+- `/public/mocks/chats.json` - Chat conversations data
+
+### Re-enabling MSW (if needed)
+If you need to restore MSW for dynamic mocking capabilities:
+1. Restore MSW initialization code in `src/main.tsx`
+2. Update `src/lib/config.ts` to include MSW-specific settings
+3. Modify `src/lib/api-client.ts` to handle MSW endpoints
+4. Install MSW dependency: `npm install msw@latest`
+
 ## How can I deploy this project?
 
 Simply open [Lovable](https://lovable.dev/projects/d52d527e-d039-4d27-8217-4784260ad798) and click on Share -> Publish.

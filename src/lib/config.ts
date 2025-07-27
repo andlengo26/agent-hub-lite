@@ -27,7 +27,7 @@ export interface AppConfig {
   };
   mock: {
     enabled: boolean;
-    apiDelay: number;
+    // Note: apiDelay removed for static mocks (no artificial delay needed)
   };
 }
 
@@ -55,7 +55,7 @@ const config: AppConfig = {
   },
   mock: {
     enabled: import.meta.env.MODE === 'development',
-    apiDelay: 800, // Simulate network delay in ms
+    // Static mocks don't need artificial delay
   },
 };
 

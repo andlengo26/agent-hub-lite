@@ -1,0 +1,70 @@
+{
+  "data": [
+    {
+      "id": "chat_001",
+      "customerName": "John Anderson",
+      "customerEmail": "john@customer.com",
+      "status": "active",
+      "assignedUserId": "user_001",
+      "organizationId": "org_001",
+      "createdAt": "2025-01-27T08:30:00Z",
+      "updatedAt": "2025-01-27T09:45:00Z",
+      "messageCount": 12,
+      "lastMessage": "Thank you for your help with the integration setup."
+    },
+    {
+      "id": "chat_002", 
+      "customerName": "Sarah Lee",
+      "customerEmail": "sarah@business.com",
+      "status": "pending",
+      "assignedUserId": "user_002",
+      "organizationId": "org_002",
+      "createdAt": "2025-01-27T07:15:00Z",
+      "updatedAt": "2025-01-27T07:30:00Z",
+      "messageCount": 3,
+      "lastMessage": "I need help configuring the widget on our website."
+    },
+    {
+      "id": "chat_003",
+      "customerName": "Mike Chen",
+      "customerEmail": "mike@startup.io", 
+      "status": "resolved",
+      "assignedUserId": "user_001",
+      "organizationId": "org_001",
+      "createdAt": "2025-01-26T16:20:00Z",
+      "updatedAt": "2025-01-26T18:45:00Z",
+      "messageCount": 8,
+      "lastMessage": "Perfect, the issue has been resolved. Thanks!"
+    },
+    {
+      "id": "chat_004",
+      "customerName": "Lisa Wang",
+      "customerEmail": "lisa@company.net",
+      "status": "active",
+      "assignedUserId": "user_003",
+      "organizationId": "org_003", 
+      "createdAt": "2025-01-26T14:10:00Z",
+      "updatedAt": "2025-01-27T09:20:00Z",
+      "messageCount": 15,
+      "lastMessage": "Can you explain how the AI training process works?"
+    },
+    {
+      "id": "chat_005",
+      "customerName": "Tom Rodriguez",
+      "customerEmail": "tom@retail.com",
+      "status": "pending",
+      "assignedUserId": "user_002",
+      "organizationId": "org_002",
+      "createdAt": "2025-01-25T11:30:00Z",
+      "updatedAt": "2025-01-25T12:00:00Z", 
+      "messageCount": 2,
+      "lastMessage": "Hello, I have a question about pricing plans."
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "limit": 10,
+    "total": 5,
+    "totalPages": 1
+  }
+}

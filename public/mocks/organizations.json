@@ -1,0 +1,55 @@
+{
+  "data": [
+    {
+      "id": "org_001",
+      "name": "TechCorp Inc.",
+      "domain": "techcorp.com",
+      "plan": "enterprise",
+      "status": "active",
+      "createdAt": "2025-01-15T09:30:00Z",
+      "updatedAt": "2025-01-25T14:20:00Z"
+    },
+    {
+      "id": "org_002", 
+      "name": "StartupXYZ",
+      "domain": "startupxyz.io",
+      "plan": "pro",
+      "status": "active",
+      "createdAt": "2025-01-20T11:45:00Z",
+      "updatedAt": "2025-01-26T16:30:00Z"
+    },
+    {
+      "id": "org_003",
+      "name": "RetailCo",
+      "domain": "retailco.com", 
+      "plan": "basic",
+      "status": "trial",
+      "createdAt": "2025-01-22T13:15:00Z",
+      "updatedAt": "2025-01-26T09:45:00Z"
+    },
+    {
+      "id": "org_004",
+      "name": "NonProfitOrg",
+      "domain": "nonprofit.org",
+      "plan": "basic",
+      "status": "active",
+      "createdAt": "2025-01-18T08:20:00Z",
+      "updatedAt": "2025-01-24T12:10:00Z"
+    },
+    {
+      "id": "org_005",
+      "name": "FinanceGroup",
+      "domain": "financegroup.net",
+      "plan": "enterprise", 
+      "status": "suspended",
+      "createdAt": "2025-01-10T15:30:00Z",
+      "updatedAt": "2025-01-25T10:15:00Z"
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "limit": 10,
+    "total": 5,
+    "totalPages": 1
+  }
+}
