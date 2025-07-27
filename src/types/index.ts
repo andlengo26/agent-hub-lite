@@ -32,7 +32,7 @@ export interface Chat {
   ipAddress: string;
   browser: string;
   pageUrl: string;
-  status: 'active' | 'missed' | 'closed';
+  status: 'waiting' | 'active' | 'missed' | 'closed';
   assignedAgentId?: string;
   createdAt: string;
   lastUpdatedAt: string;

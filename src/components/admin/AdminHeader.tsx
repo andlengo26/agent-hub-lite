@@ -1,5 +1,4 @@
 import { ChevronDown, User, LogOut, Settings } from "lucide-react";
-import { SidebarTrigger } from "@/components/ui/sidebar";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useTenant } from "@/contexts/TenantContext";
 import {
@@ -39,7 +38,6 @@ export function AdminHeader() {
   return (
     <header className="h-16 border-b bg-background flex items-center justify-between px-4">
       <div className="flex items-center gap-4">
-        <SidebarTrigger />
         <div className="flex items-center gap-3">
           <h1 className="text-xl font-semibold">Customer Support AI Portal</h1>
           <Badge variant="secondary" className="bg-green-100 text-green-800">

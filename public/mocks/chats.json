@@ -74,12 +74,72 @@
       "lastUpdatedAt": "2025-01-25T12:00:00Z",
       "geo": "Austin, TX",
       "summary": "General product demonstration request. Interested in features for inventory management and analytics dashboard capabilities."
+    },
+    {
+      "id": "chat_006",
+      "requesterName": "Emma Davis",
+      "requesterEmail": "emma@newco.com",
+      "requesterPhone": "+1-555-0128",
+      "ipAddress": "192.168.1.105",
+      "browser": "Chrome 120.0",
+      "pageUrl": "https://techcorp.com/contact",
+      "status": "waiting",
+      "assignedAgentId": null,
+      "createdAt": "2025-01-27T09:00:00Z",
+      "lastUpdatedAt": "2025-01-27T09:00:00Z",
+      "geo": "Denver, CO",
+      "summary": "New customer inquiry about product features and pricing for small business plan."
+    },
+    {
+      "id": "chat_007",
+      "requesterName": "Alex Smith",
+      "requesterEmail": "alex@enterprise.org",
+      "requesterPhone": "+1-555-0129",
+      "ipAddress": "192.168.1.106",
+      "browser": "Firefox 121.0",
+      "pageUrl": "https://startupxyz.io/enterprise",
+      "status": "waiting",
+      "assignedAgentId": null,
+      "createdAt": "2025-01-27T09:15:00Z",
+      "lastUpdatedAt": "2025-01-27T09:15:00Z",
+      "geo": "Boston, MA",
+      "summary": "Enterprise customer needs technical consultation for large-scale deployment."
+    },
+    {
+      "id": "chat_008",
+      "requesterName": "Rachel Green",
+      "requesterEmail": "rachel@missed.com",
+      "requesterPhone": "+1-555-0130",
+      "ipAddress": "192.168.1.107",
+      "browser": "Safari 17.0",
+      "pageUrl": "https://retailco.com/support",
+      "status": "missed",
+      "assignedAgentId": null,
+      "createdAt": "2025-01-27T08:00:00Z",
+      "lastUpdatedAt": "2025-01-27T08:30:00Z",
+      "geo": "Miami, FL",
+      "summary": "Customer waited for 30 minutes but no agent was available. Inquiry about refund policy."
+    },
+    {
+      "id": "chat_009",
+      "requesterName": "David Wilson",
+      "requesterEmail": "david@closed.biz",
+      "requesterPhone": "+1-555-0131",
+      "ipAddress": "192.168.1.108",
+      "browser": "Edge 120.0",
+      "pageUrl": "https://techcorp.com/billing",
+      "status": "closed",
+      "assignedAgentId": "user_001",
+      "createdAt": "2025-01-27T07:00:00Z",
+      "lastUpdatedAt": "2025-01-27T08:45:00Z",
+      "geo": "Phoenix, AZ",
+      "summary": "Billing issue resolved. Customer was charged incorrectly for premium features, refund processed."
     }
   ],
   "pagination": {
     "page": 1,
     "limit": 10,
-    "total": 5,
+    "total": 9,
     "totalPages": 1
   }
 }

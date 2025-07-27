@@ -24,6 +24,7 @@ import {
   SidebarMenuSub,
   SidebarMenuSubButton,
   SidebarMenuSubItem,
+  SidebarTrigger,
   useSidebar,
 } from "@/components/ui/sidebar";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -100,6 +101,9 @@ export function AdminSidebar() {
 
   return (
     <Sidebar className={collapsed ? "w-14" : "w-60"} collapsible="icon">
+      <div className="p-2">
+        <SidebarTrigger />
+      </div>
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupLabel className="text-lg font-semibold mb-4">

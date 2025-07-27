@@ -34,13 +34,13 @@ export function QueuePreview({
   onChatSelect,
   onChatAccept,
 }: QueuePreviewProps) {
-  const [dateFilter, setDateFilter] = useState<DateFilterOption>('today');
+  const [dateFilter, setDateFilter] = useState<DateFilterOption>('all');
   const [customDate, setCustomDate] = useState<Date>(new Date());
   const [openSections, setOpenSections] = useState({
     waiting: true,
     active: true,
-    missed: false,
-    closed: false,
+    missed: true,
+    closed: true,
   });
 
   // Filter chats by date filter option
@@ -67,7 +67,7 @@ export function QueuePreview({
 
   // Categorize chats by status
   const categorizedChats = {
-    waiting: filteredChats.filter(chat => !chat.assignedAgentId && chat.status !== 'closed'),
+    waiting: filteredChats.filter(chat => (chat.status === 'waiting' || (!chat.assignedAgentId && chat.status !== 'closed' && chat.status !== 'missed'))),
     active: filteredChats.filter(chat => chat.assignedAgentId && chat.status === 'active'),
     missed: filteredChats.filter(chat => chat.status === 'missed'),
     closed: filteredChats.filter(chat => chat.status === 'closed'),
