@@ -96,70 +96,29 @@ export interface Domain {
   addedAt: string;
 }
 
-// Minimal fallback data for when API calls fail or during testing
-// Primary data now comes from /public/mocks/*.json files
-export const fallbackData = {
-  organizations: [
-    {
-      id: "fallback_001",
-      name: "Sample Organization",
-      logoUrl: "/placeholder.svg",
-      activeAgents: 5,
-      createdAt: "2025-01-01T00:00:00Z",
-      status: "active" as const
-    }
-  ] as Organization[],
-  
-  users: [
-    {
-      id: "fallback_001",
-      avatar: "/placeholder.svg",
-      avatarUrl: "/placeholder.svg",
-      firstName: "Sample",
-      lastName: "User",
-      email: "sample@example.com",
-      role: "agent" as const,
-      onlineStatus: "offline" as const,
-      createdAt: "2025-01-01T00:00:00Z"
-    }
-  ] as User[],
-  
-  chats: [
-    {
-      id: "fallback_001",
-      requesterName: "Sample Customer",
-      requesterEmail: "customer@example.com",
-      requesterPhone: "+1-555-0000",
-      ipAddress: "192.168.1.1",
-      browser: "Chrome 120.0",
-      pageUrl: "https://example.com",
-      status: "active" as const,
-      assignedAgentId: "fallback_001",
-      createdAt: "2025-01-01T00:00:00Z",
-      lastUpdatedAt: "2025-01-01T00:00:00Z",
-      geo: "Unknown",
-      summary: "Sample chat conversation"
-    }
-  ] as Chat[],
-  
-  engagements: [] as Engagement[],
-  documents: [] as Document[],
-  scraperJobs: [] as ScraperJob[],
-  faqs: [] as FAQ[],
-  resources: [] as Resource[],
-  domains: [] as Domain[]
+// DEPRECATED: These exports are deprecated and should not be used in new code
+// All data now comes from static JSON files via the API client
+// These are kept only for legacy compatibility during migration
+
+export const mockOrganizations: Organization[] = [];
+export const mockUsers: User[] = [];
+export const mockChats: Chat[] = [];
+export const mockEngagements: Engagement[] = [];
+export const mockDocuments: Document[] = [];
+export const mockScraperJobs: ScraperJob[] = [];
+export const mockFAQs: FAQ[] = [];
+export const mockResources: Resource[] = [];
+export const mockDomains: Domain[] = [];
+
+// DEPRECATED: Use API endpoints instead
+export const mockData = {
+  organizations: mockOrganizations,
+  users: mockUsers,
+  chats: mockChats,
+  engagements: mockEngagements,
+  documents: mockDocuments,
+  scraperJobs: mockScraperJobs,
+  faqs: mockFAQs,
+  resources: mockResources,
+  domains: mockDomains
 };
-
-// Legacy exports for backward compatibility - now point to fallback data
-export const mockOrganizations = fallbackData.organizations;
-export const mockUsers = fallbackData.users;
-export const mockChats = fallbackData.chats;
-export const mockEngagements = fallbackData.engagements;
-export const mockDocuments = fallbackData.documents;
-export const mockScraperJobs = fallbackData.scraperJobs;
-export const mockFAQs = fallbackData.faqs;
-export const mockResources = fallbackData.resources;
-export const mockDomains = fallbackData.domains;
-
-// Consolidated export
-export const mockData = fallbackData;

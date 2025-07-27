@@ -8,7 +8,7 @@ import { EnhancedDataTable } from "@/components/common/EnhancedDataTable";
 import { ChatFilters } from "@/components/admin/ChatFilters";
 import { ChatPanel } from "@/components/admin/ChatPanel";
 import { ErrorBoundary } from "@/components/common/ErrorBoundary";
-import { mockChats, mockUsers, Chat } from "@/lib/mock-data";
+import { Chat } from "@/lib/mock-data";
 import { useChats, useUsers } from "@/hooks/useApiQuery";
 import { useFeatureFlag } from "@/hooks/useFeatureFlag";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -95,8 +95,8 @@ export default function MyChats() {
   const { data: chatsResponse, isLoading } = useChats();
   const { data: usersResponse } = useUsers();
   
-  const allChats = chatsResponse?.data || mockChats;
-  const users = usersResponse?.data || mockUsers;
+  const allChats = chatsResponse?.data || [];
+  const users = usersResponse?.data || [];
   
   // Filter to only show chats assigned to current user
   const userChats = allChats.filter(chat => chat.assignedAgentId === currentUserId);
@@ -223,10 +223,7 @@ export default function MyChats() {
             <TabsContent value={activeTab} className="mt-6">
               <EnhancedDataTable
                 data={filteredChats}
-                columns={chatColumns.map(col => ({
-                  ...col,
-                  cell: col.cell ? (chat: Chat) => col.cell(chat, users) : undefined
-                }))}
+                columns={chatColumns}
                 onRowClick={handleRowClick}
                 loading={isLoading}
                 emptyState={{

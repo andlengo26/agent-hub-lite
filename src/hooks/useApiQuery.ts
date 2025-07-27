@@ -8,7 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 import { logger } from '@/lib/logger';
 import type { CreateOrganizationInput, InviteUserInput } from '@/lib/validations';
 
-// Enhanced chat queries with robust fallback mechanisms
+// Enhanced chat queries with API client only
 export function useChats(params?: {
   page?: number;
   limit?: number;
@@ -18,43 +18,9 @@ export function useChats(params?: {
     queryKey: ['chats', params],
     queryFn: async () => {
       console.log('🔄 useChats: Fetching chats with params:', params);
-      
-      try {
-        const result = await apiClient.getChats(params);
-        console.log('✅ useChats: Successfully fetched chats via API client:', result);
-        return result;
-      } catch (error) {
-        console.warn('⚠️ useChats: API failed, using mock data fallback:', error.message);
-        
-        // Import mock data and format it properly
-        const { mockData } = await import('@/lib/mock-data');
-        let filteredChats = mockData.chats;
-        
-        // Apply status filter if provided
-        if (params?.status) {
-          filteredChats = mockData.chats.filter(chat => chat.status === params.status);
-        }
-        
-        // Apply pagination
-        const page = params?.page || 1;
-        const limit = params?.limit || 10;
-        const startIndex = (page - 1) * limit;
-        const endIndex = startIndex + limit;
-        const paginatedChats = filteredChats.slice(startIndex, endIndex);
-        
-        // Return in API format
-        return {
-          data: paginatedChats,
-          timestamp: new Date().toISOString(),
-          success: true,
-          pagination: {
-            page,
-            limit,
-            total: filteredChats.length,
-            totalPages: Math.ceil(filteredChats.length / limit)
-          }
-        };
-      }
+      const result = await apiClient.getChats(params);
+      console.log('✅ useChats: Successfully fetched chats via API client:', result);
+      return result;
     },
     staleTime: 30000, // 30 seconds
     retry: (failureCount, error) => {
@@ -97,7 +63,7 @@ export function useCreateChat() {
   });
 }
 
-// Enhanced user queries with robust fallback mechanisms
+// Enhanced user queries with API client only
 export function useUsers(params?: {
   page?: number;
   limit?: number;
@@ -106,37 +72,9 @@ export function useUsers(params?: {
     queryKey: ['users', params],
     queryFn: async () => {
       console.log('🔄 useUsers: Fetching users with params:', params);
-      
-      try {
-        const result = await apiClient.getUsers(params);
-        console.log('✅ useUsers: Successfully fetched users via API client:', result);
-        return result;
-      } catch (error) {
-        console.warn('⚠️ useUsers: API failed, using mock data fallback:', error.message);
-        
-        // Import mock data and format it properly
-        const { mockData } = await import('@/lib/mock-data');
-        
-        // Apply pagination
-        const page = params?.page || 1;
-        const limit = params?.limit || 10;
-        const startIndex = (page - 1) * limit;
-        const endIndex = startIndex + limit;
-        const paginatedUsers = mockData.users.slice(startIndex, endIndex);
-        
-        // Return in API format
-        return {
-          data: paginatedUsers,
-          timestamp: new Date().toISOString(),
-          success: true,
-          pagination: {
-            page,
-            limit,
-            total: mockData.users.length,
-            totalPages: Math.ceil(mockData.users.length / limit)
-          }
-        };
-      }
+      const result = await apiClient.getUsers(params);
+      console.log('✅ useUsers: Successfully fetched users via API client:', result);
+      return result;
     },
     staleTime: 60000, // 1 minute
     retry: (failureCount, error) => {
@@ -195,30 +133,15 @@ export function useDeleteUser() {
   });
 }
 
-// Enhanced organization queries with robust fallback mechanisms
+// Enhanced organization queries with API client only
 export function useOrganizations() {
   return useQuery({
     queryKey: ['organizations'],
     queryFn: async () => {
       console.log('🔄 useOrganizations: Fetching organizations');
-      
-      try {
-        const result = await apiClient.getOrganizations();
-        console.log('✅ useOrganizations: Successfully fetched organizations via API client:', result);
-        return result;
-      } catch (error) {
-        console.warn('⚠️ useOrganizations: API failed, using mock data fallback:', error.message);
-        
-        // Import mock data and format it properly
-        const { mockData } = await import('@/lib/mock-data');
-        
-        // Return in API format
-        return {
-          data: mockData.organizations,
-          timestamp: new Date().toISOString(),
-          success: true
-        };
-      }
+      const result = await apiClient.getOrganizations();
+      console.log('✅ useOrganizations: Successfully fetched organizations via API client:', result);
+      return result;
     },
     staleTime: 300000, // 5 minutes
     retry: (failureCount, error) => {

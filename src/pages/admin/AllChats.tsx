@@ -11,7 +11,7 @@ import { ChatFilters, ChatFilters as ChatFiltersType } from "@/components/admin/
 import { ChatPagination } from "@/components/admin/ChatPagination";
 import { AgentAssignmentModal } from "@/components/admin/AgentAssignmentModal";
 import { ErrorBoundary } from "@/components/common/ErrorBoundary";
-import { mockChats, mockUsers, Chat } from "@/lib/mock-data";
+import { Chat } from "@/lib/mock-data";
 import { useChats, useUsers } from "@/hooks/useApiQuery";
 import { useFeatureFlag } from "@/hooks/useFeatureFlag";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -110,8 +110,8 @@ export default function AllChats() {
   const { data: usersResponse } = useUsers();
 
   // Data processing - always call
-  const chats = chatsResponse?.data || mockChats;
-  const users = usersResponse?.data || mockUsers;
+  const chats = chatsResponse?.data || [];
+  const users = usersResponse?.data || [];
 
   // Memoized filtered chats for performance - always call
   const filteredChats = useMemo(() => {

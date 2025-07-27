@@ -7,7 +7,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Chat, mockUsers } from "@/lib/mock-data";
+import { Chat } from "@/lib/mock-data";
 import { useUsers } from '@/hooks/useApiQuery';
 import { toast } from "@/hooks/use-toast";
 import { 
@@ -35,8 +35,7 @@ export const ChatPanel = memo<ChatPanelProps>(({ chat }) => {
   const [isRetrying, setIsRetrying] = useState(false);
   const [selectedAgentId, setSelectedAgentId] = useState(chat.assignedAgentId || "unassigned");
   const { data: usersResponse } = useUsers();
-  
-  const users = usersResponse?.data || mockUsers;
+  const users = usersResponse?.data || [];
   const assignedAgent = users.find(u => u.id === chat.assignedAgentId);
 
   const handleSendMessage = async () => {

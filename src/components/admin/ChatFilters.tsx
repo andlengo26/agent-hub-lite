@@ -7,7 +7,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { SearchInput } from '@/components/common/SearchInput';
 import { CalendarIcon, Filter, X } from 'lucide-react';
 import { format } from 'date-fns';
-import { mockUsers } from '@/lib/mock-data';
+import { useUsers } from '@/hooks/useApiQuery';
 import { cn } from '@/lib/utils';
 
 export interface ChatFilters {
@@ -33,6 +33,9 @@ export function ChatFilters({
   isCollapsed = false, 
   onToggleCollapse 
 }: ChatFiltersProps) {
+  const { data: usersResponse } = useUsers();
+  const users = usersResponse?.data || [];
+  
   const updateFilter = (key: keyof ChatFilters, value: any) => {
     onFiltersChange({ ...filters, [key]: value });
   };
@@ -125,7 +128,7 @@ export function ChatFilters({
               <SelectContent>
                 <SelectItem value="all">All agents</SelectItem>
                 <SelectItem value="unassigned">Unassigned</SelectItem>
-                {mockUsers.map((user) => (
+                {users.filter(user => user.role === 'agent').map((user) => (
                   <SelectItem key={user.id} value={user.id}>
                     {user.firstName} {user.lastName}
                   </SelectItem>
