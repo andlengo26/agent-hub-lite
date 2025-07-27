@@ -10,7 +10,8 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Section } from '@/components/common/Section';
 import { TranscriptViewer } from './TranscriptViewer';
-import { Chat } from '@/types';
+import { EmailComposer } from './EmailComposer';
+import { Chat, EmailMessage } from '@/types';
 import { 
   CheckCircle, 
   XCircle, 
@@ -30,6 +31,7 @@ interface ActiveChatProps {
   onAcceptChat?: (chatId: string) => void;
   onCancelChat?: (chatId: string) => void;
   onEmailTranscript?: (chatId: string) => void;
+  onSendFollowUpEmail?: (emailData: Omit<EmailMessage, 'id' | 'sentAt' | 'sentById'>) => Promise<void>;
 }
 
 export function ActiveChat({
@@ -39,6 +41,7 @@ export function ActiveChat({
   onAcceptChat,
   onCancelChat,
   onEmailTranscript,
+  onSendFollowUpEmail,
 }: ActiveChatProps) {
   const [message, setMessage] = useState('');
   const [isAcceptingChat, setIsAcceptingChat] = useState(false);
@@ -46,6 +49,7 @@ export function ActiveChat({
   const [isClosingChat, setIsClosingChat] = useState(false);
   const [isSendingMessage, setIsSendingMessage] = useState(false);
   const [isEmailingTranscript, setIsEmailingTranscript] = useState(false);
+  const [isEmailComposerOpen, setIsEmailComposerOpen] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   
   // Focus textarea when chat is accepted
@@ -235,6 +239,18 @@ export function ActiveChat({
                 Email Transcript
               </Button>
             )}
+            
+            {currentChat.status === 'missed' && (
+              <Button 
+                variant="default" 
+                size="sm"
+                onClick={() => setIsEmailComposerOpen(true)}
+                aria-label="Reply via email for missed chat"
+              >
+                <Mail className="h-4 w-4 mr-1" />
+                Reply via Email
+              </Button>
+            )}
           </div>
         </div>
       </div>
@@ -336,6 +352,16 @@ export function ActiveChat({
           </Button>
         </div>
       </div>
+
+      {/* Email Composer Drawer */}
+      {currentChat && (
+        <EmailComposer
+          isOpen={isEmailComposerOpen}
+          onClose={() => setIsEmailComposerOpen(false)}
+          chat={currentChat}
+          onSendEmail={onSendFollowUpEmail}
+        />
+      )}
     </div>
   );
 }

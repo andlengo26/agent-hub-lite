@@ -97,3 +97,16 @@ export interface Domain {
   addedById: string;
   addedAt: string;
 }
+
+export interface EmailMessage {
+  id: string;
+  from: string;
+  to: string;
+  cc?: string;
+  bcc?: string;
+  subject: string;
+  body: string;
+  chatId: string;
+  sentAt: string;
+  sentById: string;
+}

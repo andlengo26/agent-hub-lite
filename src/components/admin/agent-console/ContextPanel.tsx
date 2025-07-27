@@ -7,7 +7,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Chat } from '@/types';
-import { MapPin, Globe, Smartphone, Clock, User, FileText, History } from 'lucide-react';
+import { MapPin, Globe, Smartphone, Clock, User, FileText, History, Mail } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
 interface ContextPanelProps {
@@ -41,14 +41,24 @@ export function ContextPanel({ currentChat, users }: ContextPanelProps) {
       date: '2024-01-20',
       agent: 'Alice Johnson',
       summary: 'Helped with shipping inquiry, provided tracking number',
-      status: 'resolved'
+      status: 'resolved',
+      type: 'chat'
     },
     {
       id: 2,
+      date: '2024-01-18',
+      agent: 'System',
+      summary: `Follow-up email sent for missed chat. Subject: "Follow-up regarding your recent inquiry - ${currentChat.requesterName}"`,
+      status: 'email_sent',
+      type: 'email'
+    },
+    {
+      id: 3,
       date: '2024-01-15',
       agent: 'Bob Smith',
       summary: 'Product return request, processed refund',
-      status: 'resolved'
+      status: 'resolved',
+      type: 'chat'
     }
   ];
 
@@ -170,15 +180,27 @@ export function ContextPanel({ currentChat, users }: ContextPanelProps) {
                     </div>
                   ) : (
                     mockHistory.map((item) => (
-                      <div key={item.id} className="border rounded-md p-3">
+                      <div 
+                        key={item.id} 
+                        className={`border rounded-md p-3 ${
+                          item.type === 'email' ? 'bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800' : ''
+                        }`}
+                      >
                         <div className="flex items-center justify-between mb-2">
-                          <span className="text-sm font-medium">{item.date}</span>
-                          <Badge variant={item.status === 'resolved' ? 'default' : 'secondary'}>
-                            {item.status}
+                          <div className="flex items-center gap-2">
+                            {item.type === 'email' && <Mail className="h-4 w-4 text-blue-600" />}
+                            <span className="text-sm font-medium">{item.date}</span>
+                          </div>
+                          <Badge variant={
+                            item.status === 'resolved' ? 'default' : 
+                            item.status === 'email_sent' ? 'outline' : 
+                            'secondary'
+                          }>
+                            {item.status === 'email_sent' ? 'Email Sent' : item.status}
                           </Badge>
                         </div>
                         <p className="text-sm text-muted-foreground mb-1">
-                          Agent: {item.agent}
+                          {item.type === 'email' ? 'Email Follow-up' : `Agent: ${item.agent}`}
                         </p>
                         <p className="text-sm">{item.summary}</p>
                       </div>
