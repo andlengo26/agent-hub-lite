@@ -16,7 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useUsers, useOrganizations, useUpdateUser, useInviteUser } from "@/hooks/useApiQuery";
 import { User, Organization } from "@/types";
 import { toast } from "@/hooks/use-toast";
-import { UserPlus, Users, Download, Archive } from "lucide-react";
+import { UserPlus, UsersIcon, Download, Archive } from "lucide-react";
 
 const userFormSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
@@ -116,7 +116,7 @@ export default function Users() {
 
   const handleUpdateUser = (data: UserFormData) => {
     if (!editingUser) return;
-    updateUserMutation.mutate({ id: editingUser.id, ...data }, {
+    updateUserMutation.mutate({ userId: editingUser.id, data }, {
       onSuccess: () => {
         setIsEditModalOpen(false);
         setEditingUser(null);
@@ -128,7 +128,7 @@ export default function Users() {
   const handleBulkAssign = () => {
     if (!bulkOrgId || selectedUsers.length === 0) return;
     selectedUsers.forEach((user) => {
-      updateUserMutation.mutate({ id: user.id, organizationId: bulkOrgId });
+      updateUserMutation.mutate({ userId: user.id, data: { organizationId: bulkOrgId } });
     });
     setIsBulkAssignModalOpen(false);
     setBulkOrgId("");
@@ -137,7 +137,7 @@ export default function Users() {
   };
 
   const bulkActions = [
-    { id: "assign", label: "Bulk Assign to Org", icon: <Users className="w-4 h-4" />, onClick: () => setIsBulkAssignModalOpen(true) },
+    { id: "assign", label: "Bulk Assign to Org", icon: <UsersIcon className="w-4 h-4" />, onClick: () => setIsBulkAssignModalOpen(true) },
     { id: "export", label: "Export Selected", icon: <Download className="w-4 h-4" />, onClick: () => toast({ title: "Export started" }) },
   ];
 
@@ -268,15 +268,48 @@ export default function Users() {
           </div>
         </FormModal>
 
-        <FormModal isOpen={isBulkAssignModalOpen} onClose={() => setIsBulkAssignModalOpen(false)} title="Bulk Assign to Organization" onSubmit={handleBulkAssign} submitLabel="Assign Users">
+        {/* Bulk Assignment Modal */}
+        <FormModal 
+          isOpen={isBulkAssignModalOpen} 
+          onClose={() => {
+            setIsBulkAssignModalOpen(false);
+            setBulkOrgId("");
+          }} 
+          title="Bulk Assign to Organization" 
+          onSubmit={handleBulkAssign} 
+          submitLabel="Assign Users"
+        >
           <div className="space-y-4">
-            <Label>Organization</Label>
-            <Select value={bulkOrgId} onValueChange={setBulkOrgId}>
-              <SelectTrigger><SelectValue placeholder="Select organization" /></SelectTrigger>
-              <SelectContent>
-                {organizations.map((org) => <SelectItem key={org.id} value={org.id}>{org.name}</SelectItem>)}
-              </SelectContent>
-            </Select>
+            <div>
+              <Label>Selected Users ({selectedUsers.length})</Label>
+              <div className="mt-2 space-y-1">
+                {selectedUsers.slice(0, 3).map((user) => (
+                  <div key={user.id} className="text-sm text-muted-foreground">
+                    {user.firstName} {user.lastName}
+                  </div>
+                ))}
+                {selectedUsers.length > 3 && (
+                  <div className="text-sm text-muted-foreground">
+                    and {selectedUsers.length - 3} more...
+                  </div>
+                )}
+              </div>
+            </div>
+            <div>
+              <Label htmlFor="bulk-organization">Organization</Label>
+              <Select value={bulkOrgId} onValueChange={setBulkOrgId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select organization" />
+                </SelectTrigger>
+                <SelectContent>
+                  {organizations.map((org) => (
+                    <SelectItem key={org.id} value={org.id}>
+                      {org.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </FormModal>
 
