@@ -12,7 +12,7 @@ import { ChatPagination } from "@/components/admin/ChatPagination";
 import { AgentAssignmentModal } from "@/components/admin/AgentAssignmentModal";
 import { ErrorBoundary } from "@/components/common/ErrorBoundary";
 import { AgentConsoleProvider } from "@/contexts/AgentConsoleContext";
-import { AgentConsoleLayout } from "@/components/admin/agent-console/AgentConsoleLayout";
+import { NewAgentConsoleLayout } from "@/components/admin/agent-console/NewAgentConsoleLayout";
 import { Chat } from "@/types";
 import { useChats, useUsers } from "@/hooks/useApiQuery";
 import { useFeatureFlag } from "@/hooks/useFeatureFlag";
@@ -360,7 +360,7 @@ export default function AllChats() {
 
           {viewMode === 'console' ? (
             <div className="h-[calc(100vh-12rem)]">
-              <AgentConsoleLayout 
+              <NewAgentConsoleLayout 
                 queueChats={queueChats}
                 isLoading={isLoading}
                 users={users}

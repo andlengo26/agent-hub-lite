@@ -115,7 +115,7 @@ export function NotesSection({ chatId }: NotesSectionProps) {
       <ScrollArea className="flex-1">
         <div className="space-y-0">
           {mockNotes.map((note, index) => (
-            <React.Fragment key={note.id}>
+            <div key={note.id}>
               <div className="py-space-3">
                 <p className="text-xs text-text-primary mb-space-2 leading-relaxed">
                   {note.content}
@@ -134,7 +134,7 @@ export function NotesSection({ chatId }: NotesSectionProps) {
               {index < mockNotes.length - 1 && (
                 <Separator className="my-0" />
               )}
-            </React.Fragment>
+            </div>
           ))}
           
           {mockNotes.length === 0 && (
