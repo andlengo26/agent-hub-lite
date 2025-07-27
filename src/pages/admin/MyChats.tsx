@@ -191,7 +191,7 @@ export default function MyChats() {
             </div>
             
             {/* View Mode Toggle */}
-            <div className="flex items-center gap-space-2">
+            <div className="flex items-center gap-2">
               <Button
                 variant={viewMode === 'console' ? 'default' : 'outline'}
                 size="sm"

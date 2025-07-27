@@ -174,6 +174,11 @@ export default function AllChats() {
 
   const totalPages = Math.ceil(filteredChats.length / pageSize);
 
+  // Filter queue chats (active/missed status for console view)
+  const queueChats = useMemo(() => {
+    return filteredChats.filter(chat => chat.status === 'active' || chat.status === 'missed');
+  }, [filteredChats]);
+
   // Memoized status counts - always call
   const statusCounts = useMemo(() => ({
     all: chats.length,
@@ -319,12 +324,6 @@ export default function AllChats() {
       </div>
     );
   }
-
-
-  // Filter queue chats (active/missed status for console view)
-  const queueChats = useMemo(() => {
-    return filteredChats.filter(chat => chat.status === 'active' || chat.status === 'missed');
-  }, [filteredChats]);
 
   return (
     <ErrorBoundary>
