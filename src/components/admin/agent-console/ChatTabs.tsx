@@ -17,7 +17,7 @@ export function ChatTabs() {
           <TabsTrigger
             key={chat.id}
             value={chat.id}
-            className="relative group flex items-center gap-space-2 min-w-0"
+            className="relative group flex items-center gap-2 min-w-0"
           >
             <span className="truncate max-w-24">
               {chat.requesterName}

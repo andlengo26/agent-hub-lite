@@ -27,8 +27,8 @@ export function ActiveChatPane({ currentChat }: ActiveChatPaneProps) {
           </div>
         </CardHeader>
         <CardContent className="flex-1 flex items-center justify-center">
-          <div className="text-center text-text-secondary">
-            <div className="text-4xl mb-space-4">💬</div>
+          <div className="text-center text-muted-foreground">
+            <div className="text-4xl mb-4">💬</div>
             <p>Select a chat from the queue to start helping customers</p>
           </div>
         </CardContent>
@@ -66,18 +66,18 @@ export function ActiveChatPane({ currentChat }: ActiveChatPaneProps) {
 
   return (
     <>
-      <CardHeader className="border-b p-space-4">
+      <CardHeader className="border-b p-4">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-space-3">
+          <div className="flex items-center gap-3">
             <div>
               <h3 className="text-lg font-medium">{currentChat.requesterName}</h3>
-              <p className="text-sm text-text-secondary">{currentChat.requesterEmail}</p>
+              <p className="text-sm text-muted-foreground">{currentChat.requesterEmail}</p>
             </div>
             <Badge variant="secondary">
               {currentChat.status}
             </Badge>
           </div>
-          <div className="flex items-center gap-space-2">
+          <div className="flex items-center gap-2">
             <Button variant="ghost" size="sm">
               <Phone className="h-4 w-4" />
             </Button>
@@ -102,7 +102,7 @@ export function ActiveChatPane({ currentChat }: ActiveChatPaneProps) {
         
         {/* Chat Tabs */}
         {activeChats.length > 1 && (
-          <div className="mt-space-3">
+          <div className="mt-3">
             <ChatTabs />
           </div>
         )}
@@ -110,8 +110,8 @@ export function ActiveChatPane({ currentChat }: ActiveChatPaneProps) {
 
       <CardContent className="flex-1 flex flex-col p-0">
         {/* Messages */}
-        <ScrollArea className="flex-1 p-space-4">
-          <div className="space-y-space-4">
+        <ScrollArea className="flex-1 p-4">
+          <div className="space-y-4">
             {mockMessages.map((message) => (
               <div
                 key={message.id}
@@ -120,17 +120,17 @@ export function ActiveChatPane({ currentChat }: ActiveChatPaneProps) {
                 }`}
               >
                 <div
-                  className={`max-w-xs lg:max-w-md px-space-3 py-space-2 rounded-radius-md ${
+                  className={`max-w-xs lg:max-w-md px-3 py-2 rounded-md ${
                     message.type === 'agent'
                       ? 'bg-primary text-white'
                       : message.type === 'system'
-                      ? 'bg-surface text-text-secondary border text-center'
-                      : 'bg-surface border'
+                      ? 'bg-muted text-muted-foreground border text-center'
+                      : 'bg-muted border'
                   }`}
                 >
                   <p className="text-sm">{message.content}</p>
-                  <p className={`text-xs mt-space-1 ${
-                    message.type === 'agent' ? 'text-white/70' : 'text-text-secondary'
+                  <p className={`text-xs mt-1 ${
+                    message.type === 'agent' ? 'text-white/70' : 'text-muted-foreground'
                   }`}>
                     {formatDistanceToNow(message.timestamp, { addSuffix: true })}
                   </p>
@@ -141,10 +141,10 @@ export function ActiveChatPane({ currentChat }: ActiveChatPaneProps) {
         </ScrollArea>
 
         {/* Message Input */}
-        <div className="border-t p-space-4">
-          <div className="flex items-end gap-space-2">
+        <div className="border-t p-4">
+          <div className="flex items-end gap-2">
             <div className="flex-1">
-              <div className="flex items-center gap-space-2 mb-space-2">
+              <div className="flex items-center gap-2 mb-2">
                 <Button variant="ghost" size="sm">
                   <Paperclip className="h-4 w-4" />
                 </Button>

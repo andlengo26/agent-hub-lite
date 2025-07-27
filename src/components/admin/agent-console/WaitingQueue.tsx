@@ -33,9 +33,9 @@ export function WaitingQueue({ chats, isLoading }: WaitingQueueProps) {
           <CardTitle className="text-lg">Waiting Queue</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-space-3">
+          <div className="space-y-3">
             {[...Array(5)].map((_, i) => (
-              <div key={i} className="space-y-space-2">
+              <div key={i} className="space-y-2">
                 <Skeleton className="h-4 w-3/4" />
                 <Skeleton className="h-3 w-1/2" />
                 <Skeleton className="h-8 w-full" />
@@ -59,57 +59,57 @@ export function WaitingQueue({ chats, isLoading }: WaitingQueueProps) {
       </CardHeader>
       <CardContent className="p-0">
         <ScrollArea className="h-[calc(100vh-12rem)]">
-          <div className="space-y-space-2 p-space-4">
+          <div className="space-y-2 p-4">
             {chats.length === 0 ? (
-              <div className="text-center py-space-6 text-text-secondary">
-                <Clock className="h-8 w-8 mx-auto mb-space-2 opacity-50" />
+              <div className="text-center py-6 text-muted-foreground">
+                <Clock className="h-8 w-8 mx-auto mb-2 opacity-50" />
                 <p>No chats waiting</p>
               </div>
             ) : (
               chats.map((chat) => (
                 <div
                   key={chat.id}
-                  className={`p-space-3 border rounded-radius-md cursor-pointer transition-colors hover:bg-surface ${
-                    selectedQueueChat?.id === chat.id ? 'bg-surface border-primary' : ''
+                  className={`p-3 border rounded-md cursor-pointer transition-colors hover:bg-muted ${
+                    selectedQueueChat?.id === chat.id ? 'bg-muted border-primary' : ''
                   }`}
                   onClick={() => setSelectedQueueChat(chat)}
                 >
-                  <div className="space-y-space-2">
+                  <div className="space-y-2">
                     <div className="flex items-start justify-between">
-                      <div className="space-y-space-1 flex-1 min-w-0">
+                      <div className="space-y-1 flex-1 min-w-0">
                         <h4 className="font-medium text-sm truncate">
                           {chat.requesterName}
                         </h4>
-                        <p className="text-xs text-text-secondary truncate">
+                        <p className="text-xs text-muted-foreground truncate">
                           {chat.requesterEmail}
                         </p>
                       </div>
                       <Badge 
                         variant={getStatusBadgeVariant(chat.status)}
-                        className="text-xs ml-space-2 flex-shrink-0"
+                        className="text-xs ml-2 flex-shrink-0"
                       >
                         {chat.status}
                       </Badge>
                     </div>
                     
-                    <div className="flex items-center gap-space-3 text-xs text-text-secondary">
-                      <div className="flex items-center gap-space-1">
+                    <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                      <div className="flex items-center gap-1">
                         <MapPin className="h-3 w-3" />
                         <span className="truncate">{chat.geo}</span>
                       </div>
                       {chat.requesterPhone && (
-                        <div className="flex items-center gap-space-1">
+                        <div className="flex items-center gap-1">
                           <Phone className="h-3 w-3" />
                           <span className="truncate">{chat.requesterPhone}</span>
                         </div>
                       )}
                     </div>
                     
-                    <div className="text-xs text-text-secondary">
+                    <div className="text-xs text-muted-foreground">
                       {formatDistanceToNow(new Date(chat.createdAt), { addSuffix: true })}
                     </div>
                     
-                    <p className="text-xs text-text-secondary line-clamp-2">
+                    <p className="text-xs text-muted-foreground line-clamp-2">
                       {chat.summary}
                     </p>
 

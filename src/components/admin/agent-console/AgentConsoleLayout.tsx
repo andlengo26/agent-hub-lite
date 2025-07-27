@@ -17,7 +17,7 @@ export function AgentConsoleLayout({ queueChats, isLoading, users }: AgentConsol
   const currentChat = activeChats.find(chat => chat.id === currentChatId);
 
   return (
-    <div className="flex h-full gap-space-4">
+    <div className="flex h-full gap-4">
       {/* Left Column - Waiting Queue */}
       <div className="w-80 flex-shrink-0">
         <Card className="h-full">

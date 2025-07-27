@@ -26,8 +26,8 @@ export function ContextPanel({ currentChat, users }: ContextPanelProps) {
           <CardTitle className="text-lg">Context</CardTitle>
         </CardHeader>
         <CardContent className="flex items-center justify-center h-64">
-          <div className="text-center text-text-secondary">
-            <User className="h-8 w-8 mx-auto mb-space-2 opacity-50" />
+          <div className="text-center text-muted-foreground">
+            <User className="h-8 w-8 mx-auto mb-2 opacity-50" />
             <p>Select a chat to view details</p>
           </div>
         </CardContent>
@@ -77,24 +77,24 @@ export function ContextPanel({ currentChat, users }: ContextPanelProps) {
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="details" className="p-space-4 m-0">
+          <TabsContent value="details" className="p-4 m-0">
             <ScrollArea className="h-[calc(100vh-16rem)]">
-              <div className="space-y-space-4">
+              <div className="space-y-4">
                 {/* Customer Info */}
                 <div>
-                  <h4 className="font-medium mb-space-2">Customer Information</h4>
-                  <div className="space-y-space-2 text-sm">
-                    <div className="flex items-center gap-space-2">
-                      <User className="h-4 w-4 text-text-secondary" />
+                  <h4 className="font-medium mb-2">Customer Information</h4>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex items-center gap-2">
+                      <User className="h-4 w-4 text-muted-foreground" />
                       <span>{currentChat.requesterName}</span>
                     </div>
-                    <div className="flex items-center gap-space-2">
-                      <span className="text-text-secondary">Email:</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-muted-foreground">Email:</span>
                       <span>{currentChat.requesterEmail}</span>
                     </div>
                     {currentChat.requesterPhone && (
-                      <div className="flex items-center gap-space-2">
-                        <Smartphone className="h-4 w-4 text-text-secondary" />
+                      <div className="flex items-center gap-2">
+                        <Smartphone className="h-4 w-4 text-muted-foreground" />
                         <span>{currentChat.requesterPhone}</span>
                       </div>
                     )}
@@ -103,22 +103,22 @@ export function ContextPanel({ currentChat, users }: ContextPanelProps) {
 
                 {/* Session Info */}
                 <div>
-                  <h4 className="font-medium mb-space-2">Session Details</h4>
-                  <div className="space-y-space-2 text-sm">
-                    <div className="flex items-center gap-space-2">
-                      <MapPin className="h-4 w-4 text-text-secondary" />
+                  <h4 className="font-medium mb-2">Session Details</h4>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex items-center gap-2">
+                      <MapPin className="h-4 w-4 text-muted-foreground" />
                       <span>{currentChat.geo}</span>
                     </div>
-                    <div className="flex items-center gap-space-2">
-                      <Globe className="h-4 w-4 text-text-secondary" />
+                    <div className="flex items-center gap-2">
+                      <Globe className="h-4 w-4 text-muted-foreground" />
                       <span className="truncate">{currentChat.pageUrl}</span>
                     </div>
-                    <div className="flex items-center gap-space-2">
-                      <span className="text-text-secondary">Browser:</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-muted-foreground">Browser:</span>
                       <span>{currentChat.browser}</span>
                     </div>
-                    <div className="flex items-center gap-space-2">
-                      <Clock className="h-4 w-4 text-text-secondary" />
+                    <div className="flex items-center gap-2">
+                      <Clock className="h-4 w-4 text-muted-foreground" />
                       <span>{formatDistanceToNow(new Date(currentChat.createdAt), { addSuffix: true })}</span>
                     </div>
                   </div>
@@ -127,8 +127,8 @@ export function ContextPanel({ currentChat, users }: ContextPanelProps) {
                 {/* Assigned Agent */}
                 {assignedAgent && (
                   <div>
-                    <h4 className="font-medium mb-space-2">Assigned Agent</h4>
-                    <div className="flex items-center gap-space-2">
+                    <h4 className="font-medium mb-2">Assigned Agent</h4>
+                    <div className="flex items-center gap-2">
                       <Avatar className="h-8 w-8">
                         <AvatarImage src={assignedAgent.avatarUrl} />
                         <AvatarFallback>
@@ -139,7 +139,7 @@ export function ContextPanel({ currentChat, users }: ContextPanelProps) {
                         <div className="font-medium text-sm">
                           {assignedAgent.firstName} {assignedAgent.lastName}
                         </div>
-                        <div className="text-xs text-text-secondary">
+                        <div className="text-xs text-muted-foreground">
                           {assignedAgent.role}
                         </div>
                       </div>
@@ -155,8 +155,8 @@ export function ContextPanel({ currentChat, users }: ContextPanelProps) {
 
                 {/* Chat Summary */}
                 <div>
-                  <h4 className="font-medium mb-space-2">Summary</h4>
-                  <p className="text-sm text-text-secondary">
+                  <h4 className="font-medium mb-2">Summary</h4>
+                  <p className="text-sm text-muted-foreground">
                     {currentChat.summary}
                   </p>
                 </div>
@@ -164,25 +164,25 @@ export function ContextPanel({ currentChat, users }: ContextPanelProps) {
             </ScrollArea>
           </TabsContent>
 
-          <TabsContent value="history" className="p-space-4 m-0">
+          <TabsContent value="history" className="p-4 m-0">
             <ScrollArea className="h-[calc(100vh-16rem)]">
-              <div className="space-y-space-3">
+              <div className="space-y-3">
                 <h4 className="font-medium">Previous Interactions</h4>
                 {mockHistory.length === 0 ? (
-                  <div className="text-center py-space-4 text-text-secondary">
-                    <History className="h-6 w-6 mx-auto mb-space-2 opacity-50" />
+                  <div className="text-center py-4 text-muted-foreground">
+                    <History className="h-6 w-6 mx-auto mb-2 opacity-50" />
                     <p className="text-sm">No previous interactions</p>
                   </div>
                 ) : (
                   mockHistory.map((item) => (
-                    <div key={item.id} className="border rounded-radius-md p-space-3">
-                      <div className="flex items-center justify-between mb-space-2">
+                    <div key={item.id} className="border rounded-md p-3">
+                      <div className="flex items-center justify-between mb-2">
                         <span className="text-sm font-medium">{item.date}</span>
                         <Badge variant={item.status === 'resolved' ? 'default' : 'secondary'}>
                           {item.status}
                         </Badge>
                       </div>
-                      <p className="text-sm text-text-secondary mb-space-1">
+                      <p className="text-sm text-muted-foreground mb-1">
                         Agent: {item.agent}
                       </p>
                       <p className="text-sm">{item.summary}</p>
@@ -193,8 +193,8 @@ export function ContextPanel({ currentChat, users }: ContextPanelProps) {
             </ScrollArea>
           </TabsContent>
 
-          <TabsContent value="notes" className="p-space-4 m-0">
-            <div className="space-y-space-3">
+          <TabsContent value="notes" className="p-4 m-0">
+            <div className="space-y-3">
               <h4 className="font-medium">Internal Notes</h4>
               <Textarea
                 placeholder="Add notes about this customer or conversation..."
@@ -204,10 +204,10 @@ export function ContextPanel({ currentChat, users }: ContextPanelProps) {
                 Save Note
               </Button>
               
-              <div className="mt-space-4">
-                <h5 className="text-sm font-medium mb-space-2">Previous Notes</h5>
-                <div className="text-center py-space-4 text-text-secondary">
-                  <FileText className="h-6 w-6 mx-auto mb-space-2 opacity-50" />
+              <div className="mt-4">
+                <h5 className="text-sm font-medium mb-2">Previous Notes</h5>
+                <div className="text-center py-4 text-muted-foreground">
+                  <FileText className="h-6 w-6 mx-auto mb-2 opacity-50" />
                   <p className="text-sm">No notes yet</p>
                 </div>
               </div>
