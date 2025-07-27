@@ -99,8 +99,10 @@ export default function MyChats() {
             data={userChats}
             columns={chatColumns}
             loading={isLoading}
-            emptyTitle="No chats assigned"
-            emptyDescription="You don't have any chats assigned to you at the moment."
+            emptyState={{
+              title: "No chats assigned",
+              description: "You don't have any chats assigned to you at the moment."
+            }}
             selectable={false}
             searchable={true}
           />

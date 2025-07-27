@@ -17,7 +17,7 @@ import { useFeatureFlag } from "@/hooks/useFeatureFlag";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "@/hooks/use-toast";
 import { performanceMonitor } from "@/lib/performance-monitor";
-import { MoreHorizontal, UserPlus, MessageSquareX, XCircle, Trash2, MapPin } from "lucide-react";
+import { MoreHorizontal, UserPlus, MessageSquareX, XCircle, Trash2, MapPin, Archive } from "lucide-react";
 import { isWithinInterval, parseISO } from "date-fns";
 
 const chatColumns = [
@@ -275,6 +275,7 @@ export default function AllChats() {
     {
       id: "archive",
       label: "Archive Selected",
+      icon: <Archive className="h-4 w-4" />,
       onClick: async (selectedChats: Chat[]) => {
         toast({
           title: "Chats Archived",
@@ -285,6 +286,7 @@ export default function AllChats() {
     {
       id: "delete",
       label: "Delete Selected",
+      icon: <Trash2 className="h-4 w-4" />,
       variant: "destructive" as const,
       onClick: async (selectedChats: Chat[]) => {
         toast({
@@ -363,47 +365,13 @@ export default function AllChats() {
                   onEdit={(chat) => setSelectedChat(chat)}
                   onView={(chat) => setSelectedChat(chat)}
                   loading={isLoading}
-                  emptyTitle="No chats found"
-                  emptyDescription="No chats match your current filters."
+                  emptyState={{
+                    title: "No chats found",
+                    description: "No chats match your current filters."
+                  }}
                   selectable={true}
                   searchable={false}
                   bulkActions={bulkActions}
-                  renderRowActions={(chat) => (
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-8 w-8 p-0">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        {!chat.assignedAgentId && (
-                          <DropdownMenuItem onClick={() => handleAssignAgent(chat)}>
-                            <UserPlus className="mr-2 h-4 w-4" />
-                            Assign Agent
-                          </DropdownMenuItem>
-                        )}
-                        {chat.status === "active" && (
-                          <>
-                            <DropdownMenuItem onClick={() => handleCancelChat(chat)}>
-                              <MessageSquareX className="mr-2 h-4 w-4" />
-                              Cancel Chat
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleCloseChat(chat)}>
-                              <XCircle className="mr-2 h-4 w-4" />
-                              Close Chat
-                            </DropdownMenuItem>
-                          </>
-                        )}
-                        <DropdownMenuItem 
-                          onClick={() => handleDeleteChat(chat)}
-                          className="text-destructive"
-                        >
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          Delete Chat
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  )}
                 />
 
                 {/* Pagination */}
