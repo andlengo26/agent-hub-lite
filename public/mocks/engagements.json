@@ -1,0 +1,60 @@
+{
+  "data": [
+    {
+      "id": "eng_001",
+      "customerName": "John Anderson",
+      "customerEmail": "john@customer.com",
+      "contactNumber": "+1-555-0123",
+      "engagementCount": 5,
+      "lastEngagedAt": "2025-01-27T08:30:00Z",
+      "agentsInvolved": ["user_001", "user_002"],
+      "aiSummary": "Customer inquired about pricing plans and requested a demo. Issue resolved with product demonstration."
+    },
+    {
+      "id": "eng_002",
+      "customerName": "Sarah Lee",
+      "customerEmail": "sarah@business.com",
+      "contactNumber": "+1-555-0124",
+      "engagementCount": 2,
+      "lastEngagedAt": "2025-01-27T07:15:00Z",
+      "agentsInvolved": ["user_002"],
+      "aiSummary": "Technical support request regarding API integration. Provided documentation and code examples."
+    },
+    {
+      "id": "eng_003",
+      "customerName": "Mike Chen",
+      "customerEmail": "mike@startup.io",
+      "contactNumber": "+1-555-0125",
+      "engagementCount": 8,
+      "lastEngagedAt": "2025-01-26T16:20:00Z",
+      "agentsInvolved": ["user_001", "user_003"],
+      "aiSummary": "Billing inquiry resolved. Updated payment method and provided account access."
+    },
+    {
+      "id": "eng_004",
+      "customerName": "Lisa Wang",
+      "customerEmail": "lisa@company.net",
+      "contactNumber": "+1-555-0126",
+      "engagementCount": 1,
+      "lastEngagedAt": "2025-01-26T14:10:00Z",
+      "agentsInvolved": ["user_003"],
+      "aiSummary": "First-time user onboarding. Guided through setup process and initial configuration."
+    },
+    {
+      "id": "eng_005",
+      "customerName": "Tom Rodriguez",
+      "customerEmail": "tom@retail.com",
+      "contactNumber": "+1-555-0127",
+      "engagementCount": 3,
+      "lastEngagedAt": "2025-01-25T11:30:00Z",
+      "agentsInvolved": ["user_002"],
+      "aiSummary": "Feature request discussion. Logged enhancement request for development team review."
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "limit": 10,
+    "total": 5,
+    "totalPages": 1
+  }
+}

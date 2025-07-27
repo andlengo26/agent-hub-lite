@@ -2,58 +2,53 @@
   "data": [
     {
       "id": "user_001",
-      "name": "Alice Johnson",
+      "avatarUrl": "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150",
+      "firstName": "Alice",
+      "lastName": "Johnson",
       "email": "alice@techcorp.com", 
       "role": "admin",
-      "organizationId": "org_001",
-      "status": "active",
-      "avatar": "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150",
-      "createdAt": "2025-01-15T10:00:00Z",
-      "lastActiveAt": "2025-01-27T09:30:00Z"
+      "onlineStatus": "online",
+      "createdAt": "2025-01-15T10:00:00Z"
     },
     {
       "id": "user_002",
-      "name": "Bob Smith", 
+      "avatarUrl": "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150",
+      "firstName": "Bob",
+      "lastName": "Smith",
       "email": "bob@startupxyz.io",
       "role": "agent",
-      "organizationId": "org_002",
-      "status": "active",
-      "avatar": "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150",
-      "createdAt": "2025-01-20T12:00:00Z",
-      "lastActiveAt": "2025-01-27T08:45:00Z"
+      "onlineStatus": "online",
+      "createdAt": "2025-01-20T12:00:00Z"
     },
     {
       "id": "user_003",
-      "name": "Carol Davis",
+      "avatarUrl": "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150",
+      "firstName": "Carol",
+      "lastName": "Davis",
       "email": "carol@retailco.com",
       "role": "manager", 
-      "organizationId": "org_003",
-      "status": "active",
-      "avatar": "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150",
-      "createdAt": "2025-01-22T14:00:00Z",
-      "lastActiveAt": "2025-01-26T17:20:00Z"
+      "onlineStatus": "away",
+      "createdAt": "2025-01-22T14:00:00Z"
     },
     {
       "id": "user_004",
-      "name": "David Wilson",
+      "avatarUrl": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150",
+      "firstName": "David",
+      "lastName": "Wilson",
       "email": "david@nonprofit.org",
       "role": "agent",
-      "organizationId": "org_004", 
-      "status": "inactive",
-      "avatar": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150",
-      "createdAt": "2025-01-18T09:00:00Z",
-      "lastActiveAt": "2025-01-23T14:30:00Z"
+      "onlineStatus": "offline",
+      "createdAt": "2025-01-18T09:00:00Z"
     },
     {
       "id": "user_005",
-      "name": "Eva Martinez",
+      "avatarUrl": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150",
+      "firstName": "Eva",
+      "lastName": "Martinez",
       "email": "eva@financegroup.net",
       "role": "admin",
-      "organizationId": "org_005",
-      "status": "pending",
-      "avatar": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150", 
-      "createdAt": "2025-01-10T16:00:00Z",
-      "lastActiveAt": "2025-01-25T11:45:00Z"
+      "onlineStatus": "offline",
+      "createdAt": "2025-01-10T16:00:00Z"
     }
   ],
   "pagination": {

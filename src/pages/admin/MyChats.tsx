@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { DataTable, Column } from "@/components/admin/DataTable";
-import { mockChats, mockUsers, Chat } from "@/lib/mock-data";
+import { fallbackData, Chat } from "@/lib/mock-data";
 import { useChats } from "@/hooks/useApiQuery";
 import { useFeatureFlag } from "@/hooks/useFeatureFlag";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -24,7 +24,7 @@ export default function MyChats() {
   const enableRealTimeUpdates = useFeatureFlag('realTime');
   const { data: chatsResponse, isLoading } = useChats();
   
-  const allChats = chatsResponse?.data || mockChats;
+  const allChats = chatsResponse?.data || fallbackData.chats;
   const myChats = allChats.filter(chat => chat.assignedAgentId === currentUserId);
 
   if (isLoading) {

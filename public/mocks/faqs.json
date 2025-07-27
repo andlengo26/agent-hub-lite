@@ -1,0 +1,50 @@
+{
+  "data": [
+    {
+      "id": "faq_001",
+      "question": "How do I reset my password?",
+      "answer": "Click on 'Forgot Password' link on the login page and follow the instructions sent to your email.",
+      "tags": ["password", "login", "account"],
+      "createdAt": "2025-01-15T10:00:00Z",
+      "updatedAt": "2025-01-20T14:30:00Z"
+    },
+    {
+      "id": "faq_002",
+      "question": "What are the system requirements?",
+      "answer": "Our platform supports modern browsers (Chrome 90+, Firefox 88+, Safari 14+, Edge 90+) and requires JavaScript enabled.",
+      "tags": ["system", "requirements", "browser"],
+      "createdAt": "2025-01-16T11:15:00Z",
+      "updatedAt": "2025-01-22T09:45:00Z"
+    },
+    {
+      "id": "faq_003",
+      "question": "How can I upgrade my plan?",
+      "answer": "Go to Settings > Billing and select 'Upgrade Plan'. Choose your desired plan and complete the payment process.",
+      "tags": ["billing", "upgrade", "plan"],
+      "createdAt": "2025-01-17T14:20:00Z",
+      "updatedAt": "2025-01-25T16:10:00Z"
+    },
+    {
+      "id": "faq_004",
+      "question": "Is there a mobile app available?",
+      "answer": "Yes, our mobile apps are available on both iOS App Store and Google Play Store.",
+      "tags": ["mobile", "app", "download"],
+      "createdAt": "2025-01-18T09:30:00Z",
+      "updatedAt": "2025-01-24T12:20:00Z"
+    },
+    {
+      "id": "faq_005",
+      "question": "How do I contact support?",
+      "answer": "You can contact our support team via live chat, email at support@example.com, or phone at 1-800-SUPPORT.",
+      "tags": ["support", "contact", "help"],
+      "createdAt": "2025-01-19T16:45:00Z",
+      "updatedAt": "2025-01-26T08:15:00Z"
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "limit": 10,
+    "total": 5,
+    "totalPages": 1
+  }
+}
