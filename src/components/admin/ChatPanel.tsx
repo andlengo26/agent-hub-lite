@@ -190,7 +190,7 @@ export const ChatPanel = memo<ChatPanelProps>(({ chat }) => {
                 </SelectTrigger>
                 <SelectContent className="bg-background border shadow-md z-50">
                   <SelectItem value="unassigned">Unassigned</SelectItem>
-                  {mockUsers.filter(user => user.role === 'agent' || user.role === 'admin').map((user) => (
+                  {mockUsers.filter(user => user.role === 'agent').map((user) => (
                     <SelectItem key={user.id} value={user.id}>
                       <div className="flex items-center gap-2">
                         <Avatar className="h-5 w-5">

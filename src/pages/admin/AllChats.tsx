@@ -397,7 +397,7 @@ export default function AllChats() {
 
         {/* Chat Details Drawer */}
         <Sheet open={!!selectedChat} onOpenChange={() => setSelectedChat(null)}>
-          <SheetContent className="w-[700px] sm:w-[700px] overflow-y-auto">
+          <SheetContent className="w-2/3 max-w-[66vw] overflow-y-auto">
             <SheetHeader>
               <SheetTitle>Chat Details</SheetTitle>
             </SheetHeader>

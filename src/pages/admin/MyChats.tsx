@@ -244,7 +244,7 @@ export default function MyChats() {
 
       {/* Chat Detail Sheet */}
       <Sheet open={!!selectedChat} onOpenChange={(open) => !open && setSelectedChat(null)}>
-        <SheetContent className="w-[700px] sm:w-[700px] overflow-y-auto">
+        <SheetContent className="w-2/3 max-w-[66vw] overflow-y-auto">
           <SheetHeader>
             <SheetTitle>
               Chat Details - {selectedChat?.requesterName}
