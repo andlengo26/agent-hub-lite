@@ -189,18 +189,16 @@ export function ExpandableContextPanel({
       <div className="h-full flex flex-col">
         {isExpanded ? (
           <>
-            <div className="p-4 border-b border-border">
-              <h3 className="font-medium text-text-primary mb-3">Engagements</h3>
-              {!isMobile && onToggleExpanded && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={onToggleExpanded}
-                  className="h-6 w-6 p-0"
-                >
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
-              )}
+            <div 
+              className="p-4 border-b border-border cursor-pointer hover:bg-surface/50 transition-colors"
+              onClick={onToggleExpanded}
+            >
+              <div className="flex items-center gap-2">
+                <h3 className="font-medium text-text-primary">Engagements</h3>
+                {!isMobile && onToggleExpanded && (
+                  <ChevronRight className="h-4 w-4 text-text-secondary" />
+                )}
+              </div>
             </div>
             <div className="flex-1 flex items-center justify-center p-4">
               <div className="text-center text-text-secondary">
@@ -220,19 +218,14 @@ export function ExpandableContextPanel({
 
   const ContextContent = () => (
     <div className="h-full flex flex-col">
-      <div className="p-4 border-b border-border">
-        <div className="flex items-center justify-between">
+      <div 
+        className="p-4 border-b border-border cursor-pointer hover:bg-surface/50 transition-colors"
+        onClick={onToggleExpanded}
+      >
+        <div className="flex items-center gap-2">
           <h3 className="font-medium text-text-primary">Engagements</h3>
           {!isMobile && onToggleExpanded && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onToggleExpanded}
-              className="h-6 w-6 p-0"
-              title="Collapse panel (Ctrl+[)"
-            >
-              <ChevronRight className="h-4 w-4" />
-            </Button>
+            <ChevronRight className="h-4 w-4 text-text-secondary" />
           )}
         </div>
         <p className="text-xs text-text-secondary mt-1">

@@ -26,7 +26,7 @@ export function NewAgentConsoleLayout({
 }: NewAgentConsoleLayoutProps) {
   const { currentChatId, activeChats, acceptChat, switchToChat } = useAgentConsole();
   const [selectedQueueChatId, setSelectedQueueChatId] = useState<string>();
-  const [contextPanelExpanded, setContextPanelExpanded] = useState(true);
+  const [contextPanelExpanded, setContextPanelExpanded] = useState(false);
   const { isConnected } = useWebSocketChats();
 
   const currentChat = activeChats.find(chat => chat.id === currentChatId);

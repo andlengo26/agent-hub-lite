@@ -122,8 +122,8 @@ export function NotesSection({ chatId, onNotesCountChange }: NotesSectionProps) 
         <div className="space-y-0">
           {mockNotes.map((note, index) => (
             <div key={note.id}>
-              <div className="py-space-3">
-                <p className="text-xs text-text-primary mb-space-2 leading-relaxed">
+              <div className="py-space-4 px-space-2">
+                <p className="text-xs text-text-primary mb-space-3 leading-relaxed">
                   {note.content}
                 </p>
                 

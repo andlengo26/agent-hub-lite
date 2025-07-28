@@ -121,8 +121,8 @@ Customer Support Team`
 
   return (
     <Drawer open={isOpen} onOpenChange={onClose}>
-      <DrawerContent className="max-h-[90vh]">
-        <DrawerHeader className="pb-space-6 px-space-6">
+      <DrawerContent className="max-h-[90vh] will-change-transform">
+        <DrawerHeader className="pb-space-4 px-space-6 pt-space-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-space-3">
               <Mail className="h-5 w-5 text-primary" />
@@ -140,10 +140,10 @@ Customer Support Team`
         </DrawerHeader>
 
         <div className="px-space-6 flex-1 min-h-0 overflow-y-auto">
-          <div className="space-y-space-6 pb-space-8">
+          <div className="space-y-space-4 pb-space-6">
             {/* Basic Email Fields */}
-            <div className="space-y-space-4">
-              <div className="grid grid-cols-2 gap-space-4">
+            <div className="space-y-space-3">
+              <div className="grid grid-cols-2 gap-space-3">
                 <div className="space-y-space-2">
                   <Label htmlFor="from">From</Label>
                   <Input
@@ -184,7 +184,7 @@ Customer Support Team`
 
               {/* Advanced Fields */}
               {isAdvancedOpen && (
-                <div className="grid grid-cols-2 gap-space-4 animate-fade-in">
+                <div className="grid grid-cols-2 gap-space-3 animate-fade-in">
                   <div className="space-y-space-2">
                     <Label htmlFor="cc">CC</Label>
                     <Input
@@ -275,7 +275,7 @@ Customer Support Team`
               </div>
             </div>
 
-            <Separator className="my-space-6" />
+            <Separator className="my-space-4" />
 
             {/* Chat Context */}
             <div className="bg-surface p-space-4 rounded-radius-md">
@@ -292,8 +292,8 @@ Customer Support Team`
           </div>
         </div>
 
-        <DrawerFooter className="pt-space-6 px-space-6">
-          <div className="flex flex-col sm:flex-row gap-space-3">
+        <DrawerFooter className="pt-space-4 px-space-6 pb-space-4">
+          <div className="flex flex-col sm:flex-row gap-space-2">
             <Button
               variant="default"
               onClick={handleSendAndClose}
