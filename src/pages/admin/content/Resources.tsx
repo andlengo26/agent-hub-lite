@@ -1,10 +1,15 @@
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { DataTable, Column } from "@/components/ui/data-table";
-import { FileText, Video, Link, File, Plus } from "lucide-react";
+import { SearchInput } from "@/components/common/SearchInput";
+import { FileText, Video, Link, File, Plus, Edit, Trash2 } from "lucide-react";
 import { Resource } from "@/types";
 import { useResources } from "@/hooks/useApiQuery";
+import { ResourceModal } from "@/components/modals/ResourceModal";
+import { useQueryClient } from '@tanstack/react-query';
+import { useToast } from '@/hooks/use-toast';
 
 const getTypeIcon = (type: string) => {
   switch (type) {
@@ -46,34 +51,57 @@ const resourceColumns: Column<Resource>[] = [
 ];
 
 export default function Resources() {
+  const [search, setSearch] = useState('');
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingResource, setEditingResource] = useState<Resource | null>(null);
   const { data: resourcesResponse, isLoading, error } = useResources();
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
   const resources = resourcesResponse?.data || [];
+  const filteredResources = resources.filter(resource =>
+    resource.title.toLowerCase().includes(search.toLowerCase())
+  );
 
-  if (isLoading) {
-    return <div>Loading resources...</div>;
-  }
+  const handleEdit = (resource: Resource) => {
+    setEditingResource(resource);
+    setIsModalOpen(true);
+  };
 
-  if (error) {
-    return <div>Error loading resources: {error.message}</div>;
-  }
+  const handleDelete = (resource: Resource) => {
+    toast({ title: "Resource Deleted", description: `"${resource.title}" deleted.` });
+    queryClient.invalidateQueries({ queryKey: ['resources'] });
+  };
+
+  if (isLoading) return <div>Loading resources...</div>;
+  if (error) return <div>Error: {error.message}</div>;
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold">Resources</h1>
-          <p className="text-muted-foreground">Manage AI training resources and content</p>
+          <p className="text-muted-foreground">Manage AI training resources</p>
         </div>
-        <Button className="gap-2"><Plus className="h-4 w-4" />Add Resource</Button>
+        <Button onClick={() => setIsModalOpen(true)} className="gap-2">
+          <Plus className="h-4 w-4" />Add Resource
+        </Button>
       </div>
       <Card>
         <CardHeader>
           <CardTitle>Resource Library</CardTitle>
+          <SearchInput value={search} onChange={setSearch} placeholder="Search resources..." className="mt-4" />
         </CardHeader>
         <CardContent>
-          <DataTable data={resources} columns={resourceColumns} onEdit={() => {}} onDelete={() => {}} />
+          <DataTable data={filteredResources} columns={resourceColumns} onEdit={handleEdit} onDelete={handleDelete} />
         </CardContent>
       </Card>
+      <ResourceModal
+        isOpen={isModalOpen}
+        onClose={() => { setIsModalOpen(false); setEditingResource(null); }}
+        onSuccess={() => queryClient.invalidateQueries({ queryKey: ['resources'] })}
+        resource={editingResource}
+      />
     </div>
   );
 }
