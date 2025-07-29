@@ -14,6 +14,7 @@ import Profile from "./pages/admin/Profile";
 import AllChats from "./pages/admin/AllChats";
 import MyChats from "./pages/admin/MyChats";
 import EngagementHistory from "./pages/admin/EngagementHistory";
+import CustomerEngagementDetail from "./pages/admin/CustomerEngagementDetail";
 import Organizations from "./pages/admin/settings/Organizations";
 import Users from "./pages/admin/settings/Users";
 import AIResponse from "./pages/admin/settings/AIResponse";
@@ -74,6 +75,13 @@ const App = () => (
               <AuthGuard>
                 <AdminLayout>
                   <EngagementHistory />
+                </AdminLayout>
+              </AuthGuard>
+            } />
+            <Route path="/chats/history/:customerId" element={
+              <AuthGuard>
+                <AdminLayout>
+                  <CustomerEngagementDetail />
                 </AdminLayout>
               </AuthGuard>
             } />

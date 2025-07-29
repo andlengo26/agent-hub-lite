@@ -1,0 +1,180 @@
+{
+  "eng_001": {
+    "customerId": "eng_001",
+    "customerName": "John Smith",
+    "customerEmail": "john.smith@techcorp.com",
+    "contactNumber": "+1-555-0123",
+    "engagements": [
+      {
+        "id": "ce_001",
+        "customerId": "eng_001",
+        "date": "2025-01-15T14:30:00Z",
+        "channel": "chat",
+        "agentId": "usr_001",
+        "agentName": "Sarah Johnson",
+        "aiSummary": "Customer inquired about product integration options and pricing for enterprise plan.",
+        "agentNotes": "Customer is evaluating our platform for their team of 50+ users. Follow-up scheduled for next week.",
+        "tags": ["enterprise", "pricing", "integration"],
+        "transcript": "Customer: Hi, I need information about enterprise pricing...\nAgent: I'd be happy to help you with that..."
+      },
+      {
+        "id": "ce_002", 
+        "customerId": "eng_001",
+        "date": "2025-01-10T09:15:00Z",
+        "channel": "email",
+        "agentId": "usr_002",
+        "agentName": "Michael Brown",
+        "aiSummary": "Technical support request regarding API authentication issues.",
+        "agentNotes": "Resolved authentication problem by updating API keys. Customer confirmed working solution.",
+        "tags": ["technical", "api", "resolved"],
+        "transcript": "Customer reported authentication failures when calling our API..."
+      },
+      {
+        "id": "ce_003",
+        "customerId": "eng_001", 
+        "date": "2025-01-05T16:45:00Z",
+        "channel": "phone",
+        "agentId": "usr_001",
+        "agentName": "Sarah Johnson",
+        "aiSummary": "Initial onboarding call to set up customer account and training session.",
+        "agentNotes": "Completed account setup. Customer very satisfied with onboarding process.",
+        "tags": ["onboarding", "training", "setup"],
+        "transcript": "Phone conversation recording available - Duration: 23 minutes"
+      }
+    ],
+    "pagination": {
+      "page": 1,
+      "limit": 10,
+      "total": 3,
+      "totalPages": 1
+    }
+  },
+  "eng_002": {
+    "customerId": "eng_002",
+    "customerName": "Lisa Wilson",
+    "customerEmail": "lisa.wilson@startupinc.com",
+    "contactNumber": "+1-555-0124",
+    "engagements": [
+      {
+        "id": "ce_004",
+        "customerId": "eng_002",
+        "date": "2025-01-20T11:00:00Z",
+        "channel": "chat",
+        "agentId": "usr_003",
+        "agentName": "David Lee",
+        "aiSummary": "Customer requested feature demo and trial extension.",
+        "agentNotes": "Provided comprehensive demo. Extended trial by 14 days as requested.",
+        "tags": ["demo", "trial", "extension"],
+        "transcript": "Customer: Can you show me the reporting features?\nAgent: Absolutely! Let me walk you through our analytics dashboard..."
+      },
+      {
+        "id": "ce_005",
+        "customerId": "eng_002",
+        "date": "2025-01-12T13:20:00Z",
+        "channel": "email",
+        "agentId": "usr_002",
+        "agentName": "Michael Brown",
+        "aiSummary": "Billing inquiry about plan upgrade options.",
+        "agentNotes": "Explained pricing tiers. Customer considering Professional plan upgrade.",
+        "tags": ["billing", "upgrade", "pricing"],
+        "transcript": "Customer inquiry about upgrading from Basic to Professional plan..."
+      }
+    ],
+    "pagination": {
+      "page": 1,
+      "limit": 10,
+      "total": 2,
+      "totalPages": 1
+    }
+  },
+  "eng_003": {
+    "customerId": "eng_003",
+    "customerName": "Robert Chen",
+    "customerEmail": "robert.chen@enterprise.org",
+    "contactNumber": "+1-555-0125",
+    "engagements": [
+      {
+        "id": "ce_006",
+        "customerId": "eng_003",
+        "date": "2025-01-18T15:30:00Z",
+        "channel": "chat",
+        "agentId": "usr_001",
+        "agentName": "Sarah Johnson",
+        "aiSummary": "Security compliance questions for enterprise deployment.",
+        "agentNotes": "Discussed SOC2 compliance and security certifications. Provided compliance documentation.",
+        "tags": ["security", "compliance", "enterprise"],
+        "transcript": "Customer: We need to ensure your platform meets our security requirements..."
+      }
+    ],
+    "pagination": {
+      "page": 1,
+      "limit": 10,
+      "total": 1,
+      "totalPages": 1
+    }
+  },
+  "eng_004": {
+    "customerId": "eng_004",
+    "customerName": "Amanda Rodriguez",
+    "customerEmail": "amanda.rodriguez@consulting.biz",
+    "contactNumber": "+1-555-0126",
+    "engagements": [
+      {
+        "id": "ce_007",
+        "customerId": "eng_004",
+        "date": "2025-01-22T10:15:00Z",
+        "channel": "phone",
+        "agentId": "usr_004",
+        "agentName": "Emily Davis",
+        "aiSummary": "Contract renewal discussion and feature requests.",
+        "agentNotes": "Customer interested in annual renewal with additional user seats. Escalated to sales team.",
+        "tags": ["renewal", "sales", "expansion"],
+        "transcript": "Phone conversation recording available - Duration: 31 minutes"
+      },
+      {
+        "id": "ce_008",
+        "customerId": "eng_004",
+        "date": "2025-01-14T14:45:00Z",
+        "channel": "email",
+        "agentId": "usr_003",
+        "agentName": "David Lee",
+        "aiSummary": "Request for custom integration with third-party CRM system.",
+        "agentNotes": "Provided integration documentation. Customer working with their dev team to implement.",
+        "tags": ["integration", "crm", "custom"],
+        "transcript": "Customer requesting integration guidance for Salesforce CRM..."
+      }
+    ],
+    "pagination": {
+      "page": 1,
+      "limit": 10,
+      "total": 2,
+      "totalPages": 1
+    }
+  },
+  "eng_005": {
+    "customerId": "eng_005",
+    "customerName": "Kevin Park",
+    "customerEmail": "kevin.park@manufacturing.co",
+    "contactNumber": "+1-555-0127",
+    "engagements": [
+      {
+        "id": "ce_009",
+        "customerId": "eng_005",
+        "date": "2025-01-19T12:00:00Z",
+        "channel": "chat",
+        "agentId": "usr_002",
+        "agentName": "Michael Brown",
+        "aiSummary": "Training session for new team members on platform usage.",
+        "agentNotes": "Conducted group training session for 8 new users. All participants satisfied with training.",
+        "tags": ["training", "group", "onboarding"],
+        "transcript": "Group training session conducted via screen sharing..."
+      }
+    ],
+    "pagination": {
+      "page": 1,
+      "limit": 10,
+      "total": 1,
+      "totalPages": 1
+    }
+  }
+}

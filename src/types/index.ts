@@ -51,6 +51,33 @@ export interface Engagement {
   aiSummary: string;
 }
 
+export interface CustomerEngagement {
+  id: string;
+  customerId: string;
+  date: string;
+  channel: 'chat' | 'email' | 'phone';
+  agentId: string;
+  agentName: string;
+  aiSummary: string;
+  agentNotes: string;
+  tags: string[];
+  transcript: string;
+}
+
+export interface CustomerEngagementsResponse {
+  customerId: string;
+  customerName: string;
+  customerEmail: string;
+  contactNumber: string;
+  engagements: CustomerEngagement[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+}
+
 export interface Document {
   id: string;
   title: string;
