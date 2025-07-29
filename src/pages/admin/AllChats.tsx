@@ -19,8 +19,9 @@ import { useFeatureFlag } from "@/hooks/useFeatureFlag";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "@/hooks/use-toast";
 import { performanceMonitor } from "@/lib/performance-monitor";
-import { MoreHorizontal, UserPlus, MessageSquareX, XCircle, Trash2, MapPin, Archive, Monitor } from "lucide-react";
+import { MoreHorizontal, UserPlus, MessageSquareX, XCircle, Trash2, MapPin, Archive, Monitor, Download } from "lucide-react";
 import { isWithinInterval, parseISO } from "date-fns";
+import { exportChatsCSV } from "@/lib/csv-export";
 
 const getStatusVariant = (status: string) => {
   switch (status) {
@@ -286,6 +287,18 @@ export default function AllChats() {
   }, []);
 
   const bulkActions = [
+    {
+      id: "export",
+      label: "Export as CSV",
+      icon: <Download className="h-4 w-4" />,
+      onClick: async (selectedChats: Chat[]) => {
+        exportChatsCSV(selectedChats);
+        toast({
+          title: "Export Complete",
+          description: `${selectedChats.length} chats exported to CSV`,
+        });
+      }
+    },
     {
       id: "archive",
       label: "Archive Selected",

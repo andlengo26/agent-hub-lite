@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DataTable, Column } from "@/components/ui/data-table";
 import { Badge } from "@/components/ui/badge";
 import { Download, Archive, Trash2, Eye } from "lucide-react";
+import { exportEngagementsCSV } from "@/lib/csv-export";
 import { Engagement } from "@/types";
 import { useEngagements } from "@/hooks/useEngagements";
 import { useNavigate } from "react-router-dom";
@@ -66,10 +67,11 @@ export default function EngagementHistory() {
     setDateRange(undefined);
   };
 
-  const handleBulkExport = () => {
+  const handleBulkExport = (selectedEngagements: Engagement[]) => {
+    exportEngagementsCSV(selectedEngagements);
     toast({
-      title: "Export started",
-      description: "Exporting selected engagements...",
+      title: "Export Complete",
+      description: `${selectedEngagements.length} engagements exported to CSV`,
     });
   };
 

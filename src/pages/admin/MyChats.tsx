@@ -15,7 +15,9 @@ import { useChatsSummary } from "@/hooks/useChatsSummary";
 import { useWebSocketChats } from "@/hooks/useWebSocketChats";
 import { useFeatureFlag } from "@/hooks/useFeatureFlag";
 import { Skeleton } from "@/components/ui/skeleton";
-import { MapPin, Filter, Monitor } from "lucide-react";
+import { MapPin, Filter, Monitor, Download, Archive, Trash2 } from "lucide-react";
+import { toast } from "@/hooks/use-toast";
+import { exportChatsCSV } from "@/lib/csv-export";
 import { isWithinInterval, parseISO } from "date-fns";
 
 const currentUserId = "user_002"; // Mock current user ID
@@ -166,6 +168,46 @@ export default function MyChats() {
     return filteredChats.filter(chat => chat.status === 'active' || chat.status === 'missed');
   }, [filteredChats]);
 
+  // Bulk actions for DataTable
+  const bulkActions = [
+    {
+      id: "export",
+      label: "Export as CSV",
+      icon: <Download className="h-4 w-4" />,
+      onClick: async (selectedChats: Chat[]) => {
+        exportChatsCSV(selectedChats);
+        toast({
+          title: "Export Complete",
+          description: `${selectedChats.length} chats exported to CSV`,
+        });
+      }
+    },
+    {
+      id: "archive",
+      label: "Archive Selected",
+      icon: <Archive className="h-4 w-4" />,
+      onClick: async (selectedChats: Chat[]) => {
+        toast({
+          title: "Chats Archived",
+          description: `${selectedChats.length} chats have been archived`,
+        });
+      }
+    },
+    {
+      id: "delete",
+      label: "Delete Selected",
+      icon: <Trash2 className="h-4 w-4" />,
+      variant: "destructive" as const,
+      onClick: async (selectedChats: Chat[]) => {
+        toast({
+          title: "Chats Deleted",
+          description: `${selectedChats.length} chats have been deleted`,
+          variant: "destructive"
+        });
+      }
+    }
+  ];
+
   if (isLoading) {
     return (
       <div className="space-y-6">
@@ -271,6 +313,10 @@ export default function MyChats() {
                           columns={createChatColumns(users) as any}
                           onRowClick={(row: any) => setSelectedChat(row)}
                           loading={isLoading}
+                          selectable={true}
+                          bulkActions={bulkActions}
+                          pagination={true}
+                          searchable={true}
                         />
                       )}
                     </CardContent>
