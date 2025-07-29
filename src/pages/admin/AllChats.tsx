@@ -5,10 +5,10 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { DataTable } from "@/components/ui/data-table";
+import { DataTable, Column } from "@/components/ui/data-table";
 import { ChatPanel } from "@/components/admin/ChatPanel";
 import { ChatFilters, ChatFilters as ChatFiltersType } from "@/components/admin/ChatFilters";
-import { ChatPagination } from "@/components/admin/ChatPagination";
+
 import { AgentAssignmentModal } from "@/components/admin/AgentAssignmentModal";
 import { ErrorBoundary } from "@/components/common/ErrorBoundary";
 import { AgentConsoleProvider } from "@/contexts/AgentConsoleContext";
@@ -22,65 +22,64 @@ import { performanceMonitor } from "@/lib/performance-monitor";
 import { MoreHorizontal, UserPlus, MessageSquareX, XCircle, Trash2, MapPin, Archive, Monitor } from "lucide-react";
 import { isWithinInterval, parseISO } from "date-fns";
 
-// Move this inside component to access users
-const createChatColumns = (users: any[]) => [
-  { 
-    key: "requesterName", 
-    label: "Customer",
-    sortable: true
-  },
-  { 
-    key: "requesterEmail", 
-    label: "Email",
-    render: (_, chat: Chat) => (
-      <div className="max-w-48 truncate" title={chat.requesterEmail}>
-        {chat.requesterEmail}
-      </div>
-    ),
-    hideOnMobile: true
-  },
-  { 
-    key: "geo", 
-    label: "Location",
-    render: (_, chat: Chat) => (
-      <div className="flex items-center gap-1">
-        <MapPin className="h-3 w-3 text-muted-foreground" />
-        <span className="truncate max-w-24" title={chat.geo}>
-          {chat.geo}
-        </span>
-      </div>
-    ),
-    hideOnMobile: true
-  },
-  { 
-    key: "status", 
-    label: "Status",
-    render: (_, chat: Chat) => (
-      <span className={`capitalize ${
-        chat.status === 'active' ? 'text-success font-medium' :
-        chat.status === 'missed' ? 'text-destructive font-medium' : 
-        'text-text-secondary font-medium'
-      }`}>
-        {chat.status}
-      </span>
-    ),
-    sortable: true
-  },
-  { 
-    key: "assignedAgentId", 
-    label: "Agent",
-    render: (_, chat: Chat) => {
-      const agent = users.find((u: any) => u.id === chat.assignedAgentId);
-      return agent ? `${agent.firstName} ${agent.lastName}` : "Unassigned";
-    },
-    hideOnMobile: true
-  },
-  { 
-    key: "createdAt", 
-    label: "Started",
-    render: (_, chat: Chat) => new Date(chat.createdAt).toLocaleDateString(),
-    sortable: true
+const getStatusVariant = (status: string) => {
+  switch (status) {
+    case 'active': return 'default';
+    case 'missed': return 'destructive';
+    case 'closed': return 'secondary';
+    default: return 'outline';
   }
+};
+
+const createChatColumns = (users: any[]): Column<Chat>[] => [
+  {
+    key: "requesterName",
+    label: "Customer",
+    sortable: true,
+    render: (value, chat) => (
+      <div className="flex flex-col">
+        <span className="font-medium">{value}</span>
+        <span className="text-sm text-muted-foreground">{chat.requesterEmail}</span>
+      </div>
+    ),
+  },
+  {
+    key: "requesterEmail",
+    label: "Email",
+    sortable: true,
+  },
+  {
+    key: "geo",
+    label: "Location",
+    sortable: true,
+    render: (value) => (
+      <Badge variant="outline">{value}</Badge>
+    ),
+  },
+  {
+    key: "status",
+    label: "Status",
+    sortable: true,
+    render: (value) => (
+      <Badge variant={getStatusVariant(value)}>{value}</Badge>
+    ),
+  },
+  {
+    key: "assignedAgentId",
+    label: "Assigned Agent",
+    sortable: true,
+    render: (value) => {
+      if (!value) return <span className="text-muted-foreground">Unassigned</span>;
+      const agent = users.find(user => user.id === value);
+      return agent ? agent.firstName + ' ' + agent.lastName : 'Unknown Agent';
+    },
+  },
+  {
+    key: "createdAt",
+    label: "Start Date",
+    sortable: true,
+    render: (value) => new Date(value).toLocaleDateString(),
+  },
 ];
 
 export default function AllChats() {
@@ -404,32 +403,29 @@ export default function AllChats() {
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <DataTable
-                        data={paginatedChats}
-                        columns={createChatColumns(users)}
-                        onRowClick={setSelectedChat}
-                        onEdit={(chat) => setSelectedChat(chat)}
-                        onView={(chat) => setSelectedChat(chat)}
-                        loading={isLoading}
-                        emptyMessage="No chats found"
-                        emptyDescription="No chats match your current filters."
-                        selectable={true}
-                        searchable={false}
-                        bulkActions={bulkActions}
-                      />
-
-                      {/* Pagination */}
-                      <ChatPagination
-                        currentPage={currentPage}
-                        totalPages={totalPages}
-                        pageSize={pageSize}
-                        totalItems={filteredChats.length}
-                        onPageChange={setCurrentPage}
-                        onPageSizeChange={(size) => {
-                          setPageSize(size);
-                          setCurrentPage(1);
-                        }}
-                      />
+                    <DataTable
+                      data={filteredChats}
+                      columns={createChatColumns(users)}
+                      selectable={true}
+                      pagination={true}
+                      defaultPageSize={10}
+                      defaultSortKey="createdAt"
+                      defaultSortDirection="desc"
+                      onEdit={(chat) => setSelectedChat(chat)}
+                      onView={(chat) => setSelectedChat(chat)}
+                      bulkActions={bulkActions}
+                      customActions={[
+                        {
+                          id: "assign",
+                          label: "Assign Agent",
+                          icon: <UserPlus className="mr-2 h-4 w-4" />,
+                          onClick: (chat) => {
+                            setSelectedChat(chat);
+                            setAssignmentModal({ isOpen: true, chat });
+                          }
+                        }
+                      ]}
+                    />
                     </CardContent>
                   </Card>
                 </TabsContent>

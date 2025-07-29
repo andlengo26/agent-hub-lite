@@ -1,413 +1,376 @@
-/**
- * Unified DataTable component following KB design system
- * Consolidates all table implementations into a single, reusable component
- */
+import { useState, useMemo } from "react";
+import { Card } from "./card";
+import { Input } from "./input";
+import { Button } from "./button";
+import { Checkbox } from "./checkbox";
+import { Badge } from "./badge";
+import { Skeleton } from "./skeleton";
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuTrigger 
+} from "./dropdown-menu";
+import { 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
+} from "./table";
+import { MoreHorizontal, Search, Edit, Trash2, Eye, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { BulkActionsToolbar } from "../common/BulkActionsToolbar";
+import { EmptyState } from "../common/EmptyState";
+import { StandardPagination } from "./StandardPagination";
+import { usePagination } from "@/hooks/usePagination";
+import { useSorting } from "@/hooks/useSorting";
 
-import React, { useState, useMemo, useCallback } from 'react';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Badge } from '@/components/ui/badge';
-import { Skeleton } from '@/components/ui/skeleton';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { MoreHorizontal, Trash2, Edit, Eye, ChevronLeft, ChevronRight } from 'lucide-react';
-import { SearchInput } from '@/components/common/SearchInput';
-import { EmptyState } from '@/components/common/EmptyState';
-import { cn } from '@/lib/utils';
-
+// Column interface with enhanced sorting support
 export interface Column<T> {
-  key: keyof T;
+  key: string;
   label: string;
-  width?: string;
+  render?: (value: any, item: T) => React.ReactNode;
+  width?: number;
+  className?: string;
   sortable?: boolean;
-  hideOnMobile?: boolean;
-  render?: (value: any, row: T) => React.ReactNode;
+  sortKey?: string; // If different from key, for nested properties
 }
 
-interface BulkAction<T = any> {
+// Bulk action interface
+interface BulkAction<T> {
   id: string;
   label: string;
   icon: React.ReactNode;
-  variant?: 'default' | 'secondary' | 'destructive' | 'outline';
-  onClick: (selectedRows: T[]) => void;
-}
-
-interface CustomAction<T = any> {
-  id: string;
-  label: string;
-  icon: React.ReactNode;
-  onClick: (row: T) => void;
+  onClick: (selectedItems: T[]) => void;
   variant?: 'default' | 'destructive';
 }
 
+// Custom action interface
+interface CustomAction<T> {
+  id: string;
+  label: string;
+  icon: React.ReactNode;
+  onClick: (item: T) => void;
+}
+
+// Main props interface
 export interface DataTableProps<T> {
   data: T[];
   columns: Column<T>[];
-  // Row interactions
-  onRowClick?: (row: T) => void;
-  onEdit?: (row: T) => void;
-  onDelete?: (row: T) => void;
-  onView?: (row: T) => void;
-  // Custom actions
-  customActions?: CustomAction<T>[];
-  // Table features
-  selectable?: boolean;
+  onEdit?: (item: T) => void;
+  onDelete?: (id: string) => void;
+  onView?: (item: T) => void;
   searchable?: boolean;
+  selectable?: boolean;
   pagination?: boolean;
-  pageSize?: number;
-  // Bulk actions
-  bulkActions?: BulkAction<T>[];
-  onSelectionChange?: (selectedRows: T[]) => void;
-  // UI states
   loading?: boolean;
   emptyMessage?: string;
-  emptyDescription?: string;
   className?: string;
+  customActions?: CustomAction<T>[];
+  bulkActions?: BulkAction<T>[];
+  // Pagination props
+  defaultPageSize?: number;
+  pageSizeOptions?: number[];
+  showPageSizeSelector?: boolean;
+  showPageInfo?: boolean;
+  showFirstLast?: boolean;
+  // Sorting props
+  defaultSortKey?: string;
+  defaultSortDirection?: 'asc' | 'desc';
 }
 
 export function DataTable<T extends { id: string }>({
   data,
   columns,
-  onRowClick,
   onEdit,
   onDelete,
   onView,
-  customActions = [],
+  searchable = true,
   selectable = false,
-  searchable = false,
-  pagination = false,
-  pageSize = 10,
-  bulkActions = [],
-  onSelectionChange,
+  pagination = true,
   loading = false,
   emptyMessage = "No data available",
-  emptyDescription,
   className,
+  customActions = [],
+  bulkActions = [],
+  defaultPageSize = 10,
+  pageSizeOptions = [10, 25, 50, 100],
+  showPageSizeSelector = true,
+  showPageInfo = true,
+  showFirstLast = false,
+  defaultSortKey,
+  defaultSortDirection = 'asc'
 }: DataTableProps<T>) {
-  const [selectedRows, setSelectedRows] = useState<string[]>([]);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
+  const [searchQuery, setSearchQuery] = useState("");
 
-  // Filter data based on search
+  // Filter data based on search query
   const filteredData = useMemo(() => {
-    if (!searchable || !searchQuery.trim()) return data;
+    if (!searchQuery) return data;
     
-    const query = searchQuery.toLowerCase();
-    return data.filter((row) => {
-      return columns.some((column) => {
-        const value = row[column.key];
-        if (value == null) return false;
-        return String(value).toLowerCase().includes(query);
-      });
-    });
-  }, [data, searchQuery, searchable, columns]);
+    return data.filter(item =>
+      columns.some(column => {
+        const value = item[column.key];
+        return value?.toString().toLowerCase().includes(searchQuery.toLowerCase());
+      })
+    );
+  }, [data, searchQuery, columns]);
 
-  // Paginate filtered data
-  const paginatedData = useMemo(() => {
-    if (!pagination) return filteredData;
-    const startIndex = (currentPage - 1) * pageSize;
-    return filteredData.slice(startIndex, startIndex + pageSize);
-  }, [filteredData, currentPage, pageSize, pagination]);
+  // Use sorting hook
+  const { sortedData, requestSort, getSortDirection } = useSorting({
+    data: filteredData,
+    defaultSortKey,
+    defaultSortDirection
+  });
 
-  const totalPages = useMemo(() => {
-    if (!pagination) return 1;
-    return Math.ceil(filteredData.length / pageSize);
-  }, [filteredData.length, pageSize, pagination]);
+  // Use pagination hook
+  const {
+    currentPage,
+    pageSize,
+    totalPages,
+    totalItems,
+    paginatedData,
+    setCurrentPage,
+    setPageSize
+  } = usePagination({
+    data: sortedData,
+    defaultPageSize
+  });
 
-  // Selection handlers
-  const handleRowSelection = useCallback((rowId: string, checked: boolean) => {
-    setSelectedRows(prev => {
-      const newSelection = checked 
-        ? [...prev, rowId]
-        : prev.filter(id => id !== rowId);
-      
-      const selectedRowObjects = data.filter(row => newSelection.includes(row.id));
-      onSelectionChange?.(selectedRowObjects);
-      return newSelection;
-    });
-  }, [data, onSelectionChange]);
+  // Get final data (paginated if pagination is enabled)
+  const displayData = pagination ? paginatedData : sortedData;
 
-  const handleSelectAll = useCallback((checked: boolean) => {
-    const newSelection = checked ? paginatedData.map(row => row.id) : [];
-    setSelectedRows(newSelection);
-    
-    const selectedRowObjects = data.filter(row => newSelection.includes(row.id));
-    onSelectionChange?.(selectedRowObjects);
-  }, [paginatedData, data, onSelectionChange]);
+  const handleRowSelection = (rowId: string, checked: boolean) => {
+    const newSelectedRows = new Set(selectedRows);
+    if (checked) {
+      newSelectedRows.add(rowId);
+    } else {
+      newSelectedRows.delete(rowId);
+    }
+    setSelectedRows(newSelectedRows);
+  };
 
-  // Render cell content with proper formatting
-  const renderCellContent = useCallback((column: Column<T>, row: T) => {
-    const value = row[column.key];
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedRows(new Set(displayData.map(item => item.id)));
+    } else {
+      setSelectedRows(new Set());
+    }
+  };
+
+  const renderCellContent = (column: Column<T>, item: T) => {
+    const value = item[column.key];
     
     if (column.render) {
-      return column.render(value, row);
+      return column.render(value, item);
     }
     
-    // Default formatting
-    if (typeof value === 'boolean') {
-      return <Badge variant={value ? 'default' : 'secondary'}>{value ? 'Yes' : 'No'}</Badge>;
-    }
-    
-    if (value instanceof Date) {
-      return value.toLocaleDateString();
-    }
-    
-    if (typeof value === 'string' && value.includes('@')) {
-      return <span className="text-text-secondary">{value}</span>;
-    }
-    
-    return String(value || '');
-  }, []);
+    return value?.toString() || '';
+  };
 
   if (loading) {
     return (
-      <div className={cn("space-y-4", className)}>
-        {searchable && <Skeleton className="h-10 w-full" />}
-        <div className="rounded-md border">
+      <Card className={className}>
+        <div className="p-6">
+          {searchable && <Skeleton className="h-10 w-full mb-4" />}
+          <div className="space-y-3">
+            {Array.from({ length: 5 }).map((_, index) => (
+              <Skeleton key={index} className="h-12 w-full" />
+            ))}
+          </div>
+        </div>
+      </Card>
+    );
+  }
+
+  return (
+    <Card className={className}>
+      <div className="p-6">
+        {/* Search Input */}
+        {searchable && (
+          <div className="flex items-center gap-4 mb-4">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+              <Input
+                placeholder="Search..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Bulk Actions */}
+        {selectable && selectedRows.size > 0 && bulkActions.length > 0 && (
+          <BulkActionsToolbar
+            selectedCount={selectedRows.size}
+            actions={bulkActions.map(action => ({
+              ...action,
+              onClick: () => {
+                const selectedItems = displayData.filter(item => selectedRows.has(item.id));
+                action.onClick(selectedItems);
+              }
+            }))}
+            onClearSelection={() => setSelectedRows(new Set())}
+          />
+        )}
+
+        {/* Table */}
+        <div className="border rounded-md">
           <Table>
             <TableHeader>
               <TableRow>
-                {selectable && <TableHead className="w-12"><Skeleton className="h-4 w-4" /></TableHead>}
-                {columns.map((column, index) => (
-                  <TableHead key={index}><Skeleton className="h-4 w-20" /></TableHead>
+                {selectable && (
+                  <TableHead className="w-12">
+                    <Checkbox
+                      checked={selectedRows.size === displayData.length && displayData.length > 0}
+                      onCheckedChange={handleSelectAll}
+                    />
+                  </TableHead>
+                )}
+                {columns.map((column) => (
+                  <TableHead 
+                    key={column.key} 
+                    className={cn(
+                      column.className,
+                      column.sortable && "cursor-pointer hover:bg-muted/50 select-none"
+                    )}
+                    style={{ width: column.width }}
+                    onClick={() => column.sortable && requestSort(column.sortKey || column.key)}
+                  >
+                    <div className="flex items-center gap-2">
+                      {column.label}
+                      {column.sortable && (
+                        <div className="flex flex-col">
+                          {getSortDirection(column.sortKey || column.key) === 'asc' && (
+                            <ArrowUp className="h-3 w-3" />
+                          )}
+                          {getSortDirection(column.sortKey || column.key) === 'desc' && (
+                            <ArrowDown className="h-3 w-3" />
+                          )}
+                          {!getSortDirection(column.sortKey || column.key) && (
+                            <ArrowUpDown className="h-3 w-3 opacity-50" />
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </TableHead>
                 ))}
-                <TableHead className="w-12"><Skeleton className="h-4 w-4" /></TableHead>
+                <TableHead className="w-12" />
               </TableRow>
             </TableHeader>
             <TableBody>
-              {Array.from({ length: pageSize }).map((_, index) => (
-                <TableRow key={index}>
-                  {selectable && <TableCell><Skeleton className="h-4 w-4" /></TableCell>}
-                  {columns.map((_, colIndex) => (
-                    <TableCell key={colIndex}><Skeleton className="h-4 w-24" /></TableCell>
-                  ))}
-                  <TableCell><Skeleton className="h-4 w-4" /></TableCell>
+              {loading ? (
+                Array.from({ length: pageSize }).map((_, index) => (
+                  <TableRow key={index}>
+                    {selectable && (
+                      <TableCell>
+                        <Skeleton className="h-4 w-4" />
+                      </TableCell>
+                    )}
+                    {columns.map((column) => (
+                      <TableCell key={column.key}>
+                        <Skeleton className="h-4 w-full" />
+                      </TableCell>
+                    ))}
+                    <TableCell>
+                      <Skeleton className="h-8 w-8" />
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : displayData.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={columns.length + (selectable ? 1 : 0) + 1} className="h-24 text-center">
+                    <EmptyState 
+                      title={emptyMessage}
+                      description="No items found."
+                    />
+                  </TableCell>
                 </TableRow>
-              ))}
+              ) : (
+                displayData.map((item) => (
+                  <TableRow key={item.id}>
+                    {selectable && (
+                      <TableCell>
+                        <Checkbox
+                          checked={selectedRows.has(item.id)}
+                          onCheckedChange={(checked) => handleRowSelection(item.id, !!checked)}
+                        />
+                      </TableCell>
+                    )}
+                    {columns.map((column) => (
+                      <TableCell key={column.key} className={column.className}>
+                        {renderCellContent(column, item)}
+                      </TableCell>
+                    ))}
+                    <TableCell>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" className="h-8 w-8 p-0">
+                            <span className="sr-only">Open menu</span>
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          {customActions.map((action, index) => (
+                            <DropdownMenuItem
+                              key={index}
+                              onClick={() => action.onClick(item)}
+                            >
+                              {action.icon}
+                              {action.label}
+                            </DropdownMenuItem>
+                          ))}
+                          {onView && (
+                            <DropdownMenuItem onClick={() => onView(item)}>
+                              <Eye className="mr-2 h-4 w-4" />
+                              View
+                            </DropdownMenuItem>
+                          )}
+                          {onEdit && (
+                            <DropdownMenuItem onClick={() => onEdit(item)}>
+                              <Edit className="mr-2 h-4 w-4" />
+                              Edit
+                            </DropdownMenuItem>
+                          )}
+                          {onDelete && (
+                            <DropdownMenuItem 
+                              onClick={() => onDelete(item.id)}
+                              className="text-destructive"
+                            >
+                              <Trash2 className="mr-2 h-4 w-4" />
+                              Delete
+                            </DropdownMenuItem>
+                          )}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
         </div>
-      </div>
-    );
-  }
 
-  if (filteredData.length === 0) {
-    return (
-      <div className={cn("space-y-4", className)}>
-        {searchable && (
-          <SearchInput
-            value={searchQuery}
-            onChange={setSearchQuery}
-            placeholder="Search..."
+        {/* Pagination */}
+        {pagination && !loading && displayData.length > 0 && (
+          <StandardPagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            pageSize={pageSize}
+            totalItems={totalItems}
+            onPageChange={setCurrentPage}
+            onPageSizeChange={setPageSize}
+            pageSizeOptions={pageSizeOptions}
+            showPageSizeSelector={showPageSizeSelector}
+            showPageInfo={showPageInfo}
+            showFirstLast={showFirstLast}
           />
         )}
-        <EmptyState 
-          title={emptyMessage}
-          description={emptyDescription}
-        />
       </div>
-    );
-  }
-
-  const hasActions = onEdit || onDelete || onView || customActions.length > 0;
-  const isAllSelected = paginatedData.length > 0 && paginatedData.every(row => selectedRows.includes(row.id));
-  const isSomeSelected = selectedRows.length > 0 && selectedRows.length < paginatedData.length;
-
-  return (
-    <div className={cn("space-y-4", className)}>
-      {/* Search and bulk actions */}
-      {(searchable || (selectable && bulkActions.length > 0)) && (
-        <div className="flex items-center justify-between gap-4">
-          {searchable && (
-            <SearchInput
-              value={searchQuery}
-              onChange={setSearchQuery}
-              placeholder="Search..."
-              className="max-w-sm"
-            />
-          )}
-          
-          {selectable && selectedRows.length > 0 && bulkActions.length > 0 && (
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-text-secondary">
-                {selectedRows.length} selected
-              </span>
-              {bulkActions.map((action) => (
-                <Button
-                  key={action.id}
-                  variant={action.variant || 'outline'}
-                  size="sm"
-                  onClick={() => {
-                    const selectedRowObjects = data.filter(row => selectedRows.includes(row.id));
-                    action.onClick(selectedRowObjects);
-                  }}
-                >
-                  {action.icon}
-                  {action.label}
-                </Button>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Table */}
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              {selectable && (
-                <TableHead className="w-12">
-                  <Checkbox
-                    checked={isAllSelected}
-                    ref={(el) => {
-                      if (el) {
-                        const checkboxEl = el.querySelector('input');
-                        if (checkboxEl) checkboxEl.indeterminate = isSomeSelected;
-                      }
-                    }}
-                    onCheckedChange={handleSelectAll}
-                    aria-label="Select all rows"
-                  />
-                </TableHead>
-              )}
-              {columns.map((column, index) => (
-                <TableHead 
-                  key={index}
-                  style={column.width ? { width: column.width } : undefined}
-                  className={cn(
-                    column.hideOnMobile && "hidden md:table-cell"
-                  )}
-                >
-                  {column.label}
-                </TableHead>
-              ))}
-              {hasActions && <TableHead className="w-12" />}
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {paginatedData.map((row) => (
-              <TableRow
-                key={row.id}
-                onClick={() => onRowClick?.(row)}
-                className={cn(
-                  onRowClick && "cursor-pointer",
-                  selectedRows.includes(row.id) && "bg-muted/50"
-                )}
-              >
-                {selectable && (
-                  <TableCell>
-                    <Checkbox
-                      checked={selectedRows.includes(row.id)}
-                      onCheckedChange={(checked) => handleRowSelection(row.id, !!checked)}
-                      aria-label={`Select row ${row.id}`}
-                    />
-                  </TableCell>
-                )}
-                {columns.map((column, index) => (
-                  <TableCell 
-                    key={index}
-                    className={cn(
-                      column.hideOnMobile && "hidden md:table-cell"
-                    )}
-                  >
-                    {renderCellContent(column, row)}
-                  </TableCell>
-                ))}
-                {hasActions && (
-                  <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="sm">
-                          <MoreHorizontal className="h-4 w-4" />
-                          <span className="sr-only">Open menu</span>
-                        </Button>
-                      </DropdownMenuTrigger>
-                       <DropdownMenuContent align="end">
-                         {customActions.map((action) => (
-                           <DropdownMenuItem 
-                             key={action.id}
-                             onClick={() => action.onClick(row)}
-                             className={action.variant === 'destructive' ? 'text-destructive' : ''}
-                           >
-                             <span className="mr-2">{action.icon}</span>
-                             {action.label}
-                           </DropdownMenuItem>
-                         ))}
-                         {onView && (
-                           <DropdownMenuItem onClick={() => onView(row)}>
-                             <Eye className="mr-2 h-4 w-4" />
-                             View
-                           </DropdownMenuItem>
-                         )}
-                         {onEdit && (
-                           <DropdownMenuItem onClick={() => onEdit(row)}>
-                             <Edit className="mr-2 h-4 w-4" />
-                             Edit
-                           </DropdownMenuItem>
-                         )}
-                         {onDelete && (
-                           <DropdownMenuItem 
-                             onClick={() => onDelete(row)}
-                             className="text-destructive"
-                           >
-                             <Trash2 className="mr-2 h-4 w-4" />
-                             Delete
-                           </DropdownMenuItem>
-                         )}
-                       </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                )}
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
-
-      {/* Pagination */}
-      {pagination && totalPages > 1 && (
-        <div className="flex items-center justify-between">
-          <div className="text-sm text-text-secondary">
-            Showing {((currentPage - 1) * pageSize) + 1} to {Math.min(currentPage * pageSize, filteredData.length)} of {filteredData.length} entries
-          </div>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-              disabled={currentPage === 1}
-            >
-              <ChevronLeft className="h-4 w-4" />
-              Previous
-            </Button>
-            <span className="text-sm">
-              Page {currentPage} of {totalPages}
-            </span>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-              disabled={currentPage === totalPages}
-            >
-              Next
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-      )}
-    </div>
+    </Card>
   );
 }

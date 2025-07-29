@@ -8,8 +8,8 @@ import { FloatingPreview } from "@/components/admin/FloatingPreview";
 import { useDomains } from "@/hooks/useApiQuery";
 
 const domainColumns: Column<Domain>[] = [
-  { key: "domain", label: "Domain" },
-  { key: "addedAt", label: "Added" },
+  { key: "domain", label: "Domain", sortable: true },
+  { key: "addedAt", label: "Added", sortable: true },
 ];
 
 export default function Security() {
@@ -40,7 +40,12 @@ export default function Security() {
             <Input placeholder="example.com" />
             <Button className="gap-2"><Plus className="h-4 w-4" />Add</Button>
           </div>
-          <DataTable data={domains} columns={domainColumns} onDelete={() => {}} />
+          <DataTable 
+            data={domains} 
+            columns={domainColumns} 
+            pagination={true}
+            onDelete={() => {}} 
+          />
         </CardContent>
       </Card>
     </div>
