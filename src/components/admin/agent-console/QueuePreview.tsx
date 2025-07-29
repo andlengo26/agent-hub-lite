@@ -189,9 +189,10 @@ export function QueuePreview({
       >
         <CollapsibleTrigger className="flex items-center justify-between w-full p-3 hover:bg-surface/50 transition-colors">
           <div className="flex items-center gap-2">
-            {selectionMode && chats.length > 0 && (
+            {selectionMode && (
               <Checkbox
-                checked={allSectionSelected}
+                checked={chats.length > 0 ? allSectionSelected : false}
+                disabled={chats.length === 0}
                 ref={(el) => {
                   if (el) {
                     const element = el as unknown as HTMLInputElement;

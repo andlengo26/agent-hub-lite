@@ -1,6 +1,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Download, Archive, Trash2, X } from 'lucide-react';
 
 interface BulkAction {
@@ -53,39 +54,54 @@ export function BulkActionsToolbar({
   const allActions = actions.length > 0 ? actions : defaultActions;
 
   return (
-    <div 
-      className={`flex items-center justify-between p-4 bg-surface border border-border rounded-lg mb-4 ${className}`}
-      role="toolbar"
-      aria-label="Bulk actions toolbar"
-    >
-      <div className="flex items-center gap-3">
-        <Badge variant="secondary" className="text-sm">
-          {selectedCount} selected
-        </Badge>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onClearSelection}
-          aria-label="Clear selection"
-        >
-          <X className="h-4 w-4 mr-1" />
-          Clear
-        </Button>
+    <TooltipProvider>
+      <div 
+        className={`flex items-center justify-between p-3 bg-surface border border-border rounded-lg mb-4 ${className}`}
+        role="toolbar"
+        aria-label="Bulk actions toolbar"
+      >
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-muted-foreground">
+            {selectedCount} selected
+          </span>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onClearSelection}
+                aria-label="Clear selection"
+                className="h-8 w-8 p-0"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Clear selection</p>
+            </TooltipContent>
+          </Tooltip>
+        </div>
+        <div className="flex items-center gap-1">
+          {allActions.map((action) => (
+            <Tooltip key={action.id}>
+              <TooltipTrigger asChild>
+                <Button
+                  variant={action.variant || 'outline'}
+                  size="sm"
+                  onClick={action.onClick}
+                  className="h-8 w-8 p-0"
+                  aria-label={action.label}
+                >
+                  {action.icon}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>{action.label}</p>
+              </TooltipContent>
+            </Tooltip>
+          ))}
+        </div>
       </div>
-      <div className="flex items-center gap-2">
-        {allActions.map((action) => (
-          <Button
-            key={action.id}
-            variant={action.variant || 'outline'}
-            size="sm"
-            onClick={action.onClick}
-            className="flex items-center gap-2"
-          >
-            {action.icon}
-            {action.label}
-          </Button>
-        ))}
-      </div>
-    </div>
+    </TooltipProvider>
   );
 }
