@@ -20,69 +20,77 @@ import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
-
-const channelOptions = [
-  { label: "Chat", value: "chat" },
-  { label: "Email", value: "email" },
-  { label: "Phone", value: "phone" },
-];
-
-const availableTags = [
-  { label: "Technical", value: "technical" },
-  { label: "Billing", value: "billing" },
-  { label: "Enterprise", value: "enterprise" },
-  { label: "Integration", value: "integration" },
-  { label: "Training", value: "training" },
-  { label: "Demo", value: "demo" },
-  { label: "Support", value: "support" },
-  { label: "Sales", value: "sales" },
-];
-
-const engagementColumns: Column<CustomerEngagement>[] = [
-  {
-    key: "date",
-    label: "Date",
-    sortable: true,
-    render: (value) => new Date(value).toLocaleDateString()
-  },
-  {
-    key: "aiSummary",
-    label: "AI Summary",
-    sortable: true,
-    render: (value) => (
-      <div className="max-w-xs truncate" title={value}>
+const channelOptions = [{
+  label: "Chat",
+  value: "chat"
+}, {
+  label: "Email",
+  value: "email"
+}, {
+  label: "Phone",
+  value: "phone"
+}];
+const availableTags = [{
+  label: "Technical",
+  value: "technical"
+}, {
+  label: "Billing",
+  value: "billing"
+}, {
+  label: "Enterprise",
+  value: "enterprise"
+}, {
+  label: "Integration",
+  value: "integration"
+}, {
+  label: "Training",
+  value: "training"
+}, {
+  label: "Demo",
+  value: "demo"
+}, {
+  label: "Support",
+  value: "support"
+}, {
+  label: "Sales",
+  value: "sales"
+}];
+const engagementColumns: Column<CustomerEngagement>[] = [{
+  key: "date",
+  label: "Date",
+  sortable: true,
+  render: value => new Date(value).toLocaleDateString()
+}, {
+  key: "aiSummary",
+  label: "AI Summary",
+  sortable: true,
+  render: value => <div className="max-w-xs truncate" title={value}>
         {value}
       </div>
-    )
-  },
-  {
-    key: "channel",
-    label: "Channel",
-    sortable: true,
-    render: (value) => (
-      <Badge variant="outline" className="capitalize">
+}, {
+  key: "channel",
+  label: "Channel",
+  sortable: true,
+  render: value => <Badge variant="outline" className="capitalize">
         {value}
       </Badge>
-    )
-  },
-  {
-    key: "agentName",
-    label: "Agent",
-    sortable: true
-  },
-  {
-    key: "agentNotes",
-    label: "Notes",
-    render: (value) => (
-      <div className="max-w-xs truncate" title={value}>
+}, {
+  key: "agentName",
+  label: "Agent",
+  sortable: true
+}, {
+  key: "agentNotes",
+  label: "Notes",
+  render: value => <div className="max-w-xs truncate" title={value}>
         {value}
       </div>
-    )
-  },
-];
-
+}];
 export default function CustomerEngagementDetail() {
-  const { customerId } = useParams<{ customerId: string }>();
+  const {
+    customerId
+  } = useParams<{
+    customerId: string;
+  }>();
   const navigate = useNavigate();
   const [selectedEngagement, setSelectedEngagement] = useState<CustomerEngagement | null>(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -94,19 +102,19 @@ export default function CustomerEngagementDetail() {
     agentName: '',
     aiSummary: '',
     agentNotes: '',
-    tags: [] as string[],
+    tags: [] as string[]
   });
-
   if (!customerId) {
     return <div>Customer ID not found</div>;
   }
-
-  const { data: customerData, isLoading, error } = useCustomerEngagements(customerId);
-
+  const {
+    data: customerData,
+    isLoading,
+    error
+  } = useCustomerEngagements(customerId);
   const handleBack = () => {
     navigate('/chats/history');
   };
-
   const handleAddEngagement = () => {
     setFormData({
       date: new Date(),
@@ -114,11 +122,10 @@ export default function CustomerEngagementDetail() {
       agentName: '',
       aiSummary: '',
       agentNotes: '',
-      tags: [],
+      tags: []
     });
     setIsAddModalOpen(true);
   };
-
   const handleEditEngagement = (engagement: CustomerEngagement) => {
     setSelectedEngagement(engagement);
     setFormData({
@@ -127,85 +134,68 @@ export default function CustomerEngagementDetail() {
       agentName: engagement.agentName,
       aiSummary: engagement.aiSummary,
       agentNotes: engagement.agentNotes,
-      tags: engagement.tags,
+      tags: engagement.tags
     });
     setIsEditModalOpen(true);
   };
-
   const handleViewDetails = (engagement: CustomerEngagement) => {
     setSelectedEngagement(engagement);
     setIsViewModalOpen(true);
   };
-
   const handleDeleteEngagement = (engagement: CustomerEngagement) => {
     toast({
       title: "Engagement deleted",
-      description: `Engagement from ${new Date(engagement.date).toLocaleDateString()} has been deleted.`,
+      description: `Engagement from ${new Date(engagement.date).toLocaleDateString()} has been deleted.`
     });
   };
-
   const handleSaveEngagement = () => {
     toast({
       title: "Engagement saved",
-      description: "Engagement has been saved successfully.",
+      description: "Engagement has been saved successfully."
     });
     setIsAddModalOpen(false);
     setIsEditModalOpen(false);
   };
-
   const handleBulkDelete = () => {
     toast({
       title: "Engagements deleted",
-      description: "Selected engagements have been deleted.",
+      description: "Selected engagements have been deleted."
     });
   };
-
-  const customActions = [
-    {
-      id: "view",
-      label: "View Details",
-      icon: <Eye className="w-4 h-4" />,
-      onClick: handleViewDetails,
-    },
-    {
-      id: "edit",
-      label: "Edit",
-      icon: <Edit className="w-4 h-4" />,
-      onClick: handleEditEngagement,
-    },
-    {
-      id: "delete",
-      label: "Delete",
-      icon: <Trash2 className="w-4 h-4" />,
-      variant: "destructive" as const,
-      onClick: handleDeleteEngagement,
-    },
-  ];
-
-  const bulkActions = [
-    {
-      id: "delete",
-      label: "Delete Selected",
-      icon: <Trash2 className="w-4 h-4" />,
-      variant: "destructive" as const,
-      onClick: handleBulkDelete,
-    },
-  ];
-
+  const customActions = [{
+    id: "view",
+    label: "View Details",
+    icon: <Eye className="w-4 h-4" />,
+    onClick: handleViewDetails
+  }, {
+    id: "edit",
+    label: "Edit",
+    icon: <Edit className="w-4 h-4" />,
+    onClick: handleEditEngagement
+  }, {
+    id: "delete",
+    label: "Delete",
+    icon: <Trash2 className="w-4 h-4" />,
+    variant: "destructive" as const,
+    onClick: handleDeleteEngagement
+  }];
+  const bulkActions = [{
+    id: "delete",
+    label: "Delete Selected",
+    icon: <Trash2 className="w-4 h-4" />,
+    variant: "destructive" as const,
+    onClick: handleBulkDelete
+  }];
   if (isLoading) {
     return <div>Loading customer engagement details...</div>;
   }
-
   if (error) {
     return <div>Error loading customer engagement details: {error.message}</div>;
   }
-
   if (!customerData) {
     return <div>Customer data not found</div>;
   }
-
-  return (
-    <div className="space-y-space-6">
+  return <div className="space-y-space-6">
       {/* Header with breadcrumb and back button */}
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-space-4">
@@ -214,8 +204,8 @@ export default function CustomerEngagementDetail() {
             Back to History
           </Button>
           <div>
-            <h1 className="text-3xl font-bold">{customerData.customerName}</h1>
-            <p className="text-muted-foreground">{customerData.customerEmail}</p>
+            
+            
           </div>
         </div>
         <Button onClick={handleAddEngagement}>
@@ -253,133 +243,88 @@ export default function CustomerEngagementDetail() {
           <CardTitle>Engagement History</CardTitle>
         </CardHeader>
         <CardContent>
-          <DataTable
-            data={customerData.engagements}
-            columns={engagementColumns}
-            loading={isLoading}
-            searchable
-            selectable
-            pagination
-            customActions={customActions}
-            bulkActions={bulkActions}
-            emptyMessage="No engagements found"
-            emptyDescription="Customer engagements will appear here once available."
-          />
+          <DataTable data={customerData.engagements} columns={engagementColumns} loading={isLoading} searchable selectable pagination customActions={customActions} bulkActions={bulkActions} emptyMessage="No engagements found" emptyDescription="Customer engagements will appear here once available." />
         </CardContent>
       </Card>
 
       {/* Add/Edit Engagement Modal */}
-      <FormModal
-        isOpen={isAddModalOpen || isEditModalOpen}
-        onClose={() => {
-          setIsAddModalOpen(false);
-          setIsEditModalOpen(false);
-        }}
-        title={isEditModalOpen ? "Edit Engagement" : "Add Engagement"}
-        submitLabel="Save"
-        onSubmit={handleSaveEngagement}
-        size="lg"
-      >
+      <FormModal isOpen={isAddModalOpen || isEditModalOpen} onClose={() => {
+      setIsAddModalOpen(false);
+      setIsEditModalOpen(false);
+    }} title={isEditModalOpen ? "Edit Engagement" : "Add Engagement"} submitLabel="Save" onSubmit={handleSaveEngagement} size="lg">
         <div className="space-y-space-4">
           <div>
             <Label htmlFor="date">Date</Label>
             <Popover>
               <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className={cn(
-                    "w-full justify-start text-left font-normal",
-                    !formData.date && "text-muted-foreground"
-                  )}
-                >
+                <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !formData.date && "text-muted-foreground")}>
                   <CalendarIcon className="mr-2 h-4 w-4" />
                   {formData.date ? format(formData.date, "PPP") : <span>Pick a date</span>}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={formData.date}
-                  onSelect={(date) => date && setFormData({ ...formData, date })}
-                  initialFocus
-                  className="p-3 pointer-events-auto"
-                />
+                <Calendar mode="single" selected={formData.date} onSelect={date => date && setFormData({
+                ...formData,
+                date
+              })} initialFocus className="p-3 pointer-events-auto" />
               </PopoverContent>
             </Popover>
           </div>
 
           <div>
             <Label htmlFor="channel">Channel</Label>
-            <Select
-              value={formData.channel}
-              onValueChange={(value) => setFormData({ ...formData, channel: value })}
-            >
+            <Select value={formData.channel} onValueChange={value => setFormData({
+            ...formData,
+            channel: value
+          })}>
               <SelectTrigger>
                 <SelectValue placeholder="Select channel" />
               </SelectTrigger>
               <SelectContent>
-                {channelOptions.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
+                {channelOptions.map(option => <SelectItem key={option.value} value={option.value}>
                     {option.label}
-                  </SelectItem>
-                ))}
+                  </SelectItem>)}
               </SelectContent>
             </Select>
           </div>
 
           <div>
             <Label htmlFor="agentName">Agent Name</Label>
-            <Input
-              id="agentName"
-              value={formData.agentName}
-              onChange={(e) => setFormData({ ...formData, agentName: e.target.value })}
-              placeholder="Enter agent name"
-            />
+            <Input id="agentName" value={formData.agentName} onChange={e => setFormData({
+            ...formData,
+            agentName: e.target.value
+          })} placeholder="Enter agent name" />
           </div>
 
           <div>
             <Label htmlFor="aiSummary">AI Summary</Label>
-            <Textarea
-              id="aiSummary"
-              value={formData.aiSummary}
-              onChange={(e) => setFormData({ ...formData, aiSummary: e.target.value })}
-              placeholder="Enter AI summary"
-              rows={3}
-            />
+            <Textarea id="aiSummary" value={formData.aiSummary} onChange={e => setFormData({
+            ...formData,
+            aiSummary: e.target.value
+          })} placeholder="Enter AI summary" rows={3} />
           </div>
 
           <div>
             <Label htmlFor="agentNotes">Agent Notes</Label>
-            <Textarea
-              id="agentNotes"
-              value={formData.agentNotes}
-              onChange={(e) => setFormData({ ...formData, agentNotes: e.target.value })}
-              placeholder="Enter agent notes"
-              rows={4}
-            />
+            <Textarea id="agentNotes" value={formData.agentNotes} onChange={e => setFormData({
+            ...formData,
+            agentNotes: e.target.value
+          })} placeholder="Enter agent notes" rows={4} />
           </div>
 
           <div>
             <Label htmlFor="tags">Tags</Label>
-            <MultiSelect
-              options={availableTags}
-              selected={formData.tags}
-              onChange={(tags) => setFormData({ ...formData, tags })}
-              placeholder="Select tags"
-            />
+            <MultiSelect options={availableTags} selected={formData.tags} onChange={tags => setFormData({
+            ...formData,
+            tags
+          })} placeholder="Select tags" />
           </div>
         </div>
       </FormModal>
 
       {/* View Details Modal */}
-      <Modal
-        isOpen={isViewModalOpen}
-        onClose={() => setIsViewModalOpen(false)}
-        title="Engagement Details"
-        size="lg"
-      >
-        {selectedEngagement && (
-          <div className="space-y-space-6">
+      <Modal isOpen={isViewModalOpen} onClose={() => setIsViewModalOpen(false)} title="Engagement Details" size="lg">
+        {selectedEngagement && <div className="space-y-space-6">
             <div className="grid grid-cols-2 gap-space-4">
               <div>
                 <h3 className="font-semibold text-sm text-muted-foreground">Date</h3>
@@ -398,11 +343,9 @@ export default function CustomerEngagementDetail() {
               <div>
                 <h3 className="font-semibold text-sm text-muted-foreground">Tags</h3>
                 <div className="flex flex-wrap gap-1">
-                  {selectedEngagement.tags.map((tag) => (
-                    <Badge key={tag} variant="secondary" className="text-xs">
+                  {selectedEngagement.tags.map(tag => <Badge key={tag} variant="secondary" className="text-xs">
                       {tag}
-                    </Badge>
-                  ))}
+                    </Badge>)}
                 </div>
               </div>
             </div>
@@ -423,9 +366,7 @@ export default function CustomerEngagementDetail() {
                 <pre className="whitespace-pre-wrap">{selectedEngagement.transcript}</pre>
               </div>
             </div>
-          </div>
-        )}
+          </div>}
       </Modal>
-    </div>
-  );
+    </div>;
 }
