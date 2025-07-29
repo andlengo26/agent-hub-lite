@@ -12,10 +12,13 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Checkbox } from '@/components/ui/checkbox';
+import { BulkActionsToolbar } from '@/components/common/BulkActionsToolbar';
 import { Chat } from '@/types';
 import { formatDistanceToNow, format, isToday, isSameDay, isYesterday, isThisWeek, isThisMonth } from 'date-fns';
-import { Clock, MessageCircle, ChevronDown, CalendarIcon } from 'lucide-react';
+import { Clock, MessageCircle, ChevronDown, CalendarIcon, Download } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { exportChatsCSV } from '@/lib/csv-export';
 
 interface QueuePreviewProps {
   chats: Chat[];
@@ -23,6 +26,9 @@ interface QueuePreviewProps {
   selectedChatId?: string;
   onChatSelect: (chatId: string) => void;
   onChatAccept: (chatId: string) => void;
+  selectionMode?: boolean;
+  selectedChats?: string[];
+  onChatSelectionChange?: (chatIds: string[]) => void;
 }
 
 type DateFilterOption = 'today' | 'yesterday' | 'this-week' | 'this-month' | 'all' | 'custom';
@@ -33,6 +39,9 @@ export function QueuePreview({
   selectedChatId,
   onChatSelect,
   onChatAccept,
+  selectionMode = false,
+  selectedChats = [],
+  onChatSelectionChange,
 }: QueuePreviewProps) {
   const [dateFilter, setDateFilter] = useState<DateFilterOption>('all');
   const [customDate, setCustomDate] = useState<Date>(new Date());
@@ -42,6 +51,43 @@ export function QueuePreview({
     missed: false,
     closed: false,
   });
+
+  // Bulk selection handlers
+  const handleChatSelection = (chatId: string, checked: boolean) => {
+    if (!onChatSelectionChange) return;
+    
+    if (checked) {
+      onChatSelectionChange([...selectedChats, chatId]);
+    } else {
+      onChatSelectionChange(selectedChats.filter(id => id !== chatId));
+    }
+  };
+
+  const handleSectionSelectAll = (sectionChats: Chat[], checked: boolean) => {
+    if (!onChatSelectionChange) return;
+    
+    const sectionChatIds = sectionChats.map(chat => chat.id);
+    
+    if (checked) {
+      // Add all section chats to selection
+      const newSelection = [...selectedChats, ...sectionChatIds.filter(id => !selectedChats.includes(id))];
+      onChatSelectionChange(newSelection);
+    } else {
+      // Remove all section chats from selection
+      onChatSelectionChange(selectedChats.filter(id => !sectionChatIds.includes(id)));
+    }
+  };
+
+  const handleBulkExport = () => {
+    const selectedChatData = chats.filter(chat => selectedChats.includes(chat.id));
+    exportChatsCSV(selectedChatData);
+  };
+
+  const clearSelection = () => {
+    if (onChatSelectionChange) {
+      onChatSelectionChange([]);
+    }
+  };
 
   // Filter chats by date filter option
   const filteredChats = chats.filter(chat => {
@@ -91,12 +137,20 @@ export function QueuePreview({
     <div
       key={chat.id}
       className={cn(
-        "p-3 cursor-pointer transition-colors hover:bg-surface/50 border-b border-border last:border-b-0",
-        selectedChatId === chat.id && "bg-surface border-l-4 border-l-primary"
+        "p-3 transition-colors hover:bg-surface/50 border-b border-border last:border-b-0",
+        selectedChatId === chat.id && "bg-surface border-l-4 border-l-primary",
+        !selectionMode && "cursor-pointer"
       )}
-      onClick={() => onChatSelect(chat.id)}
+      onClick={selectionMode ? undefined : () => onChatSelect(chat.id)}
     >
-      <div className="flex items-center justify-between">
+      <div className="flex items-center gap-3">
+        {selectionMode && (
+          <Checkbox
+            checked={selectedChats.includes(chat.id)}
+            onCheckedChange={(checked) => handleChatSelection(chat.id, checked as boolean)}
+            onClick={(e) => e.stopPropagation()}
+          />
+        )}
         <div className="flex-1 min-w-0">
           <h4 className="font-medium text-text-primary truncate text-sm">
             {chat.requesterName}
@@ -122,36 +176,59 @@ export function QueuePreview({
     key: keyof typeof openSections,
     chats: Chat[],
     variant: 'default' | 'secondary' | 'destructive' | 'outline' = 'secondary'
-  ) => (
-    <Collapsible
-      open={openSections[key]}
-      onOpenChange={() => toggleSection(key)}
-    >
-      <CollapsibleTrigger className="flex items-center justify-between w-full p-3 hover:bg-surface/50 transition-colors">
-        <div className="flex items-center gap-2">
-          <span className="font-medium text-text-primary">{title}</span>
-          <Badge variant={variant} className="text-xs">
-            {chats.length}
-          </Badge>
-        </div>
-        <ChevronDown className={cn(
-          "h-4 w-4 text-text-secondary transition-transform",
-          openSections[key] && "rotate-180"
-        )} />
-      </CollapsibleTrigger>
-      <CollapsibleContent>
-        {chats.length === 0 ? (
-          <div className="p-6 text-center text-text-secondary text-sm">
-            No {title.toLowerCase()} chats
+  ) => {
+    const sectionChatIds = chats.map(chat => chat.id);
+    const selectedInSection = sectionChatIds.filter(id => selectedChats.includes(id));
+    const allSectionSelected = chats.length > 0 && selectedInSection.length === chats.length;
+    const someSelected = selectedInSection.length > 0 && selectedInSection.length < chats.length;
+
+    return (
+      <Collapsible
+        open={openSections[key]}
+        onOpenChange={() => toggleSection(key)}
+      >
+        <CollapsibleTrigger className="flex items-center justify-between w-full p-3 hover:bg-surface/50 transition-colors">
+          <div className="flex items-center gap-2">
+            {selectionMode && chats.length > 0 && (
+              <Checkbox
+                checked={allSectionSelected}
+                ref={(el) => {
+                  if (el) {
+                    const element = el as unknown as HTMLInputElement;
+                    element.indeterminate = someSelected;
+                  }
+                }}
+                onCheckedChange={(checked) => handleSectionSelectAll(chats, checked as boolean)}
+                onClick={(e) => e.stopPropagation()}
+              />
+            )}
+            <span className="font-medium text-text-primary">{title}</span>
+            <Badge variant={variant} className="text-xs">
+              {chats.length}
+              {selectionMode && selectedInSection.length > 0 && (
+                <span className="ml-1">({selectedInSection.length} selected)</span>
+              )}
+            </Badge>
           </div>
-        ) : (
-          <div className="border-t border-border">
-            {chats.map(renderChatItem)}
-          </div>
-        )}
-      </CollapsibleContent>
-    </Collapsible>
-  );
+          <ChevronDown className={cn(
+            "h-4 w-4 text-text-secondary transition-transform",
+            openSections[key] && "rotate-180"
+          )} />
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          {chats.length === 0 ? (
+            <div className="p-6 text-center text-text-secondary text-sm">
+              No {title.toLowerCase()} chats
+            </div>
+          ) : (
+            <div className="border-t border-border">
+              {chats.map(renderChatItem)}
+            </div>
+          )}
+        </CollapsibleContent>
+      </Collapsible>
+    );
+  };
 
   if (isLoading) {
     return (
@@ -171,6 +248,23 @@ export function QueuePreview({
 
   return (
     <div className="h-full flex flex-col">
+      {/* Bulk Actions Toolbar */}
+      {selectionMode && (
+        <BulkActionsToolbar
+          selectedCount={selectedChats.length}
+          onClearSelection={clearSelection}
+          actions={[
+            {
+              id: 'export',
+              label: 'Export as CSV',
+              icon: <Download className="h-4 w-4" />,
+              variant: 'outline',
+              onClick: handleBulkExport,
+            },
+          ]}
+        />
+      )}
+
       {/* Header with simplified date filter */}
       <div className="p-4 border-b border-border">
         <h3 className="font-medium text-text-primary mb-3">Queue</h3>

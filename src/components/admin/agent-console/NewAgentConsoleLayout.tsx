@@ -17,16 +17,19 @@ interface NewAgentConsoleLayoutProps {
   queueChats: Chat[];
   isLoading?: boolean;
   users: User[];
+  selectionMode?: boolean;
 }
 
 export function NewAgentConsoleLayout({ 
   queueChats, 
   isLoading, 
-  users 
+  users,
+  selectionMode = false
 }: NewAgentConsoleLayoutProps) {
   const { currentChatId, activeChats, acceptChat, switchToChat } = useAgentConsole();
   const [selectedQueueChatId, setSelectedQueueChatId] = useState<string>();
   const [contextPanelExpanded, setContextPanelExpanded] = useState(false);
+  const [selectedChats, setSelectedChats] = useState<string[]>([]);
   const { isConnected } = useWebSocketChats();
 
   const currentChat = activeChats.find(chat => chat.id === currentChatId);
@@ -71,6 +74,9 @@ export function NewAgentConsoleLayout({
             selectedChatId={selectedQueueChatId}
             onChatSelect={setSelectedQueueChatId}
             onChatAccept={handleChatAccept}
+            selectionMode={selectionMode}
+            selectedChats={selectedChats}
+            onChatSelectionChange={setSelectedChats}
           />
         </Card>
       </div>

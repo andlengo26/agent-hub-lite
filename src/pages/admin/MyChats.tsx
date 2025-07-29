@@ -258,6 +258,7 @@ export default function MyChats() {
                 queueChats={queueChats}
                 isLoading={isLoading}
                 users={users}
+                selectionMode={true}
               />
             </div>
           ) : (
