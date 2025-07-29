@@ -63,6 +63,7 @@ export default function Users() {
     {
       key: "firstName",
       label: "User",
+      sortable: true,
       render: (_, user) => (
         <div className="flex items-center space-x-3">
           <Avatar className="h-8 w-8">
@@ -79,16 +80,19 @@ export default function Users() {
     {
       key: "role",
       label: "Role",
+      sortable: true,
       render: (role) => <Badge variant="outline" className="capitalize">{role}</Badge>,
     },
     {
       key: "organizationId",
       label: "Organization",
+      sortable: true,
       render: (orgId) => <span className="text-sm">{getOrgName(orgId)}</span>,
     },
     {
       key: "onlineStatus",
       label: "Status",
+      sortable: true,
       render: (status) => (
         <div className="flex items-center space-x-2">
           <div className={`w-2 h-2 rounded-full ${status === "online" ? "bg-green-500" : status === "away" ? "bg-yellow-500" : "bg-gray-500"}`} />

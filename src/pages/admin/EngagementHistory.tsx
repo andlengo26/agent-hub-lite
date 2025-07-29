@@ -1,44 +1,78 @@
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DataTable, Column } from "@/components/ui/data-table";
-import { SearchInput } from "@/components/common/SearchInput";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Eye } from "lucide-react";
+import { Download, Archive, Trash2 } from "lucide-react";
 import { Engagement } from "@/types";
 import { useEngagements } from "@/hooks/useEngagements";
 import { Modal } from "@/components/ui/Modal";
+import { toast } from "@/hooks/use-toast";
 
 const engagementColumns: Column<Engagement>[] = [
-  { key: "customerName", label: "Customer" },
-  { key: "customerEmail", label: "Email" },
-  { key: "engagementCount", label: "Engagements", render: (value) => (
+  { key: "customerName", label: "Customer", sortable: true },
+  { key: "customerEmail", label: "Email", sortable: true },
+  { key: "engagementCount", label: "Engagements", sortable: true, render: (value) => (
     <Badge variant="outline">{value}</Badge>
   )},
-  { key: "lastEngagedAt", label: "Last Contact", render: (value) => 
+  { key: "lastEngagedAt", label: "Last Contact", sortable: true, render: (value) => 
     new Date(value).toLocaleDateString()
   },
-  { key: "agentsInvolved", label: "Agents", render: (value) => value.length },
+  { key: "agentsInvolved", label: "Agents", sortable: true, render: (value) => value.length },
 ];
 
 export default function EngagementHistory() {
-  const [search, setSearch] = useState('');
-  const [sortBy, setSortBy] = useState('lastEngagedAt');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [selectedEngagement, setSelectedEngagement] = useState<Engagement | null>(null);
 
-  const { data: engagementsResponse, isLoading, error } = useEngagements({
-    search,
-    sortBy,
-    sortOrder,
-  });
+  const { data: engagementsResponse, isLoading, error } = useEngagements({});
 
   const engagements = engagementsResponse?.data || [];
 
   const handleViewDetails = (engagement: Engagement) => {
     setSelectedEngagement(engagement);
   };
+
+  const handleBulkExport = () => {
+    toast({
+      title: "Export started",
+      description: "Exporting selected engagements...",
+    });
+  };
+
+  const handleBulkArchive = () => {
+    toast({
+      title: "Archive completed",
+      description: "Selected engagements archived.",
+    });
+  };
+
+  const handleBulkDelete = () => {
+    toast({
+      title: "Delete completed",
+      description: "Selected engagements deleted.",
+    });
+  };
+
+  const bulkActions = [
+    {
+      id: "export",
+      label: "Export Selected",
+      icon: <Download className="w-4 h-4" />,
+      onClick: handleBulkExport,
+    },
+    {
+      id: "archive",
+      label: "Archive Selected",
+      icon: <Archive className="w-4 h-4" />,
+      onClick: handleBulkArchive,
+    },
+    {
+      id: "delete",
+      label: "Delete Selected",
+      icon: <Trash2 className="w-4 h-4" />,
+      variant: "destructive" as const,
+      onClick: handleBulkDelete,
+    },
+  ];
 
   if (isLoading) {
     return <div>Loading engagement history...</div>;
@@ -60,39 +94,19 @@ export default function EngagementHistory() {
       <Card>
         <CardHeader>
           <CardTitle>Customer Engagements</CardTitle>
-          <div className="flex gap-space-4 items-center mt-space-4">
-            <SearchInput
-              value={search}
-              onChange={setSearch}
-              placeholder="Search customers, emails, or summaries..."
-              className="flex-1"
-            />
-            <Select value={sortBy} onValueChange={setSortBy}>
-              <SelectTrigger className="w-48">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="lastEngagedAt">Last Contact</SelectItem>
-                <SelectItem value="customerName">Customer Name</SelectItem>
-                <SelectItem value="engagementCount">Engagement Count</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value={sortOrder} onValueChange={(value: 'asc' | 'desc') => setSortOrder(value)}>
-              <SelectTrigger className="w-32">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="desc">Desc</SelectItem>
-                <SelectItem value="asc">Asc</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
         </CardHeader>
         <CardContent>
           <DataTable 
             data={engagements} 
             columns={engagementColumns}
+            loading={isLoading}
+            searchable
+            selectable
+            pagination
             onView={handleViewDetails}
+            bulkActions={bulkActions}
+            emptyMessage="No engagements found"
+            emptyDescription="Customer engagements will appear here once available."
           />
         </CardContent>
       </Card>

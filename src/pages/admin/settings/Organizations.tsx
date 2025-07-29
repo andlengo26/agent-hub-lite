@@ -53,6 +53,7 @@ export default function Organizations() {
     {
       key: "name",
       label: "Organization",
+      sortable: true,
       render: (_, org) => (
         <div className="flex items-center space-x-3">
           <Avatar className="h-8 w-8">
@@ -73,6 +74,7 @@ export default function Organizations() {
     {
       key: "activeAgents",
       label: "Active Agents",
+      sortable: true,
       render: (agents) => (
         <Badge variant="secondary">
           {agents} agents
@@ -81,7 +83,8 @@ export default function Organizations() {
     },
     {
       key: "status",
-      label: "Status", 
+      label: "Status",
+      sortable: true,
       render: (status) => (
         <Badge variant={status === "active" ? "default" : "secondary"}>
           {status}
@@ -91,6 +94,7 @@ export default function Organizations() {
     {
       key: "createdAt",
       label: "Created",
+      sortable: true,
       render: (date) => new Date(date).toLocaleDateString(),
     },
   ];

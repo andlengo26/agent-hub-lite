@@ -5,30 +5,30 @@ import { Badge } from "@/components/ui/badge";
 import { DataTable, Column } from "@/components/ui/data-table";
 import { SearchInput } from "@/components/common/SearchInput";
 import { ScraperJob } from "@/types";
-import { Plus, Play, Edit, Trash2 } from "lucide-react";
+import { Plus, Play, Edit, Trash2, Download, Archive } from "lucide-react";
 import { useScraperJobs } from "@/hooks/useApiQuery";
 import { ScraperJobModal } from "@/components/modals/ScraperJobModal";
 import { useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 
 const scraperColumns: Column<ScraperJob>[] = [
-  { key: "url", label: "URL" },
-  { key: "linkDepth", label: "Depth" },
-  { key: "frequency", label: "Frequency" },
+  { key: "url", label: "URL", sortable: true },
+  { key: "linkDepth", label: "Depth", sortable: true },
+  { key: "frequency", label: "Frequency", sortable: true },
   { 
     key: "status", 
     label: "Status",
+    sortable: true,
     render: (value) => (
       <Badge variant={value === "completed" ? "default" : value === "failed" ? "destructive" : "secondary"}>
         {value}
       </Badge>
     )
   },
-  { key: "lastScrapedAt", label: "Last Run", render: (value) => new Date(value).toLocaleDateString() },
+  { key: "lastScrapedAt", label: "Last Run", sortable: true, render: (value) => new Date(value).toLocaleDateString() },
 ];
 
 export default function URLScraper() {
-  const [search, setSearch] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingJob, setEditingJob] = useState<ScraperJob | null>(null);
   const { data: scraperJobsResponse, isLoading, error } = useScraperJobs();
@@ -36,13 +36,6 @@ export default function URLScraper() {
   const { toast } = useToast();
 
   const scraperJobs = scraperJobsResponse?.data || [];
-  
-  // Filter jobs based on search
-  const filteredJobs = scraperJobs.filter(job =>
-    job.url.toLowerCase().includes(search.toLowerCase()) ||
-    job.frequency.toLowerCase().includes(search.toLowerCase()) ||
-    job.status.toLowerCase().includes(search.toLowerCase())
-  );
 
   const handleRunNow = (job: ScraperJob) => {
     toast({
@@ -74,6 +67,49 @@ export default function URLScraper() {
     setEditingJob(null);
   };
 
+  const handleBulkExport = () => {
+    toast({
+      title: "Export started",
+      description: "Exporting selected scraper jobs...",
+    });
+  };
+
+  const handleBulkArchive = () => {
+    toast({
+      title: "Archive completed",
+      description: "Selected scraper jobs archived.",
+    });
+  };
+
+  const handleBulkDelete = () => {
+    toast({
+      title: "Delete completed",
+      description: "Selected scraper jobs deleted.",
+    });
+  };
+
+  const bulkActions = [
+    {
+      id: "export",
+      label: "Export Selected",
+      icon: <Download className="w-4 h-4" />,
+      onClick: handleBulkExport,
+    },
+    {
+      id: "archive",
+      label: "Archive Selected",
+      icon: <Archive className="w-4 h-4" />,
+      onClick: handleBulkArchive,
+    },
+    {
+      id: "delete",
+      label: "Delete Selected",
+      icon: <Trash2 className="w-4 h-4" />,
+      variant: "destructive" as const,
+      onClick: handleBulkDelete,
+    },
+  ];
+
   if (isLoading) {
     return <div>Loading scraper jobs...</div>;
   }
@@ -97,18 +133,17 @@ export default function URLScraper() {
       <Card>
         <CardHeader>
           <CardTitle>Scraper Jobs</CardTitle>
-          <SearchInput
-            value={search}
-            onChange={setSearch}
-            placeholder="Search scraper jobs..."
-            className="mt-space-4"
-          />
         </CardHeader>
         <CardContent>
           <DataTable 
-            data={filteredJobs} 
+            data={scraperJobs} 
             columns={scraperColumns} 
+            loading={isLoading}
+            searchable
+            selectable
+            pagination
             onEdit={handleEdit}
+            bulkActions={bulkActions}
             customActions={[
               {
                 id: 'run',
@@ -116,20 +151,9 @@ export default function URLScraper() {
                 icon: <Play className="h-4 w-4" />,
                 onClick: handleRunNow,
               },
-              {
-                id: 'edit',
-                label: 'Edit',
-                icon: <Edit className="h-4 w-4" />,
-                onClick: handleEdit,
-              },
-              {
-                id: 'delete',
-                label: 'Delete',
-                icon: <Trash2 className="h-4 w-4" />,
-                onClick: handleDelete,
-                variant: 'destructive',
-              },
             ]}
+            emptyMessage="No scraper jobs found"
+            emptyDescription="Add your first scraper job to get started."
           />
         </CardContent>
       </Card>

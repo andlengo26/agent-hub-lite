@@ -11,7 +11,7 @@ interface StandardPaginationProps {
   totalItems: number;
   onPageChange: (page: number) => void;
   onPageSizeChange: (size: number) => void;
-  pageSizeOptions?: number[];
+  pageSizeOptions?: (number | 'All')[];
   showPageSizeSelector?: boolean;
   showPageInfo?: boolean;
   showFirstLast?: boolean;
@@ -25,7 +25,7 @@ export function StandardPagination({
   totalItems,
   onPageChange,
   onPageSizeChange,
-  pageSizeOptions = [10, 25, 50, 100],
+  pageSizeOptions = [10, 25, 50, 100, 'All'],
   showPageSizeSelector = true,
   showPageInfo = true,
   showFirstLast = false,
@@ -44,8 +44,8 @@ export function StandardPagination({
           <div className="flex items-center gap-2">
             <span className="text-sm text-muted-foreground">Rows per page:</span>
             <Select 
-              value={pageSize.toString()} 
-              onValueChange={(value) => onPageSizeChange(parseInt(value))}
+              value={pageSize === Number.MAX_SAFE_INTEGER ? 'All' : pageSize.toString()} 
+              onValueChange={(value) => onPageSizeChange(value === 'All' ? Number.MAX_SAFE_INTEGER : parseInt(value))}
             >
               <SelectTrigger className="w-20">
                 <SelectValue />

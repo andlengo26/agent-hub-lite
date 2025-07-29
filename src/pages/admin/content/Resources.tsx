@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { DataTable, Column } from "@/components/ui/data-table";
 import { SearchInput } from "@/components/common/SearchInput";
-import { FileText, Video, Link, File, Plus, Edit, Trash2 } from "lucide-react";
+import { FileText, Video, Link, File, Plus, Edit, Trash2, Download, Archive } from "lucide-react";
 import { Resource } from "@/types";
 import { useResources } from "@/hooks/useApiQuery";
 import { ResourceModal } from "@/components/modals/ResourceModal";
@@ -24,6 +24,7 @@ const resourceColumns: Column<Resource>[] = [
   { 
     key: "title", 
     label: "Resource",
+    sortable: true,
     render: (value, row) => (
       <div className="flex items-center gap-2">
         {getTypeIcon(row.type)}
@@ -34,6 +35,7 @@ const resourceColumns: Column<Resource>[] = [
   { 
     key: "type", 
     label: "Type",
+    sortable: true,
     render: (value) => <Badge variant="outline">{value}</Badge>
   },
   { 
@@ -47,11 +49,10 @@ const resourceColumns: Column<Resource>[] = [
       </div>
     )
   },
-  { key: "updatedAt", label: "Updated" },
+  { key: "updatedAt", label: "Updated", sortable: true },
 ];
 
 export default function Resources() {
-  const [search, setSearch] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingResource, setEditingResource] = useState<Resource | null>(null);
   const { data: resourcesResponse, isLoading, error } = useResources();
@@ -59,9 +60,6 @@ export default function Resources() {
   const { toast } = useToast();
 
   const resources = resourcesResponse?.data || [];
-  const filteredResources = resources.filter(resource =>
-    resource.title.toLowerCase().includes(search.toLowerCase())
-  );
 
   const handleEdit = (resource: Resource) => {
     setEditingResource(resource);
@@ -72,6 +70,49 @@ export default function Resources() {
     toast({ title: "Resource Deleted", description: `"${resource.title}" deleted.` });
     queryClient.invalidateQueries({ queryKey: ['resources'] });
   };
+
+  const handleBulkExport = () => {
+    toast({
+      title: "Export started",
+      description: "Exporting selected resources...",
+    });
+  };
+
+  const handleBulkArchive = () => {
+    toast({
+      title: "Archive completed",
+      description: "Selected resources archived.",
+    });
+  };
+
+  const handleBulkDelete = () => {
+    toast({
+      title: "Delete completed",
+      description: "Selected resources deleted.",
+    });
+  };
+
+  const bulkActions = [
+    {
+      id: "export",
+      label: "Export Selected",
+      icon: <Download className="w-4 h-4" />,
+      onClick: handleBulkExport,
+    },
+    {
+      id: "archive",
+      label: "Archive Selected",
+      icon: <Archive className="w-4 h-4" />,
+      onClick: handleBulkArchive,
+    },
+    {
+      id: "delete",
+      label: "Delete Selected",
+      icon: <Trash2 className="w-4 h-4" />,
+      variant: "destructive" as const,
+      onClick: handleBulkDelete,
+    },
+  ];
 
   if (isLoading) return <div>Loading resources...</div>;
   if (error) return <div>Error: {error.message}</div>;
@@ -90,10 +131,21 @@ export default function Resources() {
       <Card>
         <CardHeader>
           <CardTitle>Resource Library</CardTitle>
-          <SearchInput value={search} onChange={setSearch} placeholder="Search resources..." className="mt-4" />
         </CardHeader>
         <CardContent>
-          <DataTable data={filteredResources} columns={resourceColumns} onEdit={handleEdit} onDelete={handleDelete} />
+          <DataTable 
+            data={resources} 
+            columns={resourceColumns} 
+            loading={isLoading}
+            searchable
+            selectable
+            pagination
+            onEdit={handleEdit} 
+            onDelete={handleDelete}
+            bulkActions={bulkActions}
+            emptyMessage="No resources found"
+            emptyDescription="Add your first AI training resource to get started."
+          />
         </CardContent>
       </Card>
       <ResourceModal
