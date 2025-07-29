@@ -55,7 +55,7 @@ export interface CustomerEngagement {
   id: string;
   customerId: string;
   date: string;
-  channel: 'chat' | 'email' | 'phone';
+  channel: 'chat' | 'email' | 'phone' | 'general';
   agentId: string;
   agentName: string;
   aiSummary: string;
