@@ -1,12 +1,14 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DataTable, Column } from "@/components/ui/data-table";
 import { Badge } from "@/components/ui/badge";
-import { Download, Archive, Trash2 } from "lucide-react";
+import { Download, Archive, Trash2, Eye } from "lucide-react";
 import { Engagement } from "@/types";
 import { useEngagements } from "@/hooks/useEngagements";
 import { useNavigate } from "react-router-dom";
 import { toast } from "@/hooks/use-toast";
+import { EngagementFilters } from '@/components/admin/EngagementFilters';
+import { DateRange } from 'react-day-picker';
 
 const engagementColumns: Column<Engagement>[] = [
   { key: "customerName", label: "Customer", sortable: true },
@@ -24,10 +26,44 @@ export default function EngagementHistory() {
   const navigate = useNavigate();
   const { data: engagementsResponse, isLoading, error } = useEngagements({});
 
+  // Filter state
+  const [selectedAgents, setSelectedAgents] = useState<string[]>([]);
+  const [dateRange, setDateRange] = useState<DateRange | undefined>();
+
   const engagements = engagementsResponse?.data || [];
+
+  // Get unique agents for filter
+  const availableAgents = useMemo(() => {
+    if (!engagements) return [];
+    const agentSet = new Set(engagements.flatMap(e => e.agentsInvolved));
+    return Array.from(agentSet).map(name => ({ value: name, label: name }));
+  }, [engagements]);
+
+  // Filter engagements
+  const filteredEngagements = useMemo(() => {
+    if (!engagements) return [];
+    
+    return engagements.filter(engagement => {
+      const agentMatch = selectedAgents.length === 0 || 
+        selectedAgents.some(agent => engagement.agentsInvolved.includes(agent));
+      
+      const dateMatch = !dateRange?.from || !dateRange?.to ||
+        (new Date(engagement.lastEngagedAt) >= dateRange.from && 
+         new Date(engagement.lastEngagedAt) <= dateRange.to);
+        
+      return agentMatch && dateMatch;
+    });
+  }, [engagements, selectedAgents, dateRange]);
+
+  const hasActiveFilters = selectedAgents.length > 0 || !!dateRange;
 
   const handleViewDetails = (engagement: Engagement) => {
     navigate(`/chats/history/${engagement.id}`);
+  };
+
+  const handleClearFilters = () => {
+    setSelectedAgents([]);
+    setDateRange(undefined);
   };
 
   const handleBulkExport = () => {
@@ -73,6 +109,15 @@ export default function EngagementHistory() {
     },
   ];
 
+  const customActions = [
+    {
+      id: "view",
+      label: "View Details",
+      icon: <Eye className="w-4 h-4" />,
+      onClick: handleViewDetails,
+    },
+  ];
+
   if (isLoading) {
     return <div>Loading engagement history...</div>;
   }
@@ -90,20 +135,31 @@ export default function EngagementHistory() {
         </p>
       </div>
 
+      {/* Filters */}
+      <EngagementFilters
+        agents={availableAgents}
+        selectedAgents={selectedAgents}
+        onAgentsChange={setSelectedAgents}
+        dateRange={dateRange}
+        onDateRangeChange={setDateRange}
+        onClearFilters={handleClearFilters}
+        hasActiveFilters={hasActiveFilters}
+      />
+
       <Card>
         <CardHeader>
-          <CardTitle>Customer Engagements</CardTitle>
+          <CardTitle>Customer Engagements ({filteredEngagements.length})</CardTitle>
         </CardHeader>
         <CardContent>
           <DataTable 
-            data={engagements} 
+            data={filteredEngagements} 
             columns={engagementColumns}
             loading={isLoading}
             searchable
             selectable
             pagination
-            onRowClick={handleViewDetails}
             bulkActions={bulkActions}
+            customActions={customActions}
             emptyMessage="No engagements found"
             emptyDescription="Customer engagements will appear here once available."
           />

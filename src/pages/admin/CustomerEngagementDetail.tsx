@@ -3,19 +3,19 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Plus, Loader2 } from 'lucide-react';
+import { ArrowLeft, Plus, Loader2, Download, Archive, Trash2 } from 'lucide-react';
 import { useCustomerEngagements } from '@/hooks/useCustomerEngagements';
 import { FormModal } from '@/components/common/FormModal';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { EngagementFilters } from '@/components/admin/EngagementFilters';
 import { EngagementAccordion } from '@/components/admin/EngagementAccordion';
+import { BulkActionsToolbar } from '@/components/common/BulkActionsToolbar';
+import { Checkbox } from '@/components/ui/checkbox';
 import { CustomerEngagement } from '@/types';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
-import { DateRange } from 'react-day-picker';
 
 const channelOptions = [
   { value: 'chat', label: 'Chat' },
@@ -43,9 +43,8 @@ export default function CustomerEngagementDetail() {
     tags: [] as string[],
   });
 
-  // Filter state
-  const [selectedAgents, setSelectedAgents] = useState<string[]>([]);
-  const [dateRange, setDateRange] = useState<DateRange | undefined>();
+  // Selection state
+  const [selectedEngagements, setSelectedEngagements] = useState<Set<string>>(new Set());
 
   // Fetch customer engagements
   const { 
@@ -55,28 +54,8 @@ export default function CustomerEngagementDetail() {
     refetch 
   } = useCustomerEngagements(customerId || '', {});
 
-  // Get unique agents for filter
-  const availableAgents = useMemo(() => {
-    if (!customerData?.engagements) return [];
-    const agentSet = new Set(customerData.engagements.map(e => e.agentName));
-    return Array.from(agentSet).map(name => ({ value: name, label: name }));
-  }, [customerData?.engagements]);
-
-  // Filter engagements
-  const filteredEngagements = useMemo(() => {
-    if (!customerData?.engagements) return [];
-    
-    return customerData.engagements.filter(engagement => {
-      const agentMatch = selectedAgents.length === 0 || selectedAgents.includes(engagement.agentName);
-      
-      const dateMatch = !dateRange?.from || !dateRange?.to ||
-        (new Date(engagement.date) >= dateRange.from && new Date(engagement.date) <= dateRange.to);
-        
-      return agentMatch && dateMatch;
-    });
-  }, [customerData?.engagements, selectedAgents, dateRange]);
-
-  const hasActiveFilters = selectedAgents.length > 0 || !!dateRange;
+  // Use all engagements without filtering
+  const engagements = customerData?.engagements || [];
 
   const handleBack = () => {
     navigate('/chats/history');
@@ -153,10 +132,75 @@ export default function CustomerEngagementDetail() {
     }
   };
 
-  const handleClearFilters = () => {
-    setSelectedAgents([]);
-    setDateRange(undefined);
+  // Selection handlers
+  const handleSelectEngagement = (engagementId: string, checked: boolean) => {
+    const newSelected = new Set(selectedEngagements);
+    if (checked) {
+      newSelected.add(engagementId);
+    } else {
+      newSelected.delete(engagementId);
+    }
+    setSelectedEngagements(newSelected);
   };
+
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedEngagements(new Set(engagements.map(e => e.id)));
+    } else {
+      setSelectedEngagements(new Set());
+    }
+  };
+
+  const handleClearSelection = () => {
+    setSelectedEngagements(new Set());
+  };
+
+  // Bulk action handlers
+  const handleBulkExport = () => {
+    toast({
+      title: "Export started",
+      description: `Exporting ${selectedEngagements.size} engagements...`,
+    });
+    handleClearSelection();
+  };
+
+  const handleBulkArchive = () => {
+    toast({
+      title: "Archive completed",
+      description: `${selectedEngagements.size} engagements archived.`,
+    });
+    handleClearSelection();
+  };
+
+  const handleBulkDelete = () => {
+    toast({
+      title: "Delete completed",
+      description: `${selectedEngagements.size} engagements deleted.`,
+    });
+    handleClearSelection();
+  };
+
+  const bulkActions = [
+    {
+      id: "export",
+      label: "Export Selected",
+      icon: <Download className="w-4 h-4" />,
+      onClick: handleBulkExport,
+    },
+    {
+      id: "archive",
+      label: "Archive Selected", 
+      icon: <Archive className="w-4 h-4" />,
+      onClick: handleBulkArchive,
+    },
+    {
+      id: "delete",
+      label: "Delete Selected",
+      icon: <Trash2 className="w-4 h-4" />,
+      variant: "destructive" as const,
+      onClick: handleBulkDelete,
+    },
+  ];
 
   if (isLoading) {
     return (
@@ -221,36 +265,45 @@ export default function CustomerEngagementDetail() {
         </CardContent>
       </Card>
 
-      {/* Filters */}
-      <EngagementFilters
-        agents={availableAgents}
-        selectedAgents={selectedAgents}
-        onAgentsChange={setSelectedAgents}
-        dateRange={dateRange}
-        onDateRangeChange={setDateRange}
-        onClearFilters={handleClearFilters}
-        hasActiveFilters={hasActiveFilters}
-      />
+      {/* Bulk Actions Toolbar */}
+      {selectedEngagements.size > 0 && (
+        <BulkActionsToolbar
+          selectedCount={selectedEngagements.size}
+          onClearSelection={handleClearSelection}
+          actions={bulkActions}
+        />
+      )}
 
       {/* Engagement History Accordion */}
       <Card>
-        <CardHeader>
-          <CardTitle>Engagement History ({filteredEngagements.length})</CardTitle>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+          <CardTitle>Engagement History ({engagements.length})</CardTitle>
+          {engagements.length > 0 && (
+            <div className="flex items-center gap-2">
+              <Checkbox
+                checked={selectedEngagements.size === engagements.length}
+                onCheckedChange={handleSelectAll}
+                className="mr-2"
+              />
+              <span className="text-sm text-text-secondary">Select all</span>
+            </div>
+          )}
         </CardHeader>
         <CardContent>
-          {filteredEngagements.length === 0 ? (
+          {engagements.length === 0 ? (
             <div className="text-center py-8">
-              <p className="text-text-secondary">
-                {hasActiveFilters ? 'No engagements match your filters.' : 'No engagements found.'}
-              </p>
+              <p className="text-text-secondary">No engagements found.</p>
             </div>
           ) : (
             <EngagementAccordion
-              engagements={filteredEngagements}
+              engagements={engagements}
               onDeleteEngagement={handleDeleteEngagement}
               onEditEngagement={handleEditEngagement}
               expandedRow={expandedRow}
               onExpandedRowChange={setExpandedRow}
+              selectedEngagements={selectedEngagements}
+              onSelectEngagement={handleSelectEngagement}
+              showActions={false}
             />
           )}
         </CardContent>
