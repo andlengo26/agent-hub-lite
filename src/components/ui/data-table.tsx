@@ -53,20 +53,23 @@ interface CustomAction<T> {
   label: string;
   icon: React.ReactNode;
   onClick: (item: T) => void;
+  variant?: 'default' | 'destructive';
 }
 
 // Main props interface
 export interface DataTableProps<T> {
   data: T[];
   columns: Column<T>[];
+  onRowClick?: (item: T) => void;
   onEdit?: (item: T) => void;
-  onDelete?: (id: string) => void;
+  onDelete?: (item: T) => void;
   onView?: (item: T) => void;
   searchable?: boolean;
   selectable?: boolean;
   pagination?: boolean;
   loading?: boolean;
   emptyMessage?: string;
+  emptyDescription?: string;
   className?: string;
   customActions?: CustomAction<T>[];
   bulkActions?: BulkAction<T>[];
@@ -84,6 +87,7 @@ export interface DataTableProps<T> {
 export function DataTable<T extends { id: string }>({
   data,
   columns,
+  onRowClick,
   onEdit,
   onDelete,
   onView,
@@ -92,6 +96,7 @@ export function DataTable<T extends { id: string }>({
   pagination = true,
   loading = false,
   emptyMessage = "No data available",
+  emptyDescription,
   className,
   customActions = [],
   bulkActions = [],
@@ -292,7 +297,7 @@ export function DataTable<T extends { id: string }>({
                 </TableRow>
               ) : (
                 displayData.map((item) => (
-                  <TableRow key={item.id}>
+                  <TableRow key={item.id} onClick={() => onRowClick?.(item)} className={onRowClick ? "cursor-pointer" : ""}>
                     {selectable && (
                       <TableCell>
                         <Checkbox
@@ -338,7 +343,7 @@ export function DataTable<T extends { id: string }>({
                           )}
                           {onDelete && (
                             <DropdownMenuItem 
-                              onClick={() => onDelete(item.id)}
+                              onClick={() => onDelete(item)}
                               className="text-destructive"
                             >
                               <Trash2 className="mr-2 h-4 w-4" />
