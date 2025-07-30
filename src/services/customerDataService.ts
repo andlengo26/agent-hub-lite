@@ -22,28 +22,64 @@ export class CustomerDataService {
   static async getCustomersFromChats(): Promise<Customer[]> {
     try {
       const response = await fetch('/mocks/chats.json');
+      if (!response.ok) {
+        throw new Error(`Failed to fetch chats: ${response.status} ${response.statusText}`);
+      }
+      
       const chatData = await response.json();
-      const chats: Chat[] = chatData.data;
+      const chats: Chat[] = chatData.data || [];
 
-      // Group chats by customer ID
+      if (!Array.isArray(chats)) {
+        console.warn('Invalid chat data format: expected array');
+        return [];
+      }
+
+      // Group chats by customer ID and track data consistency
       const customerMap = new Map<string, {
         id: string;
         name: string;
         email: string;
         phone: string;
         chats: Chat[];
+        dataSource: string; // Track which chat provided the customer data
       }>();
 
       chats.forEach(chat => {
+        // Validate chat data
+        if (!chat.customerId || !chat.requesterName || !chat.requesterEmail) {
+          console.warn(`Incomplete chat data for chat ${chat.id}:`, {
+            customerId: chat.customerId,
+            requesterName: chat.requesterName,
+            requesterEmail: chat.requesterEmail
+          });
+          return;
+        }
+
         if (!customerMap.has(chat.customerId)) {
+          // Use first occurrence as canonical customer data
           customerMap.set(chat.customerId, {
             id: chat.customerId,
             name: chat.requesterName,
             email: chat.requesterEmail,
-            phone: chat.requesterPhone,
-            chats: []
+            phone: chat.requesterPhone || '',
+            chats: [],
+            dataSource: chat.id
           });
+        } else {
+          // Check for data inconsistencies (for debugging)
+          const existing = customerMap.get(chat.customerId)!;
+          if (existing.name !== chat.requesterName || 
+              existing.email !== chat.requesterEmail || 
+              existing.phone !== chat.requesterPhone) {
+            console.warn(`Data inconsistency detected for customer ${chat.customerId}:`, {
+              existing: { name: existing.name, email: existing.email, phone: existing.phone },
+              current: { name: chat.requesterName, email: chat.requesterEmail, phone: chat.requesterPhone },
+              sourceChat: existing.dataSource,
+              conflictingChat: chat.id
+            });
+          }
         }
+        
         customerMap.get(chat.customerId)!.chats.push(chat);
       });
 
@@ -53,17 +89,21 @@ export class CustomerDataService {
           new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
         );
 
+        const firstChat = sortedChats[sortedChats.length - 1];
+        const lastChat = sortedChats[0];
+
         return {
           id: customerData.id,
-          name: customerData.name,
-          email: customerData.email,
-          phone: customerData.phone,
-          createdAt: sortedChats[sortedChats.length - 1].createdAt, // First chat
-          lastEngagedAt: sortedChats[0].lastUpdatedAt, // Most recent activity
+          name: customerData.name || 'Unknown Customer',
+          email: customerData.email || '',
+          phone: customerData.phone || '',
+          createdAt: firstChat?.createdAt || new Date().toISOString(),
+          lastEngagedAt: lastChat?.lastUpdatedAt || lastChat?.createdAt || new Date().toISOString(),
           engagementCount: customerData.chats.length
         };
       });
 
+      // Sort by most recent engagement
       return customers.sort((a, b) => 
         new Date(b.lastEngagedAt).getTime() - new Date(a.lastEngagedAt).getTime()
       );
