@@ -19,16 +19,16 @@ const customerColumns: Column<Customer>[] = [
   {
     key: 'customer',
     label: 'Customer',
-    render: (customer) => (
+    render: (_value, customer) => (
       <div className="flex items-center space-x-3">
         <Avatar className="h-8 w-8">
           <AvatarFallback className="text-xs">
-            {customer.name.split(' ').map(n => n[0]).join('').toUpperCase()}
+            {(customer?.name ?? "—").split(' ').map(n => n[0]).join('').toUpperCase()}
           </AvatarFallback>
         </Avatar>
         <div>
-          <div className="font-medium text-text-primary">{customer.name}</div>
-          <div className="text-sm text-text-secondary">{customer.email}</div>
+          <div className="font-medium text-text-primary">{customer?.name ?? "—"}</div>
+          <div className="text-sm text-text-secondary">{customer?.email ?? "—"}</div>
         </div>
       </div>
     ),
@@ -37,9 +37,9 @@ const customerColumns: Column<Customer>[] = [
     key: 'engagementCount',
     label: 'Engagements',
     sortable: true,
-    render: (customer) => (
+    render: (_value, customer) => (
       <Badge variant="secondary" className="font-medium">
-        {customer.engagementCount} total
+        {customer?.engagementCount ?? 0} total
       </Badge>
     ),
   },
@@ -47,19 +47,24 @@ const customerColumns: Column<Customer>[] = [
     key: 'lastEngagedAt',
     label: 'Last Contact',
     sortable: true,
-    render: (customer) => (
+    render: (_value, customer) => (
       <div className="flex items-center space-x-1 text-sm text-text-secondary">
         <CalendarDays className="h-4 w-4" />
-        <span>{formatDistanceToNow(new Date(customer.lastEngagedAt), { addSuffix: true })}</span>
+        <span>
+          {customer?.lastEngagedAt 
+            ? formatDistanceToNow(new Date(customer.lastEngagedAt), { addSuffix: true })
+            : "—"
+          }
+        </span>
       </div>
     ),
   },
   {
     key: 'phone',
     label: 'Contact',
-    render: (customer) => (
+    render: (_value, customer) => (
       <div className="space-y-1">
-        {customer.phone && (
+        {customer?.phone && (
           <div className="flex items-center space-x-1 text-sm">
             <Phone className="h-3 w-3" />
             <span>{customer.phone}</span>
@@ -67,7 +72,7 @@ const customerColumns: Column<Customer>[] = [
         )}
         <div className="flex items-center space-x-1 text-sm text-text-secondary">
           <Mail className="h-3 w-3" />
-          <span>{customer.email}</span>
+          <span>{customer?.email ?? "—"}</span>
         </div>
       </div>
     ),
@@ -103,7 +108,7 @@ export default function EngagementHistory() {
     enableNotifications: false, // Don't show notifications on this overview page
   });
 
-  // Filter customers based on date range
+  // Filter customers based on date range and remove invalid entries
   const filteredCustomers = useMemo(() => {
     if (!customersData?.data) {
       console.log('🔍 No customer data available for filtering');
@@ -111,9 +116,10 @@ export default function EngagementHistory() {
     }
 
     console.log(`🔍 Filtering ${customersData.data.length} customers`);
+    // Step 2: Prune out undefined rows upstream
     let filtered = customersData.data.filter(customer => {
-      if (!customer) {
-        console.warn('⚠️ Null/undefined customer found in data');
+      if (!customer || !customer.id) {
+        console.warn('⚠️ Null/undefined/invalid customer found in data:', customer);
         return false;
       }
       return true;
@@ -134,6 +140,15 @@ export default function EngagementHistory() {
     }
 
     console.log(`✅ Filtered to ${filtered.length} customers`);
+    
+    // Step 5: Verify with logging
+    console.table(filtered.slice(0, 3).map(customer => ({
+      id: customer.id,
+      name: customer.name,
+      email: customer.email,
+      engagementCount: customer.engagementCount
+    })));
+    
     return filtered;
   }, [customersData?.data, dateRange]);
 

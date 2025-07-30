@@ -165,7 +165,12 @@ export function DataTable<T extends { id: string }>({
     }
   };
 
-  const renderCellContent = (column: Column<T>, item: T) => {
+  const renderCellContent = (column: Column<T>, item: T | undefined) => {
+    // Step 3: Guard against undefined items in DataTable
+    if (!item) {
+      return <span className="text-muted-foreground">—</span>;
+    }
+    
     const value = item[column.key];
     
     if (column.render) {

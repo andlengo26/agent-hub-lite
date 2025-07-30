@@ -68,23 +68,24 @@ export class CustomerDataService {
       }>();
 
       chats.forEach(chat => {
-        // Generate customer ID if missing
+        // Step 4: Generate customer ID if missing (defensive checks)
+        const customerId = chat.customerId || `unknown_${chat.id || Date.now()}`;
         if (!chat.customerId) {
           if (chat.requesterEmail) {
             chat.customerId = `auto_${chat.requesterEmail.replace(/[^a-zA-Z0-9]/g, '_')}_${Date.now()}`;
             console.log(`🔧 Generated customer ID: ${chat.customerId} for email: ${chat.requesterEmail}`);
           } else {
-            chat.customerId = `anon_${chat.id}_${Date.now()}`;
+            chat.customerId = `anon_${chat.id || Date.now()}_${Date.now()}`;
             console.log(`🔧 Generated anonymous customer ID: ${chat.customerId} for chat: ${chat.id}`);
           }
         }
 
-        // Create fallback customer data with improved defaults
+        // Create fallback customer data with guaranteed defaults
         const customerName = chat.requesterName || 
                            (chat.requesterEmail ? chat.requesterEmail.split('@')[0] : null) ||
-                           `Customer ${chat.customerId.slice(-8)}`;
+                           "Unknown Customer";
         
-        const customerEmail = chat.requesterEmail || '';
+        const customerEmail = chat.requesterEmail || "No email";
 
         // Always process the chat, even with missing data
         if (!customerMap.has(chat.customerId)) {
@@ -137,18 +138,27 @@ export class CustomerDataService {
         const lastChat = sortedChats[0];
 
         const customer = {
-          id: customerData.id,
+          id: customerData.id || `fallback_${Date.now()}`,
           name: customerData.name || 'Unknown Customer',
-          email: customerData.email || '',
+          email: customerData.email || 'No email',
           phone: customerData.phone || '',
           createdAt: firstChat?.createdAt || new Date().toISOString(),
           lastEngagedAt: lastChat?.lastUpdatedAt || lastChat?.createdAt || new Date().toISOString(),
-          engagementCount: customerData.chats.length
+          engagementCount: customerData.chats.length || 0
         };
 
-        // Validate customer data integrity
-        if (!customer.id || !customer.name) {
-          console.warn('⚠️ Customer validation failed:', customer);
+        // Step 4: Validate customer data integrity with fallbacks
+        if (!customer.id) {
+          customer.id = `emergency_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+          console.warn('⚠️ Emergency ID generated for customer:', customer);
+        }
+        if (!customer.name) {
+          customer.name = 'Unknown Customer';
+          console.warn('⚠️ Fallback name applied for customer:', customer.id);
+        }
+        if (!customer.email) {
+          customer.email = 'No email';
+          console.warn('⚠️ Fallback email applied for customer:', customer.id);
         }
 
         return customer;
