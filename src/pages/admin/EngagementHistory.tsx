@@ -19,19 +19,35 @@ const customerColumns: Column<Customer>[] = [
   {
     key: 'customer',
     label: 'Customer',
-    render: (customer) => (
-      <div className="flex items-center space-x-3">
-        <Avatar className="h-8 w-8">
-          <AvatarFallback className="text-xs">
-            {customer.name.split(' ').map(n => n[0]).join('')}
-          </AvatarFallback>
-        </Avatar>
-        <div>
-          <div className="font-medium text-text-primary">{customer.name}</div>
-          <div className="text-sm text-text-secondary">{customer.email}</div>
+    render: (customer) => {
+      if (!customer || !customer.name) {
+        return (
+          <div className="flex items-center space-x-3">
+            <Avatar className="h-8 w-8">
+              <AvatarFallback className="text-xs">?</AvatarFallback>
+            </Avatar>
+            <div>
+              <div className="font-medium text-text-primary">Unknown Customer</div>
+              <div className="text-sm text-text-secondary">{customer?.email || 'No email'}</div>
+            </div>
+          </div>
+        );
+      }
+      
+      return (
+        <div className="flex items-center space-x-3">
+          <Avatar className="h-8 w-8">
+            <AvatarFallback className="text-xs">
+              {customer.name.split(' ').map(n => n[0]).join('')}
+            </AvatarFallback>
+          </Avatar>
+          <div>
+            <div className="font-medium text-text-primary">{customer.name}</div>
+            <div className="text-sm text-text-secondary">{customer.email}</div>
+          </div>
         </div>
-      </div>
-    ),
+      );
+    },
   },
   {
     key: 'engagementCount',
@@ -39,7 +55,7 @@ const customerColumns: Column<Customer>[] = [
     sortable: true,
     render: (customer) => (
       <Badge variant="secondary" className="font-medium">
-        {customer.engagementCount} total
+        {customer?.engagementCount || 0} total
       </Badge>
     ),
   },
@@ -47,19 +63,30 @@ const customerColumns: Column<Customer>[] = [
     key: 'lastEngagedAt',
     label: 'Last Contact',
     sortable: true,
-    render: (customer) => (
-      <div className="flex items-center space-x-1 text-sm text-text-secondary">
-        <CalendarDays className="h-4 w-4" />
-        <span>{formatDistanceToNow(new Date(customer.lastEngagedAt), { addSuffix: true })}</span>
-      </div>
-    ),
+    render: (customer) => {
+      if (!customer?.lastEngagedAt) {
+        return (
+          <div className="flex items-center space-x-1 text-sm text-text-secondary">
+            <CalendarDays className="h-4 w-4" />
+            <span>No contact</span>
+          </div>
+        );
+      }
+      
+      return (
+        <div className="flex items-center space-x-1 text-sm text-text-secondary">
+          <CalendarDays className="h-4 w-4" />
+          <span>{formatDistanceToNow(new Date(customer.lastEngagedAt), { addSuffix: true })}</span>
+        </div>
+      );
+    },
   },
   {
     key: 'phone',
     label: 'Contact',
     render: (customer) => (
       <div className="space-y-1">
-        {customer.phone && (
+        {customer?.phone && (
           <div className="flex items-center space-x-1 text-sm">
             <Phone className="h-3 w-3" />
             <span>{customer.phone}</span>
@@ -67,7 +94,7 @@ const customerColumns: Column<Customer>[] = [
         )}
         <div className="flex items-center space-x-1 text-sm text-text-secondary">
           <Mail className="h-3 w-3" />
-          <span>{customer.email}</span>
+          <span>{customer?.email || 'No email'}</span>
         </div>
       </div>
     ),
@@ -98,11 +125,13 @@ export default function EngagementHistory() {
   const filteredCustomers = useMemo(() => {
     if (!customersData?.data) return [];
 
-    let filtered = customersData.data;
+    let filtered = customersData.data.filter(customer => customer != null); // Remove any null/undefined customers
 
     // Apply date range filter
     if (dateRange.from || dateRange.to) {
       filtered = filtered.filter(customer => {
+        if (!customer?.lastEngagedAt) return false;
+        
         const lastEngaged = new Date(customer.lastEngagedAt);
         
         if (dateRange.from && lastEngaged < dateRange.from) return false;
@@ -117,18 +146,24 @@ export default function EngagementHistory() {
 
   // Handle viewing customer details
   const handleViewDetails = (customer: Customer) => {
+    if (!customer?.id) {
+      console.error('Customer ID is missing');
+      return;
+    }
     navigate(`/chats/history/${customer.id}`);
   };
 
   // Handle bulk actions
   const handleBulkExport = (selectedCustomers: Customer[]) => {
-    const csvData = selectedCustomers.map(customer => ({
-      Name: customer.name,
-      Email: customer.email,
-      Phone: customer.phone,
-      'Total Engagements': customer.engagementCount,
-      'Last Contact': customer.lastEngagedAt,
-      'Customer Since': customer.createdAt,
+    const validCustomers = selectedCustomers.filter(customer => customer != null);
+    
+    const csvData = validCustomers.map(customer => ({
+      Name: customer.name || 'Unknown',
+      Email: customer.email || 'No email',
+      Phone: customer.phone || 'No phone',
+      'Total Engagements': customer.engagementCount || 0,
+      'Last Contact': customer.lastEngagedAt || 'Never',
+      'Customer Since': customer.createdAt || 'Unknown',
     }));
     
     // Convert to CSV and download
