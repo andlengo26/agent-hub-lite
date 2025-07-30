@@ -6,7 +6,25 @@
       "linkDepth": 3,
       "frequency": "daily",
       "lastScrapedAt": "2025-01-27T06:00:00Z",
-      "status": "completed"
+      "status": "completed",
+      "scrapedData": {
+        "pages": [
+          {
+            "url": "https://docs.techcorp.com/getting-started",
+            "title": "Getting Started Guide",
+            "content": "Welcome to TechCorp! This guide will help you get started with our platform...",
+            "lastScraped": "2025-01-27T06:00:00Z"
+          },
+          {
+            "url": "https://docs.techcorp.com/api-reference",
+            "title": "API Reference",
+            "content": "Complete API documentation for TechCorp services...",
+            "lastScraped": "2025-01-27T06:00:00Z"
+          }
+        ],
+        "totalPages": 15,
+        "lastUpdated": "2025-01-27T06:00:00Z"
+      }
     },
     {
       "id": "scraper_002",

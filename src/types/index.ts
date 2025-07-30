@@ -116,9 +116,19 @@ export interface ScraperJob {
   id: string;
   url: string;
   linkDepth: number;
-  frequency: string;
+  frequency: string | 'none';
   lastScrapedAt: string;
   status: 'pending' | 'running' | 'completed' | 'failed';
+  scrapedData?: {
+    pages: Array<{
+      url: string;
+      title: string;
+      content: string;
+      lastScraped: string;
+    }>;
+    totalPages: number;
+    lastUpdated: string;
+  };
 }
 
 export interface FAQ {
@@ -135,11 +145,15 @@ export interface Resource {
   title: string;
   tags: string[];
   type: 'document' | 'video' | 'link' | 'template';
-  url: string;
+  url?: string;
+  fileContent?: string;
+  fileName?: string;
+  fileSize?: number;
   aiInstructions: string;
   uploadedById: string;
   uploadedAt: string;
   updatedAt: string;
+  contentPreview?: string;
 }
 
 export interface Domain {

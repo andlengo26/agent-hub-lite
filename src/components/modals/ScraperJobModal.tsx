@@ -118,6 +118,7 @@ export function ScraperJobModal({ isOpen, onClose, onSuccess, scraperJob }: Scra
               <SelectValue placeholder="Select frequency" />
             </SelectTrigger>
             <SelectContent>
+              <SelectItem value="none">None (Manual only)</SelectItem>
               <SelectItem value="daily">Daily</SelectItem>
               <SelectItem value="weekly">Weekly</SelectItem>
               <SelectItem value="monthly">Monthly</SelectItem>

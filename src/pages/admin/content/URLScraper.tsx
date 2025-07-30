@@ -5,9 +5,10 @@ import { Badge } from "@/components/ui/badge";
 import { DataTable, Column } from "@/components/ui/data-table";
 import { SearchInput } from "@/components/common/SearchInput";
 import { ScraperJob } from "@/types";
-import { Plus, Play, Edit, Trash2, Download, Archive } from "lucide-react";
+import { Plus, Play, Edit, Trash2, Download, Archive, Eye, Loader2 } from "lucide-react";
 import { useScraperJobs } from "@/hooks/useApiQuery";
 import { ScraperJobModal } from "@/components/modals/ScraperJobModal";
+import { ScrapedDataModal } from "@/components/modals/ScrapedDataModal";
 import { useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 
@@ -31,6 +32,9 @@ const scraperColumns: Column<ScraperJob>[] = [
 export default function URLScraper() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingJob, setEditingJob] = useState<ScraperJob | null>(null);
+  const [dataModalOpen, setDataModalOpen] = useState(false);
+  const [viewingJob, setViewingJob] = useState<ScraperJob | null>(null);
+  const [runningJobs, setRunningJobs] = useState<Set<string>>(new Set());
   const { data: scraperJobsResponse, isLoading, error } = useScraperJobs();
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -38,11 +42,26 @@ export default function URLScraper() {
   const scraperJobs = scraperJobsResponse?.data || [];
 
   const handleRunNow = (job: ScraperJob) => {
+    setRunningJobs(prev => new Set(prev).add(job.id));
     toast({
       title: "Scraper Job Started",
       description: `Scraping job for "${job.url}" has been started.`,
     });
-    queryClient.invalidateQueries({ queryKey: ['scraperJobs'] });
+    
+    // Simulate job completion
+    setTimeout(() => {
+      setRunningJobs(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(job.id);
+        return newSet;
+      });
+      queryClient.invalidateQueries({ queryKey: ['scraperJobs'] });
+    }, 3000);
+  };
+
+  const handleViewData = (job: ScraperJob) => {
+    setViewingJob(job);
+    setDataModalOpen(true);
   };
 
   const handleEdit = (job: ScraperJob) => {
@@ -151,6 +170,12 @@ export default function URLScraper() {
                 icon: <Play className="h-4 w-4" />,
                 onClick: handleRunNow,
               },
+              {
+                id: 'view-data',
+                label: 'View Data',
+                icon: <Eye className="h-4 w-4" />,
+                onClick: handleViewData,
+              },
             ]}
             emptyMessage="No scraper jobs found"
             emptyDescription="Add your first scraper job to get started."
@@ -164,6 +189,14 @@ export default function URLScraper() {
         onSuccess={handleModalSuccess}
         scraperJob={editingJob}
       />
+
+      {viewingJob && (
+        <ScrapedDataModal
+          isOpen={dataModalOpen}
+          onClose={() => setDataModalOpen(false)}
+          scraperJob={viewingJob}
+        />
+      )}
     </div>
   );
 }
