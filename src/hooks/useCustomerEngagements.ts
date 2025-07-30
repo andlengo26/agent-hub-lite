@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { CustomerEngagementsResponse, CustomerEngagement } from '@/types';
+import { CustomerEngagementsResponse, CustomerEngagement, Chat, User } from '@/types';
 
 interface UseCustomerEngagementsParams {
   search?: string;
@@ -9,6 +9,38 @@ interface UseCustomerEngagementsParams {
   limit?: number;
 }
 
+// Generate mock engagement data from chat history
+function generateEngagementFromChat(chat: Chat, agent: User | null): CustomerEngagement {
+  const engagementTypes = ['initial inquiry', 'follow-up', 'technical support', 'billing inquiry', 'feature request'];
+  const channels = ['chat', 'email', 'phone'] as const;
+  const tags = [
+    ['support', 'urgent'],
+    ['billing', 'payment'],
+    ['technical', 'api'],
+    ['sales', 'demo'],
+    ['onboarding', 'training']
+  ];
+
+  const randomType = engagementTypes[Math.floor(Math.random() * engagementTypes.length)];
+  const randomChannel = channels[Math.floor(Math.random() * channels.length)];
+  const randomTags = tags[Math.floor(Math.random() * tags.length)];
+
+  return {
+    id: `ce_${chat.id}`,
+    customerId: chat.customerId,
+    date: chat.createdAt,
+    channel: randomChannel,
+    agentId: chat.assignedAgentId || 'usr_001',
+    agentName: agent?.firstName && agent?.lastName ? `${agent.firstName} ${agent.lastName}` : 'Sarah Johnson',
+    aiSummary: `Customer ${randomType}: ${chat.summary}`,
+    agentNotes: `Handled ${randomType} for customer. Status: ${chat.status}. ${chat.status === 'closed' ? 'Issue resolved successfully.' : 'Follow-up may be required.'}`,
+    notes: [],
+    tags: randomTags,
+    transcript: `Generated transcript for ${randomChannel} conversation: ${chat.summary}`,
+    sourceId: chat.id
+  };
+}
+
 export function useCustomerEngagements(
   customerId: string,
   params: UseCustomerEngagementsParams = {}
@@ -16,16 +48,33 @@ export function useCustomerEngagements(
   return useQuery({
     queryKey: ['customer-engagements', customerId, params],
     queryFn: async (): Promise<CustomerEngagementsResponse> => {
-      const response = await fetch('/mocks/customer-engagements.json');
-      const data = await response.json();
+      // Fetch chats and users data
+      const [chatsResponse, usersResponse] = await Promise.all([
+        fetch('/mocks/chats.json'),
+        fetch('/mocks/users.json')
+      ]);
       
-      const customerData = data[customerId];
+      const chatsData = await chatsResponse.json();
+      const usersData = await usersResponse.json();
       
-      if (!customerData) {
+      // Filter chats for this customer
+      const customerChats = chatsData.data.filter((chat: Chat) => chat.customerId === customerId);
+      
+      if (customerChats.length === 0) {
         throw new Error(`Customer ${customerId} not found`);
       }
 
-      let { engagements } = customerData;
+      // Get customer info from first chat
+      const firstChat = customerChats[0];
+      const customerName = firstChat.requesterName;
+      const customerEmail = firstChat.requesterEmail;
+      const contactNumber = firstChat.requesterPhone;
+
+      // Generate engagements from chats
+      let engagements = customerChats.map((chat: Chat) => {
+        const agent = usersData.data.find((user: User) => user.id === chat.assignedAgentId);
+        return generateEngagementFromChat(chat, agent);
+      });
 
       // Apply search filter
       if (params.search && params.search.trim()) {
@@ -75,10 +124,10 @@ export function useCustomerEngagements(
       const paginatedEngagements = engagements.slice(startIndex, endIndex);
 
       return {
-        customerId: customerData.customerId,
-        customerName: customerData.customerName,
-        customerEmail: customerData.customerEmail,
-        contactNumber: customerData.contactNumber,
+        customerId: customerId,
+        customerName: customerName,
+        customerEmail: customerEmail,
+        contactNumber: contactNumber,
         engagements: paginatedEngagements,
         pagination: {
           page,
