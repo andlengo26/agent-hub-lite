@@ -1,0 +1,45 @@
+{
+  "integrations": {
+    "apiKey": "",
+    "aiModel": "gpt-4",
+    "moodleUrl": "",
+    "moodleToken": ""
+  },
+  "aiSettings": {
+    "assistantName": "Support Assistant",
+    "welcomeMessage": "Hello! How can I help you today?",
+    "tone": "friendly",
+    "customPrompt": "",
+    "sessionTimeout": 30,
+    "idleTimeout": 10
+  },
+  "appearance": {
+    "headerText": "Customer Support",
+    "subheaderText": "We're here to help",
+    "primaryColor": "#0052CC",
+    "secondaryColor": "#17A2B8",
+    "highlightColor": "#FFC107",
+    "buttonPosition": "bottom-right",
+    "minimizedText": "Need help?",
+    "autoOpenWidget": false
+  },
+  "userInfo": {
+    "anonymousChat": true,
+    "requiredFields": {
+      "name": false,
+      "email": false,
+      "mobile": false
+    }
+  },
+  "embed": {
+    "script": "<script>\n(function() {\n  var widget = document.createElement('div');\n  widget.id = 'support-widget';\n  widget.innerHTML = '<iframe src=\"https://your-domain.com/widget\" frameborder=\"0\"></iframe>';\n  document.body.appendChild(widget);\n})();\n</script>"
+  },
+  "voice": {
+    "enableVoiceCalls": false,
+    "enableVoicemails": false,
+    "businessHours": {
+      "start": "09:00",
+      "end": "17:00"
+    }
+  }
+}

@@ -1,0 +1,128 @@
+/**
+ * Custom hook for managing widget settings
+ */
+
+import { useState, useEffect } from 'react';
+import { useToast } from '@/hooks/use-toast';
+
+export interface WidgetSettings {
+  integrations: {
+    apiKey: string;
+    aiModel: string;
+    moodleUrl: string;
+    moodleToken: string;
+  };
+  aiSettings: {
+    assistantName: string;
+    welcomeMessage: string;
+    tone: string;
+    customPrompt: string;
+    sessionTimeout: number;
+    idleTimeout: number;
+  };
+  appearance: {
+    headerText: string;
+    subheaderText: string;
+    primaryColor: string;
+    secondaryColor: string;
+    highlightColor: string;
+    buttonPosition: string;
+    minimizedText: string;
+    autoOpenWidget: boolean;
+  };
+  userInfo: {
+    anonymousChat: boolean;
+    requiredFields: {
+      name: boolean;
+      email: boolean;
+      mobile: boolean;
+    };
+  };
+  embed: {
+    script: string;
+  };
+  voice: {
+    enableVoiceCalls: boolean;
+    enableVoicemails: boolean;
+    businessHours: {
+      start: string;
+      end: string;
+    };
+  };
+}
+
+export function useWidgetSettings() {
+  const [settings, setSettings] = useState<WidgetSettings | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    loadSettings();
+  }, []);
+
+  const loadSettings = async () => {
+    try {
+      const response = await fetch('/mocks/widget-settings.json');
+      if (!response.ok) throw new Error('Failed to load settings');
+      const data = await response.json();
+      setSettings(data);
+    } catch (error) {
+      console.error('Error loading widget settings:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load widget settings",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const saveSettings = async (newSettings: WidgetSettings) => {
+    setSaving(true);
+    try {
+      // In a real app, this would be an API call
+      // For now, we'll just update local state and show success
+      setSettings(newSettings);
+      
+      toast({
+        title: "Success",
+        description: "Widget settings saved successfully",
+      });
+      
+      return true;
+    } catch (error) {
+      console.error('Error saving widget settings:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save widget settings",
+        variant: "destructive",
+      });
+      return false;
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const updateSettings = (section: keyof WidgetSettings, updates: any) => {
+    if (!settings) return;
+    
+    setSettings(prev => ({
+      ...prev!,
+      [section]: {
+        ...prev![section],
+        ...updates
+      }
+    }));
+  };
+
+  return {
+    settings,
+    loading,
+    saving,
+    saveSettings,
+    updateSettings,
+    loadSettings
+  };
+}
