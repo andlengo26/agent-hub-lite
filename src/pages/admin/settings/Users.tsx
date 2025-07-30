@@ -8,7 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { ErrorBoundary } from "@/components/common/ErrorBoundary";
 import { DataTable, Column } from "@/components/ui/data-table";
-import { FloatingPreview } from "@/components/admin/FloatingPreview";
+
 import { FormModal } from "@/components/common/FormModal";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -322,7 +322,7 @@ export default function Users() {
           </div>
         </FormModal>
 
-        <FloatingPreview />
+        
       </div>
     </ErrorBoundary>
   );

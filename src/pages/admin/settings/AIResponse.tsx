@@ -3,12 +3,11 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { FloatingPreview } from "@/components/admin/FloatingPreview";
+
 
 export default function AIResponse() {
   return (
-    <>
-      <div className="space-y-6">
+    <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold">Auto AI Response</h1>
         <p className="text-muted-foreground">
@@ -50,7 +49,5 @@ export default function AIResponse() {
         </CardContent>
       </Card>
     </div>
-    <FloatingPreview />
-  </>
   );
 }

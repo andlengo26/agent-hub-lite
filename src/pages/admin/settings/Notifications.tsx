@@ -2,12 +2,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { FloatingPreview } from "@/components/admin/FloatingPreview";
+
 
 export default function Notifications() {
   return (
-    <>
-      <div className="space-y-6">
+    <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold">Notifications</h1>
         <p className="text-muted-foreground">
@@ -44,7 +43,5 @@ export default function Notifications() {
         </CardContent>
       </Card>
     </div>
-    <FloatingPreview />
-  </>
   );
 }

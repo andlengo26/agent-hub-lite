@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { DataTable, Column } from "@/components/ui/data-table";
 import { Domain } from "@/types";
 import { Plus } from "lucide-react";
-import { FloatingPreview } from "@/components/admin/FloatingPreview";
+
 import { useDomains } from "@/hooks/useApiQuery";
 
 const domainColumns: Column<Domain>[] = [
@@ -25,8 +25,7 @@ export default function Security() {
   }
 
   return (
-    <>
-      <div className="space-y-6">
+    <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold">Security</h1>
         <p className="text-muted-foreground">Manage security settings and allowed domains</p>
@@ -49,7 +48,5 @@ export default function Security() {
         </CardContent>
       </Card>
     </div>
-    <FloatingPreview />
-  </>
   );
 }
