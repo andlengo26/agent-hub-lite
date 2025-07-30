@@ -4,6 +4,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { AuthGuard } from "@/components/auth/AuthGuard";
 import { TenantProvider } from "@/contexts/TenantContext";
+import { Toaster } from "@/components/ui/toaster";
 
 // Login page
 import Login from "@/pages/Login";
@@ -158,6 +159,7 @@ const App = () => (
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
+        <Toaster />
       </TenantProvider>
     </TooltipProvider>
   </QueryClientProvider>

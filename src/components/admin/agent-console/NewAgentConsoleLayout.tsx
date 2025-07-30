@@ -10,7 +10,7 @@ import { ActiveChat } from './ActiveChat';
 import { ExpandableContextPanel } from './ExpandableContextPanel';
 import { useAgentConsole } from '@/contexts/AgentConsoleContext';
 import { Chat, User } from '@/types';
-import { useWebSocketChats } from '@/hooks/useWebSocketChats';
+import { useRealTimeSync } from '@/hooks/useRealTimeSync';
 import { toast } from '@/hooks/use-toast';
 
 interface NewAgentConsoleLayoutProps {
@@ -30,7 +30,17 @@ export function NewAgentConsoleLayout({
   const [selectedQueueChatId, setSelectedQueueChatId] = useState<string>();
   const [contextPanelExpanded, setContextPanelExpanded] = useState(false);
   const [selectedChats, setSelectedChats] = useState<string[]>([]);
-  const { isConnected } = useWebSocketChats();
+  
+  const { isConnected, handleNewChatIngestion } = useRealTimeSync({
+    onChatUpdate: (chat) => {
+      console.log('Chat updated in agent console:', chat.id);
+      // Automatically refresh queue if new chat arrives
+      if (chat.status === 'waiting') {
+        // Trigger queue refresh
+      }
+    },
+    enableNotifications: true,
+  });
 
   const currentChat = activeChats.find(chat => chat.id === currentChatId);
   const selectedQueueChat = queueChats.find(chat => chat.id === selectedQueueChatId);

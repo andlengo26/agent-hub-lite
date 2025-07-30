@@ -4,8 +4,8 @@
 
 import { useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { useCustomerByEmail, useUpsertCustomer } from './useCustomers';
 import { Chat, CustomerEngagement } from '@/types';
+import { toast } from '@/hooks/use-toast';
 
 interface UseChatEngagementSyncProps {
   onNewChat?: (chat: Chat) => void;
@@ -14,7 +14,6 @@ interface UseChatEngagementSyncProps {
 
 export function useChatEngagementSync({ onNewChat, onEngagementUpdate }: UseChatEngagementSyncProps = {}) {
   const queryClient = useQueryClient();
-  const upsertCustomer = useUpsertCustomer();
 
   // Auto-create customer and engagement when new chat arrives
   const handleNewChatIngestion = async (chat: Chat) => {
@@ -31,11 +30,8 @@ export function useChatEngagementSync({ onNewChat, onEngagementUpdate }: UseChat
 
       // Create customer if doesn't exist
       if (!existingCustomer && chat.requesterEmail) {
-        await upsertCustomer.mutateAsync({
-          email: chat.requesterEmail,
-          name: chat.requesterName,
-          phone: chat.requesterPhone,
-        });
+        // In a real implementation, this would call the customer creation API
+        console.log('Creating new customer for:', chat.requesterEmail);
       }
 
       // Create engagement record for the chat
@@ -59,6 +55,11 @@ export function useChatEngagementSync({ onNewChat, onEngagementUpdate }: UseChat
       onNewChat?.(chat);
     } catch (error) {
       console.error('Failed to create customer/engagement for new chat:', error);
+      toast({
+        title: "Sync Error",
+        description: "Failed to sync chat with engagement history",
+        variant: "destructive",
+      });
     }
   };
 

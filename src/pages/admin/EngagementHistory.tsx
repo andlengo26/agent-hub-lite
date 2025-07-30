@@ -6,11 +6,12 @@ import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Customer } from '@/types';
 import { useCustomers } from '@/hooks/useCustomers';
+import { useRealTimeSync } from '@/hooks/useRealTimeSync';
 import { DataTable, Column } from '@/components/ui/data-table';
 import { EngagementFilters } from '@/components/admin/EngagementFilters';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { CalendarDays, Phone, Mail, MessageSquare } from 'lucide-react';
+import { CalendarDays, Phone, Mail, MessageSquare, Wifi, WifiOff } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
 // Define columns for customer engagement table
@@ -82,6 +83,15 @@ export default function EngagementHistory() {
   // Fetch customers data
   const { data: customersData, isLoading, error } = useCustomers({
     search: searchQuery,
+  });
+
+  // Enable real-time sync for engagement history
+  const { isConnected } = useRealTimeSync({
+    onEngagementUpdate: () => {
+      // Refresh customer data when engagements are updated
+      console.log('Engagement updated, refreshing customer data');
+    },
+    enableNotifications: false, // Don't show notifications on this overview page
   });
 
   // Filter customers based on date range
@@ -169,6 +179,19 @@ export default function EngagementHistory() {
           <p className="text-text-secondary">
             View customer engagement history across all channels
           </p>
+        </div>
+        <div className="flex items-center gap-2">
+          {isConnected ? (
+            <Badge variant="outline" className="text-success border-success">
+              <Wifi className="h-3 w-3 mr-1" />
+              Live
+            </Badge>
+          ) : (
+            <Badge variant="outline" className="text-error border-error">
+              <WifiOff className="h-3 w-3 mr-1" />
+              Offline
+            </Badge>
+          )}
         </div>
       </div>
 

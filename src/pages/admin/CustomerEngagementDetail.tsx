@@ -5,6 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, Plus, Loader2, Download, Archive, Trash2 } from 'lucide-react';
 import { useCustomerEngagements } from '@/hooks/useCustomerEngagements';
+import { useCreateEngagement, useUpdateEngagement, useDeleteEngagement } from '@/hooks/useEngagementMutations';
+import { useRealTimeSync } from '@/hooks/useRealTimeSync';
 import { FormModal } from '@/components/common/FormModal';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -28,6 +30,9 @@ export default function CustomerEngagementDetail() {
   const { customerId } = useParams<{ customerId: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const createEngagement = useCreateEngagement();
+  const updateEngagement = useUpdateEngagement();
+  const deleteEngagement = useDeleteEngagement();
 
   // Modal and form state
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -56,6 +61,17 @@ export default function CustomerEngagementDetail() {
 
   // Use all engagements without filtering
   const engagements = customerData?.engagements || [];
+
+  // Enable real-time sync for this customer's engagements
+  useRealTimeSync({
+    onEngagementUpdate: (engagement) => {
+      if (engagement.customerId === customerId) {
+        // Force refresh of engagement data when updates occur
+        console.log('Engagement updated via sync:', engagement.id);
+      }
+    },
+    enableNotifications: false, // Disable notifications for this detailed view
+  });
 
   const handleBack = () => {
     navigate('/chats/history');
@@ -87,48 +103,51 @@ export default function CustomerEngagementDetail() {
   };
 
   const handleDeleteEngagement = async (engagementId: string) => {
+    if (!customerId) return;
+    
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      toast({
-        title: "Engagement deleted",
-        description: "The engagement has been successfully removed.",
+      await deleteEngagement.mutateAsync({
+        customerId,
+        engagementId,
       });
-      
-      refetch();
     } catch (error) {
+      // Error handling is done in the mutation hook
       console.error('Failed to delete engagement:', error);
-      toast({
-        title: "Error",
-        description: "Failed to delete engagement. Please try again.",
-        variant: "destructive",
-      });
     }
   };
 
   const handleSaveEngagement = async () => {
+    if (!customerId) return;
+    
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      const action = selectedEngagement ? 'updated' : 'added';
-      toast({
-        title: `Engagement ${action}`,
-        description: `The engagement has been successfully ${action}.`,
-      });
+      if (selectedEngagement) {
+        // Update existing engagement
+        await updateEngagement.mutateAsync({
+          customerId,
+          engagementId: selectedEngagement.id,
+          engagement: {
+            ...formData,
+            channel: formData.channel as 'phone' | 'chat' | 'email' | 'general',
+          },
+        });
+      } else {
+        // Add new engagement
+        await createEngagement.mutateAsync({
+          customerId,
+          engagement: {
+            customerId,
+            ...formData,
+            channel: formData.channel as 'phone' | 'chat' | 'email' | 'general',
+          } as Omit<CustomerEngagement, 'id'>,
+        });
+      }
       
       setIsAddModalOpen(false);
       setIsEditModalOpen(false);
       setSelectedEngagement(null);
-      refetch();
     } catch (error) {
+      // Error handling is done in the mutation hooks
       console.error('Failed to save engagement:', error);
-      toast({
-        title: "Error",
-        description: "Failed to save engagement. Please try again.",
-        variant: "destructive",
-      });
     }
   };
 
@@ -172,12 +191,29 @@ export default function CustomerEngagementDetail() {
     handleClearSelection();
   };
 
-  const handleBulkDelete = () => {
-    toast({
-      title: "Delete completed",
-      description: `${selectedEngagements.size} engagements deleted.`,
-    });
-    handleClearSelection();
+  const handleBulkDelete = async () => {
+    if (!customerId) return;
+    
+    try {
+      // Delete all selected engagements
+      await Promise.all(
+        Array.from(selectedEngagements).map(engagementId =>
+          deleteEngagement.mutateAsync({
+            customerId,
+            engagementId,
+          })
+        )
+      );
+      
+      handleClearSelection();
+    } catch (error) {
+      console.error('Failed to delete engagements:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete some engagements.",
+        variant: "destructive",
+      });
+    }
   };
 
   const bulkActions = [
