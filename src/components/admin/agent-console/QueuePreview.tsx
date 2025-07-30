@@ -137,11 +137,10 @@ export function QueuePreview({
     <div
       key={chat.id}
       className={cn(
-        "p-3 transition-colors hover:bg-surface/50 border-b border-border last:border-b-0",
-        selectedChatId === chat.id && "bg-surface border-l-4 border-l-primary",
-        !selectionMode && "cursor-pointer"
+        "p-3 transition-colors hover:bg-surface/50 border-b border-border last:border-b-0 cursor-pointer",
+        selectedChatId === chat.id && "bg-surface border-l-4 border-l-primary"
       )}
-      onClick={selectionMode ? undefined : () => onChatSelect(chat.id)}
+      onClick={() => onChatSelect(chat.id)}
     >
       <div className="flex items-center gap-3">
         {selectionMode && (
