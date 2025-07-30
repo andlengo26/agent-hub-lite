@@ -9,6 +9,7 @@ import { Chat, User } from '@/types';
 import { ChatDeduplicationService, ConsolidatedChat } from '@/services/chatDeduplicationService';
 import { logger } from '@/lib/logger';
 import { useMemo } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface ChatsSummaryParams {
   dateRange?: {
@@ -40,6 +41,7 @@ interface ChatsSummary {
 }
 
 export function useChatsSummary(params: ChatsSummaryParams = {}): ChatsSummary {
+  const { currentUser } = useAuth();
   const { data: chatsData, isLoading: chatsLoading, error: chatsError } = useQuery({
     queryKey: ['chats', params],
     queryFn: () => apiClient.getChats({
@@ -61,6 +63,11 @@ export function useChatsSummary(params: ChatsSummaryParams = {}): ChatsSummary {
     // Filter chats based on params
     let filteredChats = chats.filter(chat => {
       if (params.agentId && chat.assignedAgentId !== params.agentId) {
+        logger.debug('Filtering out chat due to agent mismatch', { 
+          chatId: chat.id, 
+          chatAgentId: chat.assignedAgentId, 
+          filterAgentId: params.agentId 
+        });
         return false;
       }
       
@@ -125,7 +132,17 @@ export function useChatsSummary(params: ChatsSummaryParams = {}): ChatsSummary {
         validationResult
       };
     }
-  }, [chats, params]);
+  }, [chats, params, currentUser]);
+
+  // Debug logging
+  if (params.agentId) {
+    logger.debug('Chat filtering summary', {
+      totalChats: chats.length,
+      filteredChats: processedData.chats.length,
+      agentId: params.agentId,
+      currentUserId: currentUser?.id
+    });
+  }
 
   return {
     ...processedData,

@@ -14,13 +14,14 @@ import { Chat } from "@/types";
 import { useChatsSummary } from "@/hooks/useChatsSummary";
 import { useWebSocketChats } from "@/hooks/useWebSocketChats";
 import { useFeatureFlag } from "@/hooks/useFeatureFlag";
+import { useAuth } from "@/contexts/AuthContext";
 import { Skeleton } from "@/components/ui/skeleton";
 import { MapPin, Filter, Monitor, Download, Archive, Trash2 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { exportChatsCSV } from "@/lib/csv-export";
 import { isWithinInterval, parseISO } from "date-fns";
 
-const currentUserId = "user_002"; // Mock current user ID
+
 
 const createChatColumns = (users: any[]) => [
   { 
@@ -97,12 +98,18 @@ export default function MyChats() {
     dateRange: { from: undefined, to: undefined }
   });
 
+  const { currentUser } = useAuth();
   const enableRealTimeUpdates = useFeatureFlag('realTime');
   
   // Use consolidated hook for data fetching
   const { chats: allChats, users, counts, isLoading } = useChatsSummary({
-    agentId: currentUserId, // Filter by current agent
+    agentId: currentUser?.id, // Filter by current agent
   });
+
+  // Debug logging
+  console.log('MyChats - Current user:', currentUser?.id);
+  console.log('MyChats - Filtered chats count:', allChats.length);
+  console.log('MyChats - All chats sample:', allChats.slice(0, 3));
   const { isConnected } = useWebSocketChats();
   
   // User chats are already filtered by the hook

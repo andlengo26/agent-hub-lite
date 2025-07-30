@@ -4,6 +4,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { AuthGuard } from "@/components/auth/AuthGuard";
 import { TenantProvider } from "@/contexts/TenantContext";
+import { AuthProvider } from "@/contexts/AuthContext";
 import { Toaster } from "@/components/ui/toaster";
 
 // Login page
@@ -34,7 +35,8 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <TenantProvider>
+      <AuthProvider>
+        <TenantProvider>
         <BrowserRouter>
           <Routes>
             {/* Login route */}
@@ -160,7 +162,8 @@ const App = () => (
           </Routes>
         </BrowserRouter>
         <Toaster />
-      </TenantProvider>
+        </TenantProvider>
+      </AuthProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );
