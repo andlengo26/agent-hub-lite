@@ -29,6 +29,8 @@ export interface WidgetSettings {
     buttonPosition: string;
     minimizedText: string;
     autoOpenWidget: boolean;
+    paddingX: number;
+    paddingY: number;
   };
   userInfo: {
     anonymousChat: boolean;

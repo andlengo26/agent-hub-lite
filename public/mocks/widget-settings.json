@@ -21,7 +21,9 @@
     "highlightColor": "#FFC107",
     "buttonPosition": "bottom-right",
     "minimizedText": "Need help?",
-    "autoOpenWidget": false
+    "autoOpenWidget": false,
+    "paddingX": 24,
+    "paddingY": 24
   },
   "userInfo": {
     "anonymousChat": true,

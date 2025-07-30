@@ -16,10 +16,10 @@ import { Badge } from '@/components/ui/badge';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ColorPicker } from '@/components/ui/color-picker';
-import { FloatingPreview } from '@/components/admin/FloatingPreview';
+import { InteractiveWidget } from '@/components/admin/InteractiveWidget';
 import { useWidgetSettings } from '@/hooks/useWidgetSettings';
 import { useToast } from '@/hooks/use-toast';
-import { Copy, Eye, EyeOff, Check, Loader2 } from 'lucide-react';
+import { Copy, Eye, EyeOff, Check, Loader2, MessageCircle } from 'lucide-react';
 
 export default function WidgetManagement() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -326,6 +326,31 @@ export default function WidgetManagement() {
                       />
                     </div>
                     
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="paddingX">Horizontal Padding (px)</Label>
+                        <Input
+                          id="paddingX"
+                          type="number"
+                          min="0"
+                          max="100"
+                          value={settings.appearance.paddingX}
+                          onChange={(e) => updateSettings('appearance', { paddingX: parseInt(e.target.value) || 24 })}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="paddingY">Vertical Padding (px)</Label>
+                        <Input
+                          id="paddingY"
+                          type="number"
+                          min="0"
+                          max="100"
+                          value={settings.appearance.paddingY}
+                          onChange={(e) => updateSettings('appearance', { paddingY: parseInt(e.target.value) || 24 })}
+                        />
+                      </div>
+                    </div>
+                    
                     <div className="flex items-center space-x-2">
                       <Switch
                         id="autoOpenWidget"
@@ -501,29 +526,36 @@ export default function WidgetManagement() {
         </div>
         
         <div className="lg:col-span-1">
-          <Card>
-            <CardHeader>
-              <CardTitle>Live Preview</CardTitle>
-              <CardDescription>
-                Click the floating widget to see how it will look
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center text-muted-foreground py-8">
-                <p className="text-sm">
-                  The floating widget preview is now active.
-                </p>
-                <p className="text-xs mt-2">
-                  Look for the chat icon in the corner of your screen
-                </p>
+          <div className="text-center text-muted-foreground py-8">
+            <div className="bg-muted/30 rounded-lg p-6 border-2 border-dashed">
+              <MessageCircle className="h-12 w-12 mx-auto mb-3 text-muted-foreground/50" />
+              <p className="text-sm font-medium mb-1">
+                Interactive Widget Active
+              </p>
+              <p className="text-xs">
+                Look for the floating chat widget on your screen. It's fully interactive with real AI functionality!
+              </p>
+              <div className="mt-4 text-xs space-y-1">
+                <div className="flex items-center justify-center space-x-2">
+                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  <span>Real-time settings updates</span>
+                </div>
+                <div className="flex items-center justify-center space-x-2">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                  <span>AI chat responses</span>
+                </div>
+                <div className="flex items-center justify-center space-x-2">
+                  <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                  <span>Voice & file uploads</span>
+                </div>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
       </div>
       
-      {/* Floating Preview Component */}
-      <FloatingPreview />
+      {/* Interactive Widget */}
+      <InteractiveWidget />
     </div>
   );
 }
