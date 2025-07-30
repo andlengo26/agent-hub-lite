@@ -27,7 +27,19 @@ interface UseCustomersParams {
 export function useCustomers(params: UseCustomersParams = {}) {
   return useQuery({
     queryKey: ['customers', params],
-    queryFn: () => CustomerDataService.getCustomers(params),
+    queryFn: async () => {
+      console.log('🔄 useCustomers: Fetching customers with params:', params);
+      const result = await CustomerDataService.getCustomers(params);
+      console.log('✅ useCustomers: Successfully fetched customers:', {
+        count: result.data.length,
+        total: result.pagination.total,
+        params
+      });
+      return result;
+    },
+    meta: {
+      errorMessage: 'Failed to load customer data'
+    }
   });
 }
 

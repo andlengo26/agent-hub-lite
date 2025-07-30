@@ -19,35 +19,19 @@ const customerColumns: Column<Customer>[] = [
   {
     key: 'customer',
     label: 'Customer',
-    render: (customer) => {
-      if (!customer || !customer.name) {
-        return (
-          <div className="flex items-center space-x-3">
-            <Avatar className="h-8 w-8">
-              <AvatarFallback className="text-xs">?</AvatarFallback>
-            </Avatar>
-            <div>
-              <div className="font-medium text-text-primary">Unknown Customer</div>
-              <div className="text-sm text-text-secondary">{customer?.email || 'No email'}</div>
-            </div>
-          </div>
-        );
-      }
-      
-      return (
-        <div className="flex items-center space-x-3">
-          <Avatar className="h-8 w-8">
-            <AvatarFallback className="text-xs">
-              {customer.name.split(' ').map(n => n[0]).join('')}
-            </AvatarFallback>
-          </Avatar>
-          <div>
-            <div className="font-medium text-text-primary">{customer.name}</div>
-            <div className="text-sm text-text-secondary">{customer.email}</div>
-          </div>
+    render: (customer) => (
+      <div className="flex items-center space-x-3">
+        <Avatar className="h-8 w-8">
+          <AvatarFallback className="text-xs">
+            {customer.name.split(' ').map(n => n[0]).join('').toUpperCase()}
+          </AvatarFallback>
+        </Avatar>
+        <div>
+          <div className="font-medium text-text-primary">{customer.name}</div>
+          <div className="text-sm text-text-secondary">{customer.email}</div>
         </div>
-      );
-    },
+      </div>
+    ),
   },
   {
     key: 'engagementCount',
@@ -55,7 +39,7 @@ const customerColumns: Column<Customer>[] = [
     sortable: true,
     render: (customer) => (
       <Badge variant="secondary" className="font-medium">
-        {customer?.engagementCount || 0} total
+        {customer.engagementCount} total
       </Badge>
     ),
   },
@@ -63,30 +47,19 @@ const customerColumns: Column<Customer>[] = [
     key: 'lastEngagedAt',
     label: 'Last Contact',
     sortable: true,
-    render: (customer) => {
-      if (!customer?.lastEngagedAt) {
-        return (
-          <div className="flex items-center space-x-1 text-sm text-text-secondary">
-            <CalendarDays className="h-4 w-4" />
-            <span>No contact</span>
-          </div>
-        );
-      }
-      
-      return (
-        <div className="flex items-center space-x-1 text-sm text-text-secondary">
-          <CalendarDays className="h-4 w-4" />
-          <span>{formatDistanceToNow(new Date(customer.lastEngagedAt), { addSuffix: true })}</span>
-        </div>
-      );
-    },
+    render: (customer) => (
+      <div className="flex items-center space-x-1 text-sm text-text-secondary">
+        <CalendarDays className="h-4 w-4" />
+        <span>{formatDistanceToNow(new Date(customer.lastEngagedAt), { addSuffix: true })}</span>
+      </div>
+    ),
   },
   {
     key: 'phone',
     label: 'Contact',
     render: (customer) => (
       <div className="space-y-1">
-        {customer?.phone && (
+        {customer.phone && (
           <div className="flex items-center space-x-1 text-sm">
             <Phone className="h-3 w-3" />
             <span>{customer.phone}</span>
@@ -94,7 +67,7 @@ const customerColumns: Column<Customer>[] = [
         )}
         <div className="flex items-center space-x-1 text-sm text-text-secondary">
           <Mail className="h-3 w-3" />
-          <span>{customer?.email || 'No email'}</span>
+          <span>{customer.email}</span>
         </div>
       </div>
     ),
@@ -107,25 +80,44 @@ export default function EngagementHistory() {
   const [dateRange, setDateRange] = useState<{ from?: Date; to?: Date }>({});
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Fetch customers data
-  const { data: customersData, isLoading, error } = useCustomers({
+  // Fetch customers data with improved error handling
+  const { data: customersData, isLoading, error, refetch } = useCustomers({
     search: searchQuery,
+  });
+
+  // Debug: Log customer data state
+  console.log('📊 EngagementHistory - Customer data state:', {
+    isLoading,
+    error: error?.message,
+    customerCount: customersData?.data?.length || 0,
+    searchQuery
   });
 
   // Enable real-time sync for engagement history
   const { isConnected } = useRealTimeSync({
     onEngagementUpdate: () => {
       // Refresh customer data when engagements are updated
-      console.log('Engagement updated, refreshing customer data');
+      console.log('🔄 Engagement updated, invalidating customer queries');
+      refetch();
     },
     enableNotifications: false, // Don't show notifications on this overview page
   });
 
   // Filter customers based on date range
   const filteredCustomers = useMemo(() => {
-    if (!customersData?.data) return [];
+    if (!customersData?.data) {
+      console.log('🔍 No customer data available for filtering');
+      return [];
+    }
 
-    let filtered = customersData.data.filter(customer => customer != null); // Remove any null/undefined customers
+    console.log(`🔍 Filtering ${customersData.data.length} customers`);
+    let filtered = customersData.data.filter(customer => {
+      if (!customer) {
+        console.warn('⚠️ Null/undefined customer found in data');
+        return false;
+      }
+      return true;
+    });
 
     // Apply date range filter
     if (dateRange.from || dateRange.to) {
@@ -141,29 +133,27 @@ export default function EngagementHistory() {
       });
     }
 
+    console.log(`✅ Filtered to ${filtered.length} customers`);
     return filtered;
   }, [customersData?.data, dateRange]);
 
   // Handle viewing customer details
   const handleViewDetails = (customer: Customer) => {
-    if (!customer?.id) {
-      console.error('Customer ID is missing');
-      return;
-    }
+    console.log('📍 Navigating to customer details:', customer.id);
     navigate(`/chats/history/${customer.id}`);
   };
 
   // Handle bulk actions
   const handleBulkExport = (selectedCustomers: Customer[]) => {
-    const validCustomers = selectedCustomers.filter(customer => customer != null);
+    console.log(`📤 Exporting ${selectedCustomers.length} customers`);
     
-    const csvData = validCustomers.map(customer => ({
-      Name: customer.name || 'Unknown',
-      Email: customer.email || 'No email',
+    const csvData = selectedCustomers.map(customer => ({
+      Name: customer.name,
+      Email: customer.email,
       Phone: customer.phone || 'No phone',
-      'Total Engagements': customer.engagementCount || 0,
-      'Last Contact': customer.lastEngagedAt || 'Never',
-      'Customer Since': customer.createdAt || 'Unknown',
+      'Total Engagements': customer.engagementCount,
+      'Last Contact': customer.lastEngagedAt,
+      'Customer Since': customer.createdAt,
     }));
     
     // Convert to CSV and download
@@ -197,10 +187,19 @@ export default function EngagementHistory() {
   ];
 
   if (error) {
+    console.error('❌ EngagementHistory error:', error);
     return (
       <div className="container mx-auto py-6">
-        <div className="text-center text-red-600">
-          Failed to load customer data. Please try again.
+        <div className="text-center space-y-4">
+          <div className="text-error">
+            Failed to load customer data: {error.message || 'Unknown error'}
+          </div>
+          <button 
+            onClick={() => refetch()} 
+            className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90"
+          >
+            Retry
+          </button>
         </div>
       </div>
     );

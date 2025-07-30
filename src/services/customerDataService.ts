@@ -21,18 +21,41 @@ export class CustomerDataService {
    */
   static async getCustomersFromChats(): Promise<Customer[]> {
     try {
+      console.log('🔍 CustomerDataService: Starting to fetch and aggregate customers from chats');
+      
       const response = await fetch('/mocks/chats.json');
       if (!response.ok) {
+        console.error('🚨 Failed to fetch chats:', {
+          status: response.status,
+          statusText: response.statusText,
+          url: response.url
+        });
         throw new Error(`Failed to fetch chats: ${response.status} ${response.statusText}`);
       }
       
       const chatData = await response.json();
       const chats: Chat[] = chatData.data || [];
 
+      console.log(`📊 Raw chat data loaded: ${chats.length} chats`);
+
       if (!Array.isArray(chats)) {
         console.warn('Invalid chat data format: expected array');
         return [];
       }
+
+      // Debug: Log sample of raw chat data
+      console.table(chats.slice(0, 3).map(chat => ({
+        id: chat.id,
+        customerId: chat.customerId,
+        requesterName: chat.requesterName,
+        requesterEmail: chat.requesterEmail,
+        status: chat.status
+      })));
+
+      // Track processing statistics
+      let processedChats = 0;
+      let skippedChats = 0;
+      let inconsistentDataCount = 0;
 
       // Group chats by customer ID and track data consistency
       const customerMap = new Map<string, {
@@ -45,35 +68,46 @@ export class CustomerDataService {
       }>();
 
       chats.forEach(chat => {
-        // Validate chat data
-        if (!chat.customerId || !chat.requesterName || !chat.requesterEmail) {
-          console.warn(`Incomplete chat data for chat ${chat.id}:`, {
-            customerId: chat.customerId,
-            requesterName: chat.requesterName,
-            requesterEmail: chat.requesterEmail
-          });
-          return;
+        // Generate customer ID if missing
+        if (!chat.customerId) {
+          if (chat.requesterEmail) {
+            chat.customerId = `auto_${chat.requesterEmail.replace(/[^a-zA-Z0-9]/g, '_')}_${Date.now()}`;
+            console.log(`🔧 Generated customer ID: ${chat.customerId} for email: ${chat.requesterEmail}`);
+          } else {
+            chat.customerId = `anon_${chat.id}_${Date.now()}`;
+            console.log(`🔧 Generated anonymous customer ID: ${chat.customerId} for chat: ${chat.id}`);
+          }
         }
 
+        // Create fallback customer data with improved defaults
+        const customerName = chat.requesterName || 
+                           (chat.requesterEmail ? chat.requesterEmail.split('@')[0] : null) ||
+                           `Customer ${chat.customerId.slice(-8)}`;
+        
+        const customerEmail = chat.requesterEmail || '';
+
+        // Always process the chat, even with missing data
         if (!customerMap.has(chat.customerId)) {
           // Use first occurrence as canonical customer data
           customerMap.set(chat.customerId, {
             id: chat.customerId,
-            name: chat.requesterName,
-            email: chat.requesterEmail,
+            name: customerName,
+            email: customerEmail,
             phone: chat.requesterPhone || '',
             chats: [],
             dataSource: chat.id
           });
+          console.log(`✨ Created new customer: ${chat.customerId} (${customerName})`);
         } else {
           // Check for data inconsistencies (for debugging)
           const existing = customerMap.get(chat.customerId)!;
-          if (existing.name !== chat.requesterName || 
-              existing.email !== chat.requesterEmail || 
-              existing.phone !== chat.requesterPhone) {
-            console.warn(`Data inconsistency detected for customer ${chat.customerId}:`, {
+          if (existing.name !== customerName || 
+              existing.email !== customerEmail || 
+              existing.phone !== (chat.requesterPhone || '')) {
+            inconsistentDataCount++;
+            console.warn(`⚠️ Data inconsistency detected for customer ${chat.customerId}:`, {
               existing: { name: existing.name, email: existing.email, phone: existing.phone },
-              current: { name: chat.requesterName, email: chat.requesterEmail, phone: chat.requesterPhone },
+              current: { name: customerName, email: customerEmail, phone: chat.requesterPhone },
               sourceChat: existing.dataSource,
               conflictingChat: chat.id
             });
@@ -81,6 +115,16 @@ export class CustomerDataService {
         }
         
         customerMap.get(chat.customerId)!.chats.push(chat);
+        processedChats++;
+      });
+
+      // Log processing statistics
+      console.log(`📈 Processing complete:`, {
+        totalChats: chats.length,
+        processedChats,
+        skippedChats,
+        uniqueCustomers: customerMap.size,
+        inconsistentDataCount
       });
 
       // Convert to Customer objects with aggregated data
@@ -92,7 +136,7 @@ export class CustomerDataService {
         const firstChat = sortedChats[sortedChats.length - 1];
         const lastChat = sortedChats[0];
 
-        return {
+        const customer = {
           id: customerData.id,
           name: customerData.name || 'Unknown Customer',
           email: customerData.email || '',
@@ -101,12 +145,31 @@ export class CustomerDataService {
           lastEngagedAt: lastChat?.lastUpdatedAt || lastChat?.createdAt || new Date().toISOString(),
           engagementCount: customerData.chats.length
         };
+
+        // Validate customer data integrity
+        if (!customer.id || !customer.name) {
+          console.warn('⚠️ Customer validation failed:', customer);
+        }
+
+        return customer;
       });
 
       // Sort by most recent engagement
-      return customers.sort((a, b) => 
+      const sortedCustomers = customers.sort((a, b) => 
         new Date(b.lastEngagedAt).getTime() - new Date(a.lastEngagedAt).getTime()
       );
+
+      // Debug: Log final customer summary
+      console.log(`✅ Customer aggregation complete: ${sortedCustomers.length} customers`);
+      console.table(sortedCustomers.slice(0, 5).map(customer => ({
+        id: customer.id,
+        name: customer.name,
+        email: customer.email,
+        engagementCount: customer.engagementCount,
+        lastEngagedAt: customer.lastEngagedAt
+      })));
+
+      return sortedCustomers;
     } catch (error) {
       console.error('Failed to fetch customers from chats:', error);
       return [];
