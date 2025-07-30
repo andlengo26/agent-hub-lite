@@ -1,11 +1,14 @@
 /**
- * Consolidated hook for chat summary data and counts
+ * Consolidated hook for chat summary data and counts with deduplication
  * Replaces multiple separate hooks with a unified interface
  */
 
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
 import { Chat, User } from '@/types';
+import { ChatDeduplicationService, ConsolidatedChat } from '@/services/chatDeduplicationService';
+import { logger } from '@/lib/logger';
+import { useMemo } from 'react';
 
 interface ChatsSummaryParams {
   dateRange?: {
@@ -14,10 +17,11 @@ interface ChatsSummaryParams {
   };
   agentId?: string;
   status?: 'active' | 'resolved' | 'pending';
+  enableDeduplication?: boolean;
 }
 
 interface ChatsSummary {
-  chats: Chat[];
+  chats: Chat[] | ConsolidatedChat[];
   users: User[];
   counts: {
     total: number;
@@ -25,6 +29,11 @@ interface ChatsSummary {
     missed: number;
     closed: number;
     waiting: number;
+  };
+  validationResult?: {
+    isValid: boolean;
+    warnings: string[];
+    errors: string[];
   };
   isLoading: boolean;
   error: Error | null;
@@ -47,37 +56,80 @@ export function useChatsSummary(params: ChatsSummaryParams = {}): ChatsSummary {
   const chats = chatsData?.data || [];
   const users = usersData?.data || [];
 
-  // Filter chats based on params
-  const filteredChats = chats.filter(chat => {
-    if (params.agentId && chat.assignedAgentId !== params.agentId) {
-      return false;
-    }
-    
-    if (params.dateRange) {
-      const chatDate = new Date(chat.createdAt);
-      const startDate = new Date(params.dateRange.start);
-      const endDate = new Date(params.dateRange.end);
-      if (chatDate < startDate || chatDate > endDate) {
+  // Memoize expensive operations
+  const processedData = useMemo(() => {
+    // Filter chats based on params
+    let filteredChats = chats.filter(chat => {
+      if (params.agentId && chat.assignedAgentId !== params.agentId) {
         return false;
       }
-    }
-    
-    return true;
-  });
+      
+      if (params.dateRange) {
+        const chatDate = new Date(chat.createdAt);
+        const startDate = new Date(params.dateRange.start);
+        const endDate = new Date(params.dateRange.end);
+        if (chatDate < startDate || chatDate > endDate) {
+          return false;
+        }
+      }
+      
+      return true;
+    });
 
-  // Calculate counts
-  const counts = {
-    total: filteredChats.length,
-    active: filteredChats.filter(chat => chat.status === 'active').length,
-    missed: filteredChats.filter(chat => chat.status === 'missed').length,
-    closed: filteredChats.filter(chat => chat.status === 'closed').length,
-    waiting: filteredChats.filter(chat => !chat.assignedAgentId).length,
-  };
+    // Validate data integrity
+    const validationResult = ChatDeduplicationService.validateChats(filteredChats);
+    
+    // Log validation results
+    if (validationResult.warnings.length > 0) {
+      logger.warn('Chat data validation warnings', { warnings: validationResult.warnings });
+    }
+    if (validationResult.errors.length > 0) {
+      logger.error('Chat data validation errors', { errors: validationResult.errors });
+    }
+
+    // Apply deduplication if enabled
+    if (params.enableDeduplication) {
+      // Filter conflicting chats first
+      filteredChats = ChatDeduplicationService.filterConflictingChats(filteredChats);
+      
+      // Then consolidate by customer
+      const consolidatedChats = ChatDeduplicationService.consolidateChats(filteredChats);
+      
+      // Calculate counts based on consolidated data
+      const counts = {
+        total: consolidatedChats.length,
+        active: consolidatedChats.filter(chat => chat.status === 'active').length,
+        missed: consolidatedChats.filter(chat => chat.status === 'missed').length,
+        closed: consolidatedChats.filter(chat => chat.status === 'closed').length,
+        waiting: consolidatedChats.filter(chat => chat.status === 'waiting').length,
+      };
+
+      return {
+        chats: consolidatedChats,
+        counts,
+        validationResult
+      };
+    } else {
+      // Calculate counts based on original filtered data
+      const counts = {
+        total: filteredChats.length,
+        active: filteredChats.filter(chat => chat.status === 'active').length,
+        missed: filteredChats.filter(chat => chat.status === 'missed').length,
+        closed: filteredChats.filter(chat => chat.status === 'closed').length,
+        waiting: filteredChats.filter(chat => chat.status === 'waiting').length,
+      };
+
+      return {
+        chats: filteredChats,
+        counts,
+        validationResult
+      };
+    }
+  }, [chats, params]);
 
   return {
-    chats: filteredChats,
+    ...processedData,
     users,
-    counts,
     isLoading: chatsLoading || usersLoading,
     error: chatsError,
   };

@@ -15,6 +15,9 @@ import { AgentConsoleProvider } from "@/contexts/AgentConsoleContext";
 import { NewAgentConsoleLayout } from "@/components/admin/agent-console/NewAgentConsoleLayout";
 import { Chat } from "@/types";
 import { useChats, useUsers } from "@/hooks/useApiQuery";
+import { useChatsSummary } from '@/hooks/useChatsSummary';
+import { ConsolidatedChat } from '@/services/chatDeduplicationService';
+import { CustomerIndicator } from '@/components/admin/CustomerIndicator';
 import { useFeatureFlag } from "@/hooks/useFeatureFlag";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "@/hooks/use-toast";
@@ -32,15 +35,18 @@ const getStatusVariant = (status: string) => {
   }
 };
 
-const createChatColumns = (users: any[]): Column<Chat>[] => [
+const createChatColumns = (users: any[]): Column<Chat | ConsolidatedChat>[] => [
   {
     key: "requesterName",
     label: "Customer",
     sortable: true,
     render: (value, chat) => (
-      <div className="flex flex-col">
-        <span className="font-medium">{value}</span>
-        <span className="text-sm text-muted-foreground">{chat.requesterEmail}</span>
+      <div className="flex items-center">
+        <div className="flex flex-col">
+          <span className="font-medium">{value}</span>
+          <span className="text-sm text-muted-foreground">{chat.requesterEmail}</span>
+        </div>
+        {'totalChats' in chat && <CustomerIndicator chat={chat} showDetails={true} />}
       </div>
     ),
   },
@@ -107,15 +113,28 @@ export default function AllChats() {
   
   // Feature flags and API calls - always call
   const enableRealTimeUpdates = useFeatureFlag('realTime');
-  const { data: chatsResponse, isLoading, error, isRefetching } = useChats({
+  const enableDeduplication = true; // Enable deduplication by default
+  
+  // Use enhanced hook for chat data with deduplication
+  const { 
+    chats: processedChats, 
+    users, 
+    counts, 
+    validationResult,
+    isLoading, 
+    error 
+  } = useChatsSummary({
+    enableDeduplication
+  });
+
+  // Also keep the original API calls for backward compatibility
+  const { data: chatsResponse, isRefetching } = useChats({
     page: 1,
     limit: 50,
   });
-  const { data: usersResponse } = useUsers();
 
-  // Data processing - always call
-  const chats = chatsResponse?.data || [];
-  const users = usersResponse?.data || [];
+  // Use processed chats or fallback to original data
+  const chats = processedChats.length > 0 ? processedChats : (chatsResponse?.data || []);
 
   // Memoized filtered chats for performance - always call
   const filteredChats = useMemo(() => {
@@ -180,15 +199,47 @@ export default function AllChats() {
     return filteredChats;
   }, [filteredChats]);
 
-  // Memoized status counts - always call
-  const statusCounts = useMemo(() => ({
-    all: chats.length,
-    active: chats.filter(chat => chat.status === "active").length,
-    missed: chats.filter(chat => chat.status === "missed").length,
-    closed: chats.filter(chat => chat.status === "closed").length
-  }), [chats]);
+  // Use enhanced status counts from deduplication service or calculate manually
+  const statusCounts = useMemo(() => {
+    if (counts) {
+      return {
+        all: counts.total,
+        active: counts.active,
+        missed: counts.missed,
+        closed: counts.closed
+      };
+    }
+    return {
+      all: chats.length,
+      active: chats.filter(chat => chat.status === "active").length,
+      missed: chats.filter(chat => chat.status === "missed").length,
+      closed: chats.filter(chat => chat.status === "closed").length
+    };
+  }, [chats, counts]);
 
   // All useEffect hooks - always call in same order
+  // Show validation warnings from deduplication service
+  useEffect(() => {
+    if (validationResult && validationResult.warnings.length > 0) {
+      validationResult.warnings.forEach(warning => {
+        toast({
+          title: "Data Quality Warning",
+          description: warning,
+          variant: "default"
+        });
+      });
+    }
+    if (validationResult && validationResult.errors.length > 0) {
+      validationResult.errors.forEach(error => {
+        toast({
+          title: "Data Integrity Error",
+          description: error,
+          variant: "destructive"
+        });
+      });
+    }
+  }, [validationResult]);
+
   // Show refetch toast for real-time updates
   useEffect(() => {
     if (isRefetching && enableRealTimeUpdates) {
@@ -343,12 +394,20 @@ export default function AllChats() {
       <AgentConsoleProvider>
         <div className="space-y-6">
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold">All Chats</h1>
-              <p className="text-muted-foreground">
-                Monitor and manage all customer chat interactions
-              </p>
-            </div>
+              <div>
+                <h1 className="text-3xl font-bold">All Chats</h1>
+                <p className="text-muted-foreground">
+                  Monitor and manage all customer chat interactions
+                  {enableDeduplication && " (Deduplication enabled)"}
+                </p>
+                {validationResult && !validationResult.isValid && (
+                  <div className="mt-2">
+                    <Badge variant="destructive" className="text-xs">
+                      Data integrity issues detected
+                    </Badge>
+                  </div>
+                )}
+              </div>
             
             {/* View Mode Toggle */}
             <div className="flex items-center gap-2">
