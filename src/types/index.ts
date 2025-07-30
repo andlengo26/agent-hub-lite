@@ -1,5 +1,15 @@
 // TypeScript interfaces for Customer Support AI Agent Admin Portal
 
+export interface Customer {
+  id: string;
+  email: string;
+  name: string;
+  phone: string;
+  createdAt: string;
+  lastEngagedAt: string;
+  engagementCount: number;
+}
+
 export interface Organization {
   id: string;
   name: string;
@@ -26,6 +36,7 @@ export interface User {
 
 export interface Chat {
   id: string;
+  customerId: string;
   requesterName: string;
   requesterEmail: string;
   requesterPhone: string;
@@ -54,6 +65,8 @@ export interface Engagement {
 export interface CustomerEngagement {
   id: string;
   customerId: string;
+  customerName?: string;
+  customerEmail?: string;
   date: string;
   channel: 'chat' | 'email' | 'phone' | 'general';
   agentId: string;

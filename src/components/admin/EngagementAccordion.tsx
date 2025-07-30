@@ -147,8 +147,9 @@ export function EngagementAccordion({
         // Create a mock Chat object for ChatPanel
         const mockChat = {
           id: engagement.id,
-          requesterName: engagement.customerId,
-          requesterEmail: '',
+          customerId: engagement.customerId,
+          requesterName: engagement.customerName || 'Unknown',
+          requesterEmail: engagement.customerEmail || '',
           requesterPhone: '',
           ipAddress: '192.168.1.1',
           browser: 'Chrome',

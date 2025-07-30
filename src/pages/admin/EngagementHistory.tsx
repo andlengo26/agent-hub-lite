@@ -1,173 +1,200 @@
-import { useState, useMemo } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { DataTable, Column } from "@/components/ui/data-table";
-import { Badge } from "@/components/ui/badge";
-import { Download, Archive, Trash2, Eye } from "lucide-react";
-import { exportEngagementsCSV } from "@/lib/csv-export";
-import { Engagement } from "@/types";
-import { useEngagements } from "@/hooks/useEngagements";
-import { useNavigate } from "react-router-dom";
-import { toast } from "@/hooks/use-toast";
-import { EngagementFilters } from '@/components/admin/EngagementFilters';
-import { DateRange } from 'react-day-picker';
+/**
+ * Engagement History - Customer-centric view showing aggregated engagements per customer
+ */
 
-const engagementColumns: Column<Engagement>[] = [
-  { key: "customerName", label: "Customer", sortable: true },
-  { key: "customerEmail", label: "Email", sortable: true },
-  { key: "engagementCount", label: "Engagements", sortable: true, render: (value) => (
-    <Badge variant="outline">{value}</Badge>
-  )},
-  { key: "lastEngagedAt", label: "Last Contact", sortable: true, render: (value) => 
-    new Date(value).toLocaleDateString()
+import { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Customer } from '@/types';
+import { useCustomers } from '@/hooks/useCustomers';
+import { DataTable, Column } from '@/components/ui/data-table';
+import { EngagementFilters } from '@/components/admin/EngagementFilters';
+import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { CalendarDays, Phone, Mail, MessageSquare } from 'lucide-react';
+import { formatDistanceToNow } from 'date-fns';
+
+// Define columns for customer engagement table
+const customerColumns: Column<Customer>[] = [
+  {
+    key: 'customer',
+    label: 'Customer',
+    render: (customer) => (
+      <div className="flex items-center space-x-3">
+        <Avatar className="h-8 w-8">
+          <AvatarFallback className="text-xs">
+            {customer.name.split(' ').map(n => n[0]).join('')}
+          </AvatarFallback>
+        </Avatar>
+        <div>
+          <div className="font-medium text-text-primary">{customer.name}</div>
+          <div className="text-sm text-text-secondary">{customer.email}</div>
+        </div>
+      </div>
+    ),
   },
-  { key: "agentsInvolved", label: "Agents", sortable: true, render: (value) => value.length },
+  {
+    key: 'engagementCount',
+    label: 'Engagements',
+    sortable: true,
+    render: (customer) => (
+      <Badge variant="secondary" className="font-medium">
+        {customer.engagementCount} total
+      </Badge>
+    ),
+  },
+  {
+    key: 'lastEngagedAt',
+    label: 'Last Contact',
+    sortable: true,
+    render: (customer) => (
+      <div className="flex items-center space-x-1 text-sm text-text-secondary">
+        <CalendarDays className="h-4 w-4" />
+        <span>{formatDistanceToNow(new Date(customer.lastEngagedAt), { addSuffix: true })}</span>
+      </div>
+    ),
+  },
+  {
+    key: 'phone',
+    label: 'Contact',
+    render: (customer) => (
+      <div className="space-y-1">
+        {customer.phone && (
+          <div className="flex items-center space-x-1 text-sm">
+            <Phone className="h-3 w-3" />
+            <span>{customer.phone}</span>
+          </div>
+        )}
+        <div className="flex items-center space-x-1 text-sm text-text-secondary">
+          <Mail className="h-3 w-3" />
+          <span>{customer.email}</span>
+        </div>
+      </div>
+    ),
+  },
 ];
 
 export default function EngagementHistory() {
   const navigate = useNavigate();
-  const { data: engagementsResponse, isLoading, error } = useEngagements({});
-
-  // Filter state
   const [selectedAgents, setSelectedAgents] = useState<string[]>([]);
-  const [dateRange, setDateRange] = useState<DateRange | undefined>();
+  const [dateRange, setDateRange] = useState<{ from?: Date; to?: Date }>({});
+  const [searchQuery, setSearchQuery] = useState('');
 
-  const engagements = engagementsResponse?.data || [];
+  // Fetch customers data
+  const { data: customersData, isLoading, error } = useCustomers({
+    search: searchQuery,
+  });
 
-  // Get unique agents for filter
-  const availableAgents = useMemo(() => {
-    if (!engagements) return [];
-    const agentSet = new Set(engagements.flatMap(e => e.agentsInvolved));
-    return Array.from(agentSet).map(name => ({ value: name, label: name }));
-  }, [engagements]);
+  // Filter customers based on date range
+  const filteredCustomers = useMemo(() => {
+    if (!customersData?.data) return [];
 
-  // Filter engagements
-  const filteredEngagements = useMemo(() => {
-    if (!engagements) return [];
-    
-    return engagements.filter(engagement => {
-      const agentMatch = selectedAgents.length === 0 || 
-        selectedAgents.some(agent => engagement.agentsInvolved.includes(agent));
-      
-      const dateMatch = !dateRange?.from || !dateRange?.to ||
-        (new Date(engagement.lastEngagedAt) >= dateRange.from && 
-         new Date(engagement.lastEngagedAt) <= dateRange.to);
+    let filtered = customersData.data;
+
+    // Apply date range filter
+    if (dateRange.from || dateRange.to) {
+      filtered = filtered.filter(customer => {
+        const lastEngaged = new Date(customer.lastEngagedAt);
         
-      return agentMatch && dateMatch;
-    });
-  }, [engagements, selectedAgents, dateRange]);
+        if (dateRange.from && lastEngaged < dateRange.from) return false;
+        if (dateRange.to && lastEngaged > dateRange.to) return false;
+        
+        return true;
+      });
+    }
 
-  const hasActiveFilters = selectedAgents.length > 0 || !!dateRange;
+    return filtered;
+  }, [customersData?.data, dateRange]);
 
-  const handleViewDetails = (engagement: Engagement) => {
-    navigate(`/chats/history/${engagement.id}`);
+  // Handle viewing customer details
+  const handleViewDetails = (customer: Customer) => {
+    navigate(`/chats/history/${customer.id}`);
   };
 
-  const handleClearFilters = () => {
-    setSelectedAgents([]);
-    setDateRange(undefined);
+  // Handle bulk actions
+  const handleBulkExport = (selectedCustomers: Customer[]) => {
+    const csvData = selectedCustomers.map(customer => ({
+      Name: customer.name,
+      Email: customer.email,
+      Phone: customer.phone,
+      'Total Engagements': customer.engagementCount,
+      'Last Contact': customer.lastEngagedAt,
+      'Customer Since': customer.createdAt,
+    }));
+    
+    // Convert to CSV and download
+    const csv = [
+      Object.keys(csvData[0]).join(','),
+      ...csvData.map(row => Object.values(row).join(','))
+    ].join('\n');
+    
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'customer-engagements.csv';
+    a.click();
   };
 
-  const handleBulkExport = (selectedEngagements: Engagement[]) => {
-    exportEngagementsCSV(selectedEngagements);
-    toast({
-      title: "Export Complete",
-      description: `${selectedEngagements.length} engagements exported to CSV`,
-    });
-  };
-
-  const handleBulkArchive = () => {
-    toast({
-      title: "Archive completed",
-      description: "Selected engagements archived.",
-    });
-  };
-
-  const handleBulkDelete = () => {
-    toast({
-      title: "Delete completed",
-      description: "Selected engagements deleted.",
-    });
-  };
-
+  // Define bulk actions
   const bulkActions = [
     {
-      id: "export",
-      label: "Export Selected",
-      icon: <Download className="w-4 h-4" />,
-      onClick: handleBulkExport,
-    },
-    {
-      id: "archive",
-      label: "Archive Selected",
-      icon: <Archive className="w-4 h-4" />,
-      onClick: handleBulkArchive,
-    },
-    {
-      id: "delete",
-      label: "Delete Selected",
-      icon: <Trash2 className="w-4 h-4" />,
-      variant: "destructive" as const,
-      onClick: handleBulkDelete,
+      label: 'Export Selected',
+      action: handleBulkExport,
     },
   ];
 
+  // Define custom actions
   const customActions = [
     {
-      id: "view",
-      label: "View Details",
-      icon: <Eye className="w-4 h-4" />,
-      onClick: handleViewDetails,
+      label: 'View Details',
+      action: handleViewDetails,
     },
   ];
 
-  if (isLoading) {
-    return <div>Loading engagement history...</div>;
-  }
-
   if (error) {
-    return <div>Error loading engagement history: {error.message}</div>;
+    return (
+      <div className="container mx-auto py-6">
+        <div className="text-center text-red-600">
+          Failed to load customer data. Please try again.
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="space-y-space-6">
-      <div>
-        <h1 className="text-3xl font-bold">Engagement History</h1>
-        <p className="text-muted-foreground">
-          Review customer interaction history and AI summaries
-        </p>
+    <div className="container mx-auto py-6 space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-text-primary">Engagement History</h1>
+          <p className="text-text-secondary">
+            View customer engagement history across all channels
+          </p>
+        </div>
       </div>
 
-      {/* Filters */}
-      <EngagementFilters
-        agents={availableAgents}
-        selectedAgents={selectedAgents}
-        onAgentsChange={setSelectedAgents}
-        dateRange={dateRange}
-        onDateRangeChange={setDateRange}
-        onClearFilters={handleClearFilters}
-        hasActiveFilters={hasActiveFilters}
+      {/* Search only for now */}
+      <div className="flex gap-4">
+        {/* Filters can be added later */}
+      </div>
+
+      {/* Customer Table */}
+      <DataTable
+        data={filteredCustomers}
+        columns={customerColumns}
+        loading={isLoading}
+        searchable
+        selectable
+        pagination
+        customActions={[
+          {
+            id: 'view',
+            label: 'View Details',
+            icon: <MessageSquare className="h-4 w-4" />,
+            onClick: handleViewDetails,
+          },
+        ]}
+        emptyMessage="No customers found matching your criteria."
       />
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Customer Engagements ({filteredEngagements.length})</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <DataTable 
-            data={filteredEngagements} 
-            columns={engagementColumns}
-            loading={isLoading}
-            searchable
-            selectable
-            pagination
-            bulkActions={bulkActions}
-            customActions={customActions}
-            emptyMessage="No engagements found"
-            emptyDescription="Customer engagements will appear here once available."
-          />
-        </CardContent>
-      </Card>
-
     </div>
   );
 }
