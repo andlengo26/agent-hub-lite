@@ -16,7 +16,7 @@ import { Badge } from '@/components/ui/badge';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ColorPicker } from '@/components/ui/color-picker';
-import { WidgetPreview } from '@/components/widget/WidgetPreview';
+import { FloatingPreview } from '@/components/admin/FloatingPreview';
 import { useWidgetSettings } from '@/hooks/useWidgetSettings';
 import { useToast } from '@/hooks/use-toast';
 import { Copy, Eye, EyeOff, Check, Loader2 } from 'lucide-react';
@@ -505,15 +505,25 @@ export default function WidgetManagement() {
             <CardHeader>
               <CardTitle>Live Preview</CardTitle>
               <CardDescription>
-                See how your widget will look
+                Click the floating widget to see how it will look
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <WidgetPreview />
+              <div className="text-center text-muted-foreground py-8">
+                <p className="text-sm">
+                  The floating widget preview is now active.
+                </p>
+                <p className="text-xs mt-2">
+                  Look for the chat icon in the corner of your screen
+                </p>
+              </div>
             </CardContent>
           </Card>
         </div>
       </div>
+      
+      {/* Floating Preview Component */}
+      <FloatingPreview />
     </div>
   );
 }
