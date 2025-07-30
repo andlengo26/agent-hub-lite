@@ -38,14 +38,18 @@ export function useChatEngagementSync({ onNewChat, onEngagementUpdate }: UseChat
       const newEngagement: CustomerEngagement = {
         id: `eng_${chat.id}`,
         customerId: chat.customerId,
+        customerName: chat.requesterName,
+        customerEmail: chat.requesterEmail,
         date: chat.createdAt,
         channel: 'chat',
         agentId: chat.assignedAgentId || '',
         agentName: 'System', // Would be looked up from user data
         aiSummary: chat.summary,
         agentNotes: '',
+        notes: [], // Initialize with empty notes array
         tags: [],
         transcript: `Chat started at ${chat.createdAt}`,
+        sourceId: chat.id,
       };
 
       // Invalidate engagement queries to refresh data

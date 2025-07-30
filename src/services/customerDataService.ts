@@ -160,11 +160,28 @@ export class CustomerDataService {
   }
 
   /**
-   * Create or update customer record (simulated)
+   * Create or update customer record with engagement count calculation
    */
   static async upsertCustomer(customerData: Partial<Customer> & { email: string }): Promise<Customer> {
+    // Check if customer already exists
+    const existingCustomer = await this.getCustomerByEmail(customerData.email);
+    
+    if (existingCustomer) {
+      // Update existing customer
+      const updatedCustomer: Customer = {
+        ...existingCustomer,
+        ...customerData,
+        lastEngagedAt: new Date().toISOString(),
+        engagementCount: existingCustomer.engagementCount + 1,
+      };
+      
+      console.log('Updated existing customer:', updatedCustomer);
+      return updatedCustomer;
+    }
+
+    // Create new customer
     const newCustomer: Customer = {
-      id: `cust_${Date.now()}`,
+      id: customerData.id || `cust_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       name: customerData.name || customerData.email,
       phone: customerData.phone || '',
       createdAt: new Date().toISOString(),
@@ -173,6 +190,7 @@ export class CustomerDataService {
       ...customerData,
     };
 
+    console.log('Created new customer:', newCustomer);
     return newCustomer;
   }
 }

@@ -62,6 +62,15 @@ export interface Engagement {
   aiSummary: string;
 }
 
+export interface Note {
+  id: string;
+  content: string;
+  authorId: string;
+  authorName: string;
+  createdAt: string;
+  updatedAt?: string;
+}
+
 export interface CustomerEngagement {
   id: string;
   customerId: string;
@@ -73,8 +82,10 @@ export interface CustomerEngagement {
   agentName: string;
   aiSummary: string;
   agentNotes: string;
+  notes: Note[];
   tags: string[];
   transcript: string;
+  sourceId?: string; // Reference to original chat, email, or call ID
 }
 
 export interface CustomerEngagementsResponse {

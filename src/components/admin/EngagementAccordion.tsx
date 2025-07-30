@@ -48,7 +48,7 @@ interface AudioPlayerProps {
   duration: string;
 }
 
-const AudioPlayer: React.FC<AudioPlayerProps> = ({ src, duration }) => {
+const AudioPlayer: React.FC<Partial<AudioPlayerProps>> = ({ src, duration = "0:00" }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   
@@ -144,24 +144,40 @@ export function EngagementAccordion({
   const renderChannelContent = (engagement: CustomerEngagement) => {
     switch (engagement.channel) {
       case 'chat':
-        // Create a mock Chat object for ChatPanel
-        const mockChat = {
-          id: engagement.id,
-          customerId: engagement.customerId,
-          requesterName: engagement.customerName || 'Unknown',
-          requesterEmail: engagement.customerEmail || '',
-          requesterPhone: '',
-          ipAddress: '192.168.1.1',
-          browser: 'Chrome',
-          pageUrl: 'https://example.com',
-          status: 'closed' as const,
-          assignedAgentId: engagement.agentId,
-          createdAt: engagement.date,
-          lastUpdatedAt: engagement.date,
-          geo: 'US',
-          summary: engagement.aiSummary,
-        };
-        return <ChatPanel chat={mockChat} />;
+        return (
+          <div className="space-y-3">
+            <div>
+              <h4 className="font-medium text-text-primary mb-2">Chat Transcript</h4>
+              <div className="bg-surface/50 border border-border rounded-md p-3 text-sm whitespace-pre-wrap">
+                {engagement.transcript || 'No transcript available'}
+              </div>
+            </div>
+            <div>
+              <h4 className="font-medium text-text-primary mb-2">AI Summary</h4>
+              <div className="bg-surface/50 border border-border rounded-md p-3 text-sm">
+                {engagement.aiSummary || 'No AI summary available'}
+              </div>
+            </div>
+            {engagement.notes && engagement.notes.length > 0 && (
+              <div>
+                <h4 className="font-medium text-text-primary mb-2">Notes</h4>
+                <div className="space-y-2">
+                  {engagement.notes.map((note) => (
+                    <div key={note.id} className="bg-surface/30 border border-border rounded-md p-2 text-sm">
+                      <div className="flex justify-between items-start mb-1">
+                        <span className="font-medium text-xs text-text-secondary">{note.authorName}</span>
+                        <span className="text-xs text-text-secondary">
+                          {format(new Date(note.createdAt), 'MMM dd, yyyy')}
+                        </span>
+                      </div>
+                      <p className="text-sm">{note.content}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        );
 
       case 'phone':
         return (
@@ -174,6 +190,24 @@ export function EngagementAccordion({
               <h4 className="font-medium text-text-primary">Call Summary</h4>
               <p className="text-sm text-text-secondary">{engagement.aiSummary}</p>
             </div>
+            {engagement.notes && engagement.notes.length > 0 && (
+              <div>
+                <h4 className="font-medium text-text-primary mb-2">Notes</h4>
+                <div className="space-y-2">
+                  {engagement.notes.map((note) => (
+                    <div key={note.id} className="bg-surface/30 border border-border rounded-md p-2 text-sm">
+                      <div className="flex justify-between items-start mb-1">
+                        <span className="font-medium text-xs text-text-secondary">{note.authorName}</span>
+                        <span className="text-xs text-text-secondary">
+                          {format(new Date(note.createdAt), 'MMM dd, yyyy')}
+                        </span>
+                      </div>
+                      <p className="text-sm">{note.content}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         );
 
@@ -204,6 +238,24 @@ export function EngagementAccordion({
                 <h4 className="font-medium text-text-primary mb-2">AI Summary</h4>
                 <p className="text-sm text-text-secondary">{engagement.aiSummary}</p>
               </div>
+              {engagement.notes && engagement.notes.length > 0 && (
+                <div>
+                  <h4 className="font-medium text-text-primary mb-2">Notes</h4>
+                  <div className="space-y-2">
+                    {engagement.notes.map((note) => (
+                      <div key={note.id} className="bg-surface/30 border border-border rounded-md p-2 text-sm">
+                        <div className="flex justify-between items-start mb-1">
+                          <span className="font-medium text-xs text-text-secondary">{note.authorName}</span>
+                          <span className="text-xs text-text-secondary">
+                            {format(new Date(note.createdAt), 'MMM dd, yyyy')}
+                          </span>
+                        </div>
+                        <p className="text-sm">{note.content}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
         );
