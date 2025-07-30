@@ -2,47 +2,47 @@
   "data": [
     {
       "id": "cust_001", 
-      "email": "john.doe@company.com",
-      "name": "John Doe",
-      "phone": "+1-555-0101",
-      "createdAt": "2025-01-15T08:00:00Z",
-      "lastEngagedAt": "2025-01-26T15:30:00Z",
+      "email": "john@customer.com",
+      "name": "John Anderson",
+      "phone": "+1-555-0123",
+      "createdAt": "2025-01-25T08:00:00Z",
+      "lastEngagedAt": "2025-01-27T09:45:00Z",
       "engagementCount": 3
     },
     {
       "id": "cust_002",
-      "email": "sarah.wilson@startup.io", 
-      "name": "Sarah Wilson",
-      "phone": "+1-555-0102",
-      "createdAt": "2025-01-18T10:15:00Z",
-      "lastEngagedAt": "2025-01-25T12:45:00Z",
-      "engagementCount": 2
+      "email": "sarah@business.com", 
+      "name": "Sarah Lee",
+      "phone": "+1-555-0124",
+      "createdAt": "2025-01-26T07:00:00Z",
+      "lastEngagedAt": "2025-01-26T15:30:00Z",
+      "engagementCount": 3
     },
     {
       "id": "cust_003",
-      "email": "mike.brown@tech.com",
-      "name": "Mike Brown", 
-      "phone": "+1-555-0103",
-      "createdAt": "2025-01-20T14:20:00Z",
-      "lastEngagedAt": "2025-01-24T09:15:00Z",
-      "engagementCount": 4
+      "email": "mike@startup.io",
+      "name": "Mike Chen", 
+      "phone": "+1-555-0125",
+      "createdAt": "2025-01-26T13:00:00Z",
+      "lastEngagedAt": "2025-01-27T12:00:00Z",
+      "engagementCount": 3
     },
     {
       "id": "cust_004",
-      "email": "lisa.jones@retail.com",
-      "name": "Lisa Jones",
-      "phone": "+1-555-0104", 
-      "createdAt": "2025-01-22T16:30:00Z",
-      "lastEngagedAt": "2025-01-23T11:20:00Z",
-      "engagementCount": 1
+      "email": "lisa@company.net",
+      "name": "Lisa Wang",
+      "phone": "+1-555-0126", 
+      "createdAt": "2025-01-26T10:00:00Z",
+      "lastEngagedAt": "2025-01-27T09:20:00Z",
+      "engagementCount": 2
     },
     {
       "id": "cust_005",
-      "email": "tom.davis@finance.net",
-      "name": "Tom Davis",
-      "phone": "+1-555-0105",
-      "createdAt": "2025-01-25T09:45:00Z", 
-      "lastEngagedAt": "2025-01-26T14:10:00Z",
+      "email": "tom@retail.com",
+      "name": "Tom Rodriguez",
+      "phone": "+1-555-0127",
+      "createdAt": "2025-01-25T09:00:00Z", 
+      "lastEngagedAt": "2025-01-27T10:30:00Z",
       "engagementCount": 2
     }
   ],

@@ -87,6 +87,7 @@ export function useRealTimeSync({
 
           queryClient.invalidateQueries({ queryKey: ['chats'] });
           queryClient.invalidateQueries({ queryKey: ['customer-engagements'] });
+          queryClient.invalidateQueries({ queryKey: ['customers'] });
           
           if (enableNotifications) {
             toast({
@@ -114,6 +115,7 @@ export function useRealTimeSync({
       queryClient.invalidateQueries({ queryKey: ['chats'] });
       queryClient.invalidateQueries({ queryKey: ['customer-engagements'] });
       queryClient.invalidateQueries({ queryKey: ['engagements'] });
+      queryClient.invalidateQueries({ queryKey: ['customers'] });
     }, 60000); // Every minute
 
     return () => clearInterval(syncInterval);

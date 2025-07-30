@@ -51,6 +51,7 @@ export function useChatEngagementSync({ onNewChat, onEngagementUpdate }: UseChat
       // Invalidate engagement queries to refresh data
       queryClient.invalidateQueries({ queryKey: ['customer-engagements'] });
       queryClient.invalidateQueries({ queryKey: ['engagements'] });
+      queryClient.invalidateQueries({ queryKey: ['customers'] });
 
       onNewChat?.(chat);
     } catch (error) {
