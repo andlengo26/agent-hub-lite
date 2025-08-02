@@ -332,9 +332,9 @@ export function QueuePreview({
       {/* Queue sections */}
       <ScrollArea className="flex-1">
         <div className="divide-y divide-border">
-          {renderSection("Human Queue", "humanQueue", categorizedChats.humanQueue, "outline")}
-          {renderSection("AI Active", "aiActive", categorizedChats.aiActive, "default")}
-          {renderSection("Active", "active", categorizedChats.active, "default")}
+          {renderSection("Waiting", "humanQueue", categorizedChats.humanQueue, "outline")}
+          {renderSection("AI Assisted (Active)", "aiActive", categorizedChats.aiActive, "default")}
+          {renderSection("Human Agent (Active)", "active", categorizedChats.active, "default")}
           {renderSection("Missed", "missed", categorizedChats.missed, "destructive")}
           {renderSection("Closed", "closed", categorizedChats.closed, "secondary")}
         </div>
