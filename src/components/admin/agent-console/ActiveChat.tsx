@@ -172,6 +172,21 @@ export function ActiveChat({
           </div>
           
           <div className="flex flex-wrap items-center gap-space-2">
+            {/* Takeover button for AI-handled chats */}
+            {(currentChat.handledBy === 'ai' || currentChat.aiStartedAt) && currentChat.status === 'active' && (
+              <Button 
+                variant="secondary" 
+                size="sm"
+                onClick={() => {
+                  // Handle takeover logic
+                  console.log('Taking over AI chat:', currentChat.id);
+                }}
+                aria-label="Take over from AI"
+              >
+                Takeover Conversation
+              </Button>
+            )}
+
             {/* Status-specific actions */}
             {!currentChat.assignedAgentId && currentChat.status !== 'closed' && currentChat.status !== 'missed' && (
               <>

@@ -5,11 +5,9 @@
 
 import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
-import { QueuePreview } from './QueuePreview';
 import { ActiveChat } from './ActiveChat';
 import { ExpandableContextPanel } from './ExpandableContextPanel';
-import { WaitingQueue } from './WaitingQueue';
-import { AIQueue } from './AIQueue';
+import { UnifiedQueue } from './UnifiedQueue';
 import { useAgentConsole } from '@/contexts/AgentConsoleContext';
 import { useWidgetSettings } from '@/hooks/useWidgetSettings';
 import { Chat, User } from '@/types';
@@ -76,26 +74,13 @@ export function NewAgentConsoleLayout({
     console.log('Closing chat:', chatId);
   };
 
-  const { settings: widgetSettings } = useWidgetSettings();
-  const showAIQueue = widgetSettings?.aiSettings?.enableAIFirst ?? false;
-
   return (
     <div className="flex h-[calc(100vh-200px)] gap-space-4">
-      {/* Left Pane - Dual Queue View */}
+      {/* Left Pane - Unified Queue */}
       <div className="w-80 flex-shrink-0">
-        <div className="space-y-4 h-full">
-          {/* AI Queue - only show if AI-first is enabled */}
-          {showAIQueue && (
-            <Card className="flex-1">
-              <AIQueue chats={queueChats} isLoading={isLoading} />
-            </Card>
-          )}
-          
-          {/* Human Queue */}
-          <Card className={showAIQueue ? "flex-1" : "h-full"}>
-            <WaitingQueue chats={queueChats} isLoading={isLoading} />
-          </Card>
-        </div>
+        <Card className="h-full">
+          <UnifiedQueue chats={queueChats} isLoading={isLoading} users={users} />
+        </Card>
       </div>
 
       {/* Center Pane - Active Chat */}
