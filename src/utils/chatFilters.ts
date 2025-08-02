@@ -79,7 +79,12 @@ export function categorizeChats(chats: Chat[], widgetSettings?: WidgetSettings) 
     } else if (chat.status === 'closed') {
       result.closed.push(chat);
     } else if (chat.status === 'active') {
-      result.active.push(chat);
+      // For active chats, separate by who's handling them
+      if (chat.handledBy === 'ai' || (!chat.assignedAgentId && !chat.humanHandoffAt)) {
+        result.aiActive.push(chat);
+      } else {
+        result.active.push(chat); // Human-handled active chats
+      }
     } else if (isHumanQueueChat(chat)) {
       // Human queue - these need immediate human attention
       result.humanQueue.push(chat);
