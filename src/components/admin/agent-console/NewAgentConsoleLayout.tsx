@@ -5,11 +5,10 @@
 
 import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
+import { QueuePreview } from './QueuePreview';
 import { ActiveChat } from './ActiveChat';
 import { ExpandableContextPanel } from './ExpandableContextPanel';
-import { UnifiedQueue } from './UnifiedQueue';
 import { useAgentConsole } from '@/contexts/AgentConsoleContext';
-import { useWidgetSettings } from '@/hooks/useWidgetSettings';
 import { Chat, User } from '@/types';
 import { useRealTimeSync } from '@/hooks/useRealTimeSync';
 import { toast } from '@/hooks/use-toast';
@@ -76,10 +75,19 @@ export function NewAgentConsoleLayout({
 
   return (
     <div className="flex h-[calc(100vh-200px)] gap-space-4">
-      {/* Left Pane - Unified Queue */}
+      {/* Left Pane - Queue Preview */}
       <div className="w-80 flex-shrink-0">
-        <Card className="h-full">
-          <UnifiedQueue chats={queueChats} isLoading={isLoading} users={users} />
+        <Card className="h-full p-0 overflow-hidden">
+          <QueuePreview
+            chats={queueChats}
+            isLoading={isLoading}
+            selectedChatId={selectedQueueChatId}
+            onChatSelect={setSelectedQueueChatId}
+            onChatAccept={handleChatAccept}
+            selectionMode={selectionMode}
+            selectedChats={selectedChats}
+            onChatSelectionChange={setSelectedChats}
+          />
         </Card>
       </div>
 
@@ -93,7 +101,6 @@ export function NewAgentConsoleLayout({
             onAcceptChat={handleChatAccept}
             onCancelChat={(chatId) => setSelectedQueueChatId(undefined)}
             onEmailTranscript={(chatId) => console.log('Email transcript:', chatId)}
-            onSendFollowUpEmail={async (emailData) => console.log('Send follow up email:', emailData)}
           />
         </Card>
       </div>
