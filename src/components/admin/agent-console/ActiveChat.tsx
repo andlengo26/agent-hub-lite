@@ -11,7 +11,8 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Section } from '@/components/common/Section';
 import { TranscriptViewer } from './TranscriptViewer';
 import { EmailComposer } from './EmailComposer';
-import { Chat, EmailMessage } from '@/types';
+import { AgentAvatar } from './AgentAvatar';
+import { Chat, EmailMessage, User } from '@/types';
 import { 
   CheckCircle, 
   XCircle, 
@@ -20,28 +21,33 @@ import {
   Paperclip, 
   Smile,
   Mail,
-  Loader2 
+  Loader2,
+  UserCheck
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface ActiveChatProps {
   currentChat?: Chat;
+  users?: User[];
   onCloseChat?: (chatId: string) => void;
   onSendMessage?: (message: string) => void;
   onAcceptChat?: (chatId: string) => void;
   onCancelChat?: (chatId: string) => void;
   onEmailTranscript?: (chatId: string) => void;
   onSendFollowUpEmail?: (emailData: Omit<EmailMessage, 'id' | 'sentAt' | 'sentById'>) => Promise<void>;
+  onTakeoverChat?: (chat: Chat) => void;
 }
 
 export function ActiveChat({
   currentChat,
+  users = [],
   onCloseChat,
   onSendMessage,
   onAcceptChat,
   onCancelChat,
   onEmailTranscript,
   onSendFollowUpEmail,
+  onTakeoverChat,
 }: ActiveChatProps) {
   const [message, setMessage] = useState('');
   const [isAcceptingChat, setIsAcceptingChat] = useState(false);
@@ -50,6 +56,7 @@ export function ActiveChat({
   const [isSendingMessage, setIsSendingMessage] = useState(false);
   const [isEmailingTranscript, setIsEmailingTranscript] = useState(false);
   const [isEmailComposerOpen, setIsEmailComposerOpen] = useState(false);
+  const [isTakingOver, setIsTakingOver] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   
   // Focus textarea when chat is accepted
@@ -136,6 +143,17 @@ export function ActiveChat({
     }
   };
 
+  const handleTakeoverChat = async () => {
+    if (onTakeoverChat && currentChat) {
+      setIsTakingOver(true);
+      try {
+        await onTakeoverChat(currentChat);
+      } finally {
+        setIsTakingOver(false);
+      }
+    }
+  };
+
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -169,6 +187,16 @@ export function ActiveChat({
             >
               {currentChat.status}
             </Badge>
+            {/* Agent Avatar showing who's handling the chat */}
+            <div className="flex items-center gap-space-1">
+              <span className="text-xs text-text-secondary">Handled by:</span>
+              <AgentAvatar 
+                assignedAgentId={currentChat.assignedAgentId}
+                handledBy={currentChat.handledBy}
+                users={users}
+                size="md"
+              />
+            </div>
           </div>
           
           <div className="flex flex-wrap items-center gap-space-2">
@@ -204,6 +232,24 @@ export function ActiveChat({
                   Cancel
                 </Button>
               </>
+            )}
+            
+            {/* Takeover button for AI-handled chats */}
+            {currentChat.handledBy === 'ai' && currentChat.status === 'active' && !currentChat.assignedAgentId && (
+              <Button 
+                variant="default" 
+                size="sm"
+                onClick={handleTakeoverChat}
+                disabled={isTakingOver}
+                aria-label="Takeover chat from AI"
+              >
+                {isTakingOver ? (
+                  <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                ) : (
+                  <UserCheck className="h-4 w-4 mr-1" />
+                )}
+                Takeover
+              </Button>
             )}
             
             {currentChat.assignedAgentId && currentChat.status === 'active' && (

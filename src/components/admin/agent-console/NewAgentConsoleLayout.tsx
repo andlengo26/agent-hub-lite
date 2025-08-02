@@ -26,7 +26,7 @@ export function NewAgentConsoleLayout({
   users,
   selectionMode = false
 }: NewAgentConsoleLayoutProps) {
-  const { currentChatId, activeChats, acceptChat, switchToChat } = useAgentConsole();
+  const { currentChatId, activeChats, acceptChat, acceptAIHandoff, switchToChat } = useAgentConsole();
   const [selectedQueueChatId, setSelectedQueueChatId] = useState<string>();
   const [contextPanelExpanded, setContextPanelExpanded] = useState(false);
   const [selectedChats, setSelectedChats] = useState<string[]>([]);
@@ -73,6 +73,11 @@ export function NewAgentConsoleLayout({
     console.log('Closing chat:', chatId);
   };
 
+  const handleTakeoverChat = (chat: Chat) => {
+    acceptAIHandoff(chat);
+    setContextPanelExpanded(true); // Auto-expand context panel
+  };
+
   return (
     <div className="flex h-[calc(100vh-200px)] gap-space-4">
       {/* Left Pane - Queue Preview */}
@@ -97,11 +102,13 @@ export function NewAgentConsoleLayout({
         <Card className="h-full p-0 overflow-hidden">
           <ActiveChat
             currentChat={displayChat}
+            users={users}
             onCloseChat={handleCloseChat}
             onSendMessage={handleSendMessage}
             onAcceptChat={handleChatAccept}
             onCancelChat={(chatId) => setSelectedQueueChatId(undefined)}
             onEmailTranscript={(chatId) => console.log('Email transcript:', chatId)}
+            onTakeoverChat={handleTakeoverChat}
           />
         </Card>
       </div>

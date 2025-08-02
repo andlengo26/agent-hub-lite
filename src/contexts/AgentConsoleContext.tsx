@@ -42,12 +42,17 @@ export function AgentConsoleProvider({ children }: { children: React.ReactNode }
   const [contextPanelTab, setContextPanelTab] = useState<'details' | 'history' | 'notes'>('details');
 
   const acceptChat = useCallback((chat: Chat) => {
+    // For now, assign to user_001 (Alice) as the current user
+    // In a real app, this would be the currently logged-in user
+    const currentUserId = 'user_001';
+    
     const newActiveChat: ActiveChat = {
       ...chat,
       status: 'active',
       isActive: true,
       unreadCount: 0,
       handledBy: 'human',
+      assignedAgentId: currentUserId,
       humanHandoffAt: new Date().toISOString(),
     };
     
@@ -67,12 +72,17 @@ export function AgentConsoleProvider({ children }: { children: React.ReactNode }
   }, []);
 
   const acceptAIHandoff = useCallback((chat: Chat) => {
+    // For now, assign to user_001 (Alice) as the current user
+    // In a real app, this would be the currently logged-in user
+    const currentUserId = 'user_001';
+    
     const handoffChat: ActiveChat = {
       ...chat,
       status: 'active',
       isActive: true,
       unreadCount: 0,
       handledBy: 'human',
+      assignedAgentId: currentUserId,
       humanHandoffAt: new Date().toISOString(),
     };
     
