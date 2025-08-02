@@ -9,7 +9,7 @@ import { ChatFilters } from "@/components/admin/ChatFilters";
 import { ChatPanel } from "@/components/admin/ChatPanel";
 import { ErrorBoundary } from "@/components/common/ErrorBoundary";
 import { AgentConsoleProvider } from "@/contexts/AgentConsoleContext";
-import { NewAgentConsoleLayout } from "@/components/admin/agent-console/NewAgentConsoleLayout";
+import { AgentConsoleLayout } from "@/components/admin/agent-console/AgentConsoleLayout";
 import { Chat } from "@/types";
 import { useChatsSummary } from "@/hooks/useChatsSummary";
 import { useWebSocketChats } from "@/hooks/useWebSocketChats";
@@ -261,7 +261,7 @@ export default function MyChats() {
 
           {viewMode === 'console' ? (
             <div className="h-[calc(100vh-12rem)]">
-              <NewAgentConsoleLayout 
+              <AgentConsoleLayout 
                 queueChats={queueChats}
                 isLoading={isLoading}
                 users={users}

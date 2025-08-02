@@ -12,7 +12,7 @@ import { ChatFilters, ChatFilters as ChatFiltersType } from "@/components/admin/
 import { AgentAssignmentModal } from "@/components/admin/AgentAssignmentModal";
 import { ErrorBoundary } from "@/components/common/ErrorBoundary";
 import { AgentConsoleProvider } from "@/contexts/AgentConsoleContext";
-import { NewAgentConsoleLayout } from "@/components/admin/agent-console/NewAgentConsoleLayout";
+import { AgentConsoleLayout } from "@/components/admin/agent-console/AgentConsoleLayout";
 import { Chat } from "@/types";
 import { useChats, useUsers } from "@/hooks/useApiQuery";
 import { useChatsSummary } from '@/hooks/useChatsSummary';
@@ -431,7 +431,7 @@ export default function AllChats() {
 
           {viewMode === 'console' ? (
             <div className="h-[calc(100vh-12rem)]">
-              <NewAgentConsoleLayout 
+              <AgentConsoleLayout 
                 queueChats={queueChats}
                 isLoading={isLoading}
                 users={users}
