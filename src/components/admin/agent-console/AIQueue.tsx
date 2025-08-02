@@ -149,7 +149,7 @@ export function AIQueue({ chats, isLoading }: AIQueueProps) {
                         className="flex-1"
                         variant="default"
                       >
-                        Take Over
+                        Takeover Conversation
                       </Button>
                       {shouldAITimeout(chat, widgetSettings) && (
                         <Button

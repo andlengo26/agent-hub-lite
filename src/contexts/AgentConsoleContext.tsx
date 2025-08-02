@@ -88,8 +88,8 @@ export function AgentConsoleProvider({ children }: { children: React.ReactNode }
     setSelectedAIChat(null);
     
     toast({
-      title: "AI Handoff Accepted",
-      description: `Taking over AI chat with ${chat.requesterName}`,
+      title: "Conversation Takeover",
+      description: `You've taken over the conversation with ${chat.requesterName}`,
     });
   }, []);
 
