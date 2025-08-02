@@ -21,6 +21,9 @@ interface AgentConsoleContextType {
   acceptAIHandoff: (chat: Chat) => void;
   escalateChat: (chatId: string, reason?: string) => void;
   
+  // Handle human request transitions
+  processHumanRequest: (chat: Chat) => void;
+  
 }
 
 const AgentConsoleContext = createContext<AgentConsoleContextType | undefined>(undefined);
@@ -151,6 +154,33 @@ export function AgentConsoleProvider({ children }: { children: React.ReactNode }
     }
   }, [currentChatId, activeChats]);
 
+  const processHumanRequest = useCallback((chat: Chat) => {
+    // Handle transition from AI to human request
+    const currentUserId = 'user_001';
+    
+    const updatedChat: ActiveChat = {
+      ...chat,
+      status: 'waiting',
+      handledBy: 'human',
+      humanHandoffAt: chat.humanHandoffAt || new Date().toISOString(),
+      isActive: false,
+      unreadCount: 0,
+    };
+    
+    setActiveChats(prev => {
+      const exists = prev.find(c => c.id === chat.id);
+      if (exists) {
+        return prev.map(c => c.id === chat.id ? updatedChat : c);
+      }
+      return [...prev, updatedChat];
+    });
+    
+    toast({
+      title: "Human Request Processed",
+      description: `${chat.requesterName} has requested to speak with a human agent`,
+    });
+  }, []);
+
   const value: AgentConsoleContextType = {
     activeChats,
     currentChatId,
@@ -159,6 +189,7 @@ export function AgentConsoleProvider({ children }: { children: React.ReactNode }
     escalateChat,
     switchToChat,
     closeChat,
+    processHumanRequest,
   };
 
   return (

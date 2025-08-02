@@ -14,7 +14,9 @@
       "createdAt": "2025-01-27T08:30:00Z",
       "lastUpdatedAt": "2025-01-27T09:45:00Z",
       "geo": "New York, NY",
-      "summary": "Customer experiencing login issues with their business account. Requires password reset assistance and account verification."
+      "summary": "Customer experiencing login issues with their business account. Requires password reset assistance and account verification.",
+      "handledBy": "human",
+      "humanHandoffAt": "2025-01-27T08:31:00Z"
     },
     {
       "id": "chat_002", 
@@ -48,7 +50,9 @@
       "createdAt": "2025-01-26T16:20:00Z",
       "lastUpdatedAt": "2025-01-26T18:45:00Z",
       "geo": "Seattle, WA",
-      "summary": "Technical support for API integration. Successfully resolved authentication token configuration and webhook setup."
+      "summary": "Technical support for API integration. Successfully resolved authentication token configuration and webhook setup.",
+      "handledBy": "human",
+      "humanHandoffAt": "2025-01-26T16:21:00Z"
     },
     {
       "id": "chat_004",
@@ -64,7 +68,9 @@
       "createdAt": "2025-01-26T14:10:00Z",
       "lastUpdatedAt": "2025-01-27T09:20:00Z",
       "geo": "Chicago, IL",
-      "summary": "Billing inquiry regarding recent subscription charges. Investigating discrepancy in monthly recurring billing amount."
+      "summary": "Billing inquiry regarding recent subscription charges. Investigating discrepancy in monthly recurring billing amount.",
+      "handledBy": "human",
+      "humanHandoffAt": "2025-01-26T14:11:00Z"
     },
     {
       "id": "chat_005",
@@ -116,7 +122,9 @@
       "createdAt": "2025-01-27T08:00:00Z",
       "lastUpdatedAt": "2025-01-27T08:30:00Z",
       "geo": "Boston, MA",
-      "summary": "Customer waited for 30 minutes but no agent was available. Inquiry about advanced reporting features."
+      "summary": "Customer waited for 30 minutes but no agent was available. Inquiry about advanced reporting features.",
+      "handledBy": "ai",
+      "aiStartedAt": "2025-01-27T08:00:00Z"
     },
     {
       "id": "chat_008",
@@ -132,7 +140,9 @@
       "createdAt": "2025-01-27T07:00:00Z",
       "lastUpdatedAt": "2025-01-27T08:45:00Z",
       "geo": "Miami, FL",
-      "summary": "Marketing automation setup completed. Customer successfully configured email campaigns and tracking."
+      "summary": "Marketing automation setup completed. Customer successfully configured email campaigns and tracking.",
+      "handledBy": "human",
+      "humanHandoffAt": "2025-01-27T07:01:00Z"
     },
     {
       "id": "chat_009",
@@ -148,7 +158,9 @@
       "createdAt": "2025-01-27T07:30:00Z",
       "lastUpdatedAt": "2025-01-27T10:15:00Z",
       "geo": "Phoenix, AZ",
-      "summary": "Consulting firm requesting white-label solution pricing and implementation timeline."
+      "summary": "Consulting firm requesting white-label solution pricing and implementation timeline.",
+      "handledBy": "human",
+      "humanHandoffAt": "2025-01-27T07:31:00Z"
     },
     {
       "id": "chat_010",
@@ -164,7 +176,9 @@
       "createdAt": "2025-01-26T10:45:00Z",
       "lastUpdatedAt": "2025-01-26T12:20:00Z",
       "geo": "Portland, OR",
-      "summary": "Logistics integration completed. Customer now able to track shipments and manage inventory through the platform."
+      "summary": "Logistics integration completed. Customer now able to track shipments and manage inventory through the platform.",
+      "handledBy": "human",
+      "humanHandoffAt": "2025-01-26T10:46:00Z"
     },
     {
       "id": "chat_011",
@@ -180,7 +194,9 @@
       "createdAt": "2025-01-26T11:15:00Z",
       "lastUpdatedAt": "2025-01-26T12:30:00Z",
       "geo": "San Diego, CA",
-      "summary": "Previous inquiry resolved. Account setup completed and additional features configured successfully."
+      "summary": "Previous inquiry resolved. Account setup completed and additional features configured successfully.",
+      "handledBy": "human",
+      "humanHandoffAt": "2025-01-26T11:16:00Z"
     },
     {
       "id": "chat_012",
@@ -196,7 +212,9 @@
       "createdAt": "2025-01-26T13:20:00Z",
       "lastUpdatedAt": "2025-01-26T15:30:00Z",
       "geo": "Nashville, TN",
-      "summary": "Technical integration question resolved. Customer successfully connected third-party analytics tool."
+      "summary": "Technical integration question resolved. Customer successfully connected third-party analytics tool.",
+      "handledBy": "human",
+      "humanHandoffAt": "2025-01-26T13:21:00Z"
     },
     {
       "id": "chat_013",
@@ -212,7 +230,9 @@
       "createdAt": "2025-01-27T12:00:00Z",
       "lastUpdatedAt": "2025-01-27T12:15:00Z",
       "geo": "Atlanta, GA",
-      "summary": "Fintech client requesting API documentation. Chat timed out due to high queue volume."
+      "summary": "Fintech client requesting API documentation. Chat timed out due to high queue volume.",
+      "handledBy": "ai",
+      "aiStartedAt": "2025-01-27T12:00:00Z"
     },
     {
       "id": "chat_014",
@@ -228,13 +248,51 @@
       "createdAt": "2025-01-27T11:30:00Z",
       "lastUpdatedAt": "2025-01-27T12:45:00Z",
       "geo": "Minneapolis, MN",
-      "summary": "Healthcare organization needs HIPAA compliance verification and data security assessment."
+      "summary": "Healthcare organization needs HIPAA compliance verification and data security assessment.",
+      "handledBy": "human",
+      "humanHandoffAt": "2025-01-27T11:31:00Z"
+    },
+    {
+      "id": "chat_015",
+      "customerId": "cust_013",
+      "requesterName": "Robert Kim",
+      "requesterEmail": "robert@ecommerce.co",
+      "requesterPhone": "+1-555-0135",
+      "ipAddress": "192.168.1.114",
+      "browser": "Chrome 120.0",
+      "pageUrl": "https://techcorp.com/support",
+      "status": "waiting",
+      "assignedAgentId": null,
+      "createdAt": "2025-01-27T13:00:00Z",
+      "lastUpdatedAt": "2025-01-27T13:00:00Z",
+      "geo": "Las Vegas, NV",
+      "summary": "Customer requested to speak with human agent about enterprise features",
+      "handledBy": "human",
+      "humanHandoffAt": "2025-01-27T13:00:00Z"
+    },
+    {
+      "id": "chat_016",
+      "customerId": "cust_014",
+      "requesterName": "Amanda Smith",
+      "requesterEmail": "amanda@startup.net",
+      "requesterPhone": "+1-555-0136",
+      "ipAddress": "192.168.1.115",
+      "browser": "Firefox 121.0",
+      "pageUrl": "https://retailco.com/pricing",
+      "status": "waiting",
+      "assignedAgentId": null,
+      "createdAt": "2025-01-27T13:15:00Z",
+      "lastUpdatedAt": "2025-01-27T13:15:00Z",
+      "geo": "Tampa, FL",
+      "summary": "User clicked 'Talk to Human' button for complex technical question",
+      "handledBy": "human",
+      "humanHandoffAt": "2025-01-27T13:15:00Z"
     }
   ],
   "pagination": {
     "page": 1,
     "limit": 15,
-    "total": 14,
-    "totalPages": 1
+    "total": 16,
+    "totalPages": 2
   }
 }

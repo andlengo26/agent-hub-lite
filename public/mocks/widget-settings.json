@@ -18,7 +18,9 @@
       "escalateOnKeywords": ["urgent", "emergency", "complaint", "refund"],
       "maxAIAttempts": 3,
       "requireHumanForComplex": true
-    }
+    },
+    "showTalkToHumanButton": true,
+    "talkToHumanButtonText": "Talk to Human Agent"
   },
   "appearance": {
     "headerText": "Customer Support",

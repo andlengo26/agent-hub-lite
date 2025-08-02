@@ -37,14 +37,17 @@ export function isActiveAIChat(chat: Chat, widgetSettings?: WidgetSettings): boo
 
 /**
  * Determines if a chat should be shown in the human agent queue
+ * Prioritizes handledBy field and human handoff status
  */
 export function isHumanQueueChat(chat: Chat): boolean {
   const extendedStatus = (chat as any).status;
   
+  // Primary criteria: Chat is waiting and specifically requesting human or has been handed off
   return (
     chat.status === 'waiting' && 
     (chat.handledBy === 'human' || chat.humanHandoffAt != null)
   ) || (
+    // Extended statuses for escalation/timeout scenarios
     extendedStatus === 'escalated' ||
     extendedStatus === 'ai-timeout'
   );
@@ -52,22 +55,23 @@ export function isHumanQueueChat(chat: Chat): boolean {
 
 /**
  * Categorizes chats for the agent console
+ * Updated to prioritize handledBy field for better queue management
  */
 export function categorizeChats(chats: Chat[], widgetSettings?: WidgetSettings) {
   const result = {
     aiActive: [] as Chat[],
-    humanQueue: [] as Chat[],
+    humanQueue: [] as Chat[], // Renamed from 'waiting' to be more explicit
     active: [] as Chat[],
     missed: [] as Chat[],
     closed: [] as Chat[]
   };
 
   chats.forEach(chat => {
-    // Categorize based on status and AI routing
-    if (isActiveAIChat(chat, widgetSettings)) {
-      result.aiActive.push(chat);
-    } else if (isHumanQueueChat(chat)) {
+    // Prioritize human queue first - these need immediate human attention
+    if (isHumanQueueChat(chat)) {
       result.humanQueue.push(chat);
+    } else if (isActiveAIChat(chat, widgetSettings)) {
+      result.aiActive.push(chat);
     } else if (chat.status === 'active') {
       result.active.push(chat);
     } else if (chat.status === 'missed') {
@@ -95,7 +99,7 @@ export function filterChats(chats: Chat[], filters: ChatFilters): Chat[] {
 
     // HandledBy filter
     if (filters.handledBy && filters.handledBy.length > 0) {
-      const handledBy = chat.handledBy || 'human'; // Default to human for legacy chats
+      const handledBy = chat.handledBy; // Now required field
       if (!filters.handledBy.includes(handledBy)) {
         return false;
       }
@@ -126,24 +130,19 @@ export function filterChats(chats: Chat[], filters: ChatFilters): Chat[] {
  * This ensures backward compatibility with existing data
  */
 export function migrateLegacyChat(chat: Chat): Chat {
-  // If already has AI routing fields, return as-is
-  if (chat.handledBy !== undefined) {
-    return chat;
-  }
-
-  // Migrate based on current status
+  // For backward compatibility, if chat doesn't have handledBy, migrate it
   const migratedChat: Chat = {
     ...chat,
-    handledBy: chat.assignedAgentId ? 'human' : 'ai'
+    handledBy: chat.handledBy || (chat.assignedAgentId ? 'human' : 'ai')
   };
 
-  // Set AI start time for waiting chats
-  if (chat.status === 'waiting' && !chat.assignedAgentId) {
+  // Set AI start time for waiting chats without assignment
+  if (chat.status === 'waiting' && !chat.assignedAgentId && !migratedChat.aiStartedAt) {
     migratedChat.aiStartedAt = chat.createdAt;
   }
 
-  // Set human handoff time for assigned chats
-  if (chat.assignedAgentId) {
+  // Set human handoff time for assigned chats or explicit human requests
+  if ((chat.assignedAgentId || migratedChat.handledBy === 'human') && !migratedChat.humanHandoffAt) {
     migratedChat.humanHandoffAt = chat.lastUpdatedAt;
   }
 

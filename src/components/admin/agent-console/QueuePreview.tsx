@@ -20,6 +20,8 @@ import { formatDistanceToNow, format, isToday, isSameDay, isYesterday, isThisWee
 import { Clock, MessageCircle, ChevronDown, CalendarIcon, Download } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { exportChatsCSV } from '@/lib/csv-export';
+import { categorizeChats } from '@/utils/chatFilters';
+import { useWidgetSettings } from '@/hooks/useWidgetSettings';
 
 interface QueuePreviewProps {
   chats: Chat[];
@@ -49,11 +51,13 @@ export function QueuePreview({
   const [dateFilter, setDateFilter] = useState<DateFilterOption>('all');
   const [customDate, setCustomDate] = useState<Date>(new Date());
   const [openSections, setOpenSections] = useState({
-    waiting: true,
+    humanQueue: true,
+    aiActive: false,
     active: false,
     missed: false,
     closed: false,
   });
+  const { settings } = useWidgetSettings();
 
   // Bulk selection handlers
   const handleChatSelection = (chatId: string, checked: boolean) => {
@@ -114,19 +118,15 @@ export function QueuePreview({
     }
   });
 
-  // Categorize chats by status
-  const categorizedChats = {
-    waiting: filteredChats.filter(chat => (chat.status === 'waiting' || (!chat.assignedAgentId && chat.status !== 'closed' && chat.status !== 'missed'))),
-    active: filteredChats.filter(chat => chat.assignedAgentId && chat.status === 'active'),
-    missed: filteredChats.filter(chat => chat.status === 'missed'),
-    closed: filteredChats.filter(chat => chat.status === 'closed'),
-  };
+  // Categorize chats using the new AI-first routing logic
+  const categorizedChats = categorizeChats(filteredChats, settings);
 
   const toggleSection = (section: keyof typeof openSections) => {
     setOpenSections(prev => {
       // Close all sections first, then open the clicked one
       const newState = {
-        waiting: false,
+        humanQueue: false,
+        aiActive: false,
         active: false,
         missed: false,
         closed: false,
@@ -332,7 +332,8 @@ export function QueuePreview({
       {/* Queue sections */}
       <ScrollArea className="flex-1">
         <div className="divide-y divide-border">
-          {renderSection("Waiting", "waiting", categorizedChats.waiting, "outline")}
+          {renderSection("Human Queue", "humanQueue", categorizedChats.humanQueue, "outline")}
+          {renderSection("AI Active", "aiActive", categorizedChats.aiActive, "default")}
           {renderSection("Active", "active", categorizedChats.active, "default")}
           {renderSection("Missed", "missed", categorizedChats.missed, "destructive")}
           {renderSection("Closed", "closed", categorizedChats.closed, "secondary")}

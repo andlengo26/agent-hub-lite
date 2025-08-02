@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { MessageCircle, X, Maximize2, Minimize2, Send, Paperclip, Mic, MicOff, Phone } from "lucide-react";
+import { MessageCircle, X, Maximize2, Minimize2, Send, Paperclip, Mic, MicOff, Phone, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -22,6 +22,7 @@ export function InteractiveWidget() {
   const [isRecording, setIsRecording] = useState(false);
   const [userData, setUserData] = useState({ name: "", email: "", phone: "" });
   const [showUserForm, setShowUserForm] = useState(false);
+  const [isWaitingForHuman, setIsWaitingForHuman] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { settings } = useWidgetSettings();
   const { toast } = useToast();
@@ -176,6 +177,47 @@ export function InteractiveWidget() {
   const handleUserFormSubmit = () => {
     setShowUserForm(false);
     handleSendMessage();
+  };
+
+  const handleTalkToHuman = () => {
+    setIsWaitingForHuman(true);
+    
+    // Create a new chat request with human handoff
+    const chatRequest = {
+      id: `chat_${Date.now()}`,
+      customerId: `customer_${Date.now()}`,
+      requesterName: userData.name || 'Anonymous User',
+      requesterEmail: userData.email || '',
+      requesterPhone: userData.phone || '',
+      ipAddress: '127.0.0.1', // In real app, would be actual IP
+      browser: navigator.userAgent,
+      pageUrl: window.location.href,
+      status: 'waiting' as const,
+      handledBy: 'human' as const, // Set to human since user requested it
+      humanHandoffAt: new Date().toISOString(),
+      createdAt: new Date().toISOString(),
+      lastUpdatedAt: new Date().toISOString(),
+      geo: 'Unknown',
+      summary: 'User requested to talk to human agent',
+      anonymousUserId: userInfo.anonymousChat && !userData.email ? `anon_${Date.now()}` : undefined
+    };
+    
+    // In a real app, this would make an API call to create the chat
+    console.log('Chat request created:', chatRequest);
+    
+    toast({
+      title: "Human Agent Requested",
+      description: "You'll be connected to a human agent shortly. Please wait...",
+    });
+    
+    // Add system message
+    const systemMessage: Message = {
+      id: Date.now().toString(),
+      type: 'ai',
+      content: "I'm connecting you with a human agent. Please wait while we find someone to help you.",
+      timestamp: new Date()
+    };
+    setMessages(prev => [...prev, systemMessage]);
   };
 
   if (!isExpanded) {
@@ -361,6 +403,31 @@ export function InteractiveWidget() {
             )}
             <div ref={messagesEndRef} />
           </div>
+
+          {/* Human Request Button */}
+          {!isWaitingForHuman && messages.length > 1 && (
+            <div className="border-t px-4 py-2 bg-muted/30">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleTalkToHuman}
+                className="w-full text-xs"
+              >
+                <User className="h-3 w-3 mr-1" />
+                Talk to Human Agent
+              </Button>
+            </div>
+          )}
+
+          {/* Waiting for Human Indicator */}
+          {isWaitingForHuman && (
+            <div className="border-t px-4 py-3 bg-yellow-50 border-yellow-200">
+              <div className="flex items-center justify-center text-sm text-yellow-800">
+                <div className="animate-spin mr-2 h-4 w-4 border-2 border-yellow-600 border-t-transparent rounded-full"></div>
+                Waiting for human agent...
+              </div>
+            </div>
+          )}
 
           {/* Input Area */}
           <div className="border-t p-4 shrink-0">

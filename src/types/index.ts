@@ -51,7 +51,7 @@ export interface Chat {
   summary: string;
   
   // AI-first routing extensions (backward compatible)
-  handledBy?: 'ai' | 'human';
+  handledBy: 'ai' | 'human'; // Made required - defaults to 'ai' for new chats
   aiStartedAt?: string;
   humanHandoffAt?: string;
   anonymousUserId?: string; // For anonymous chat support
