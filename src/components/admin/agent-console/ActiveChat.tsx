@@ -12,6 +12,7 @@ import { Section } from '@/components/common/Section';
 import { TranscriptViewer } from './TranscriptViewer';
 import { EmailComposer } from './EmailComposer';
 import { AgentAvatar } from './AgentAvatar';
+import { ChatReassignmentModal } from '../ChatReassignmentModal';
 import { Chat, EmailMessage, User } from '@/types';
 import { 
   CheckCircle, 
@@ -22,7 +23,8 @@ import {
   Smile,
   Mail,
   Loader2,
-  UserCheck
+  UserCheck,
+  Users
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -36,6 +38,7 @@ interface ActiveChatProps {
   onEmailTranscript?: (chatId: string) => void;
   onSendFollowUpEmail?: (emailData: Omit<EmailMessage, 'id' | 'sentAt' | 'sentById'>) => Promise<void>;
   onTakeoverChat?: (chat: Chat) => void;
+  onReassignChat?: (chatId: string, newAgentId: string) => Promise<void>;
 }
 
 export function ActiveChat({
@@ -48,6 +51,7 @@ export function ActiveChat({
   onEmailTranscript,
   onSendFollowUpEmail,
   onTakeoverChat,
+  onReassignChat,
 }: ActiveChatProps) {
   const [message, setMessage] = useState('');
   const [isAcceptingChat, setIsAcceptingChat] = useState(false);
@@ -57,6 +61,7 @@ export function ActiveChat({
   const [isEmailingTranscript, setIsEmailingTranscript] = useState(false);
   const [isEmailComposerOpen, setIsEmailComposerOpen] = useState(false);
   const [isTakingOver, setIsTakingOver] = useState(false);
+  const [isReassignModalOpen, setIsReassignModalOpen] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   
   // Focus textarea when chat is accepted
@@ -151,6 +156,13 @@ export function ActiveChat({
       } finally {
         setIsTakingOver(false);
       }
+    }
+  };
+
+  const handleReassignChat = async (chatId: string, newAgentId: string) => {
+    if (onReassignChat) {
+      await onReassignChat(chatId, newAgentId);
+      setIsReassignModalOpen(false);
     }
   };
 
@@ -253,20 +265,35 @@ export function ActiveChat({
             )}
             
             {currentChat.assignedAgentId && currentChat.status === 'active' && (
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={handleCloseChat}
-                disabled={isClosingChat}
-                aria-label="Close active chat"
-              >
-                {isClosingChat ? (
-                  <Loader2 className="h-4 w-4 mr-1 animate-spin" />
-                ) : (
-                  <X className="h-4 w-4 mr-1" />
+              <>
+                {/* Reassign Chat button - only for human-handled active chats */}
+                {currentChat.handledBy === 'human' && onReassignChat && (
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => setIsReassignModalOpen(true)}
+                    aria-label="Reassign chat to another agent"
+                  >
+                    <Users className="h-4 w-4 mr-1" />
+                    Reassign
+                  </Button>
                 )}
-                Close Chat
-              </Button>
+                
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={handleCloseChat}
+                  disabled={isClosingChat}
+                  aria-label="Close active chat"
+                >
+                  {isClosingChat ? (
+                    <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                  ) : (
+                    <X className="h-4 w-4 mr-1" />
+                  )}
+                  Close Chat
+                </Button>
+              </>
             )}
             
             {currentChat.status === 'closed' && (
@@ -408,6 +435,15 @@ export function ActiveChat({
           onSendEmail={onSendFollowUpEmail}
         />
       )}
+
+      {/* Chat Reassignment Modal */}
+      <ChatReassignmentModal
+        isOpen={isReassignModalOpen}
+        onClose={() => setIsReassignModalOpen(false)}
+        chat={currentChat}
+        users={users}
+        onReassign={handleReassignChat}
+      />
     </div>
   );
 }

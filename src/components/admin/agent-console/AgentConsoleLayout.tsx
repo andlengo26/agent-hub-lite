@@ -78,6 +78,32 @@ export function AgentConsoleLayout({
     setContextPanelExpanded(true); // Auto-expand context panel
   };
 
+  const handleReassignChat = async (chatId: string, newAgentId: string): Promise<void> => {
+    try {
+      // Simulate API call for reassignment
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Update local state
+      const newAgent = users.find(u => u.id === newAgentId);
+      
+      toast({
+        title: "Chat Reassigned Successfully",
+        description: `Chat has been reassigned to ${newAgent?.firstName} ${newAgent?.lastName}`,
+      });
+      
+      // Optional: Remove from current agent's active chats or update state
+      console.log('Chat reassigned:', chatId, 'to agent:', newAgentId);
+      
+    } catch (error) {
+      toast({
+        title: "Reassignment Failed", 
+        description: "Failed to reassign chat. Please try again.",
+        variant: "destructive"
+      });
+      throw error;
+    }
+  };
+
   return (
     <div className="flex h-[calc(100vh-200px)] gap-space-4">
       {/* Left Pane - Queue Preview */}
@@ -109,6 +135,7 @@ export function AgentConsoleLayout({
             onCancelChat={(chatId) => setSelectedQueueChatId(undefined)}
             onEmailTranscript={(chatId) => console.log('Email transcript:', chatId)}
             onTakeoverChat={handleTakeoverChat}
+            onReassignChat={handleReassignChat}
           />
         </Card>
       </div>
