@@ -32,7 +32,9 @@
       "geo": "Los Angeles, CA",
       "summary": "Inquiry about enterprise pricing plans and custom integration options. Evaluating solution for 500+ employee organization.",
       "handledBy": "ai",
-      "aiStartedAt": "2025-01-27T09:15:00Z"
+      "aiStartedAt": "2025-01-27T09:15:00Z",
+      "aiResponseCount": 3,
+      "lastAIResponseAt": "2025-01-27T09:25:00Z"
     },
     {
       "id": "chat_003",
@@ -75,14 +77,17 @@
       "ipAddress": "192.168.1.104",
       "browser": "Chrome 120.0",
       "pageUrl": "https://startupxyz.io/home",
-      "status": "waiting",
+      "status": "ai-timeout",
       "assignedAgentId": null,
       "createdAt": "2025-01-27T10:30:00Z",
       "lastUpdatedAt": "2025-01-27T10:30:00Z",
       "geo": "Austin, TX",
       "summary": "General product demonstration request. Interested in features for inventory management and analytics dashboard capabilities.",
       "handledBy": "ai",
-      "aiStartedAt": "2025-01-27T08:30:00Z"
+      "aiStartedAt": "2025-01-27T08:30:00Z",
+      "aiResponseCount": 5,
+      "lastAIResponseAt": "2025-01-27T09:30:00Z",
+      "escalationReason": "AI unable to provide detailed demo - requires human agent"
     },
     {
       "id": "chat_006",
@@ -227,12 +232,55 @@
       "lastUpdatedAt": "2025-01-27T12:45:00Z",
       "geo": "Minneapolis, MN",
       "summary": "Healthcare organization needs HIPAA compliance verification and data security assessment."
+    },
+    {
+      "id": "chat_015",
+      "customerId": "cust_anonymous_003",
+      "requesterName": "Anonymous User",
+      "requesterEmail": null,
+      "anonymousUserId": "anon_9a8b7c6d-5e4f-3210-9876-fedcba987654",
+      "requesterPhone": null,
+      "ipAddress": "203.45.67.89",
+      "browser": "Chrome 120.0",
+      "pageUrl": "https://techcorp.com/demo",
+      "status": "waiting",
+      "assignedAgentId": null,
+      "createdAt": "2025-01-27T12:15:00Z",
+      "lastUpdatedAt": "2025-01-27T12:18:00Z",
+      "geo": "San Francisco, CA",
+      "summary": "Anonymous visitor requesting product demo. AI gathering requirements before scheduling.",
+      "handledBy": "ai",
+      "aiStartedAt": "2025-01-27T12:15:00Z",
+      "aiResponseCount": 2,
+      "lastAIResponseAt": "2025-01-27T12:18:00Z"
+    },
+    {
+      "id": "chat_016",
+      "customerId": "cust_018",
+      "requesterName": "Patricia Williams",
+      "requesterEmail": "pwilliams@nonprofit.org",
+      "requesterPhone": "+1-555-0188",
+      "ipAddress": "198.51.100.50",
+      "browser": "Safari 17.0",
+      "pageUrl": "https://techcorp.com/nonprofit",
+      "status": "escalated",
+      "assignedAgentId": "user_001",
+      "createdAt": "2025-01-27T10:45:00Z",
+      "lastUpdatedAt": "2025-01-27T12:00:00Z",
+      "geo": "Denver, CO",
+      "summary": "Non-profit organization inquiring about discounted pricing and grant application assistance.",
+      "handledBy": "ai",
+      "aiStartedAt": "2025-01-27T10:45:00Z",
+      "aiResponseCount": 1,
+      "lastAIResponseAt": "2025-01-27T10:46:00Z",
+      "escalationReason": "Nonprofit pricing requires human approval and special documentation",
+      "escalationTrigger": "nonprofit_keywords"
     }
   ],
   "pagination": {
     "page": 1,
     "limit": 15,
-    "total": 14,
+    "total": 16,
     "totalPages": 1
   }
 }

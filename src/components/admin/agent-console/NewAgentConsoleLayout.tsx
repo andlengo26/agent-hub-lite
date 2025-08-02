@@ -8,7 +8,10 @@ import { Card } from '@/components/ui/card';
 import { QueuePreview } from './QueuePreview';
 import { ActiveChat } from './ActiveChat';
 import { ExpandableContextPanel } from './ExpandableContextPanel';
+import { WaitingQueue } from './WaitingQueue';
+import { AIQueue } from './AIQueue';
 import { useAgentConsole } from '@/contexts/AgentConsoleContext';
+import { useWidgetSettings } from '@/hooks/useWidgetSettings';
 import { Chat, User } from '@/types';
 import { useRealTimeSync } from '@/hooks/useRealTimeSync';
 import { toast } from '@/hooks/use-toast';
@@ -73,22 +76,26 @@ export function NewAgentConsoleLayout({
     console.log('Closing chat:', chatId);
   };
 
+  const { settings: widgetSettings } = useWidgetSettings();
+  const showAIQueue = widgetSettings?.aiSettings?.enableAIFirst ?? false;
+
   return (
     <div className="flex h-[calc(100vh-200px)] gap-space-4">
-      {/* Left Pane - Queue Preview */}
+      {/* Left Pane - Dual Queue View */}
       <div className="w-80 flex-shrink-0">
-        <Card className="h-full p-0 overflow-hidden">
-          <QueuePreview
-            chats={queueChats}
-            isLoading={isLoading}
-            selectedChatId={selectedQueueChatId}
-            onChatSelect={setSelectedQueueChatId}
-            onChatAccept={handleChatAccept}
-            selectionMode={selectionMode}
-            selectedChats={selectedChats}
-            onChatSelectionChange={setSelectedChats}
-          />
-        </Card>
+        <div className="space-y-4 h-full">
+          {/* AI Queue - only show if AI-first is enabled */}
+          {showAIQueue && (
+            <Card className="flex-1">
+              <AIQueue chats={queueChats} isLoading={isLoading} />
+            </Card>
+          )}
+          
+          {/* Human Queue */}
+          <Card className={showAIQueue ? "flex-1" : "h-full"}>
+            <WaitingQueue chats={queueChats} isLoading={isLoading} />
+          </Card>
+        </div>
       </div>
 
       {/* Center Pane - Active Chat */}
@@ -101,6 +108,7 @@ export function NewAgentConsoleLayout({
             onAcceptChat={handleChatAccept}
             onCancelChat={(chatId) => setSelectedQueueChatId(undefined)}
             onEmailTranscript={(chatId) => console.log('Email transcript:', chatId)}
+            onSendFollowUpEmail={async (emailData) => console.log('Send follow up email:', emailData)}
           />
         </Card>
       </div>

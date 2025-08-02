@@ -11,13 +11,16 @@ import { ChatTabs } from './ChatTabs';
 import { Send, Paperclip, Smile, MoreHorizontal, Phone, Video, Archive } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { formatDistanceToNow } from 'date-fns';
+import { useWidgetSettings } from '@/hooks/useWidgetSettings';
+import { isActiveAIChat, shouldAITimeout } from '@/utils/chatFilters';
 
 interface ActiveChatPaneProps {
   currentChat?: Chat;
 }
 
 export function ActiveChatPane({ currentChat }: ActiveChatPaneProps) {
-  const { activeChats, closeChat } = useAgentConsole();
+  const { activeChats, closeChat, acceptAIHandoff } = useAgentConsole();
+  const { settings: widgetSettings } = useWidgetSettings();
 
   if (!currentChat) {
     return (
@@ -79,6 +82,17 @@ export function ActiveChatPane({ currentChat }: ActiveChatPaneProps) {
             </Badge>
           </div>
           <div className="flex items-center gap-2">
+            {/* Show Takeover button for AI-handled chats */}
+            {isActiveAIChat(currentChat, widgetSettings) && (
+              <Button 
+                variant="default" 
+                size="sm"
+                onClick={() => acceptAIHandoff(currentChat)}
+                className="bg-primary text-white hover:bg-primary/90"
+              >
+                Takeover Conversation
+              </Button>
+            )}
             <Button variant="ghost" size="sm">
               <Phone className="h-4 w-4" />
             </Button>

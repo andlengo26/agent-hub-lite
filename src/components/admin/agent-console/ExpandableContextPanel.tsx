@@ -269,11 +269,22 @@ export function ExpandableContextPanel({
                       <span className="text-sm font-medium text-text-secondary">Customer</span>
                     </div>
                     <div className="space-y-2 ml-5">
-                      <p className="font-medium text-text-primary">{currentChat.requesterName}</p>
-                      <div className="flex items-center gap-space-2">
-                        <Mail className="h-3 w-3 text-text-secondary" />
-                        <p className="text-sm text-text-secondary">{currentChat.requesterEmail}</p>
-                      </div>
+                      <p className="font-medium text-text-primary">
+                        {currentChat.requesterName || 'Anonymous User'}
+                      </p>
+                      {currentChat.requesterEmail ? (
+                        <div className="flex items-center gap-space-2">
+                          <Mail className="h-3 w-3 text-text-secondary" />
+                          <p className="text-sm text-text-secondary">{currentChat.requesterEmail}</p>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-space-2">
+                          <UserIcon className="h-3 w-3 text-text-secondary" />
+                          <p className="text-sm text-text-secondary">
+                            ID: {(currentChat as any).anonymousUserId || 'Unknown'}
+                          </p>
+                        </div>
+                      )}
                       {currentChat.requesterPhone && (
                         <div className="flex items-center gap-space-2">
                           <Phone className="h-3 w-3 text-text-secondary" />
@@ -282,6 +293,45 @@ export function ExpandableContextPanel({
                       )}
                     </div>
                   </div>
+
+                  {/* AI Handoff Information */}
+                  {(currentChat as any).handledBy === 'ai' && (
+                    <>
+                      <Separator />
+                      <div>
+                        <div className="flex items-center gap-2 mb-2">
+                          <MessageCircle className="h-3 w-3 text-blue-500" />
+                          <span className="text-sm font-medium text-text-secondary">AI Assistant</span>
+                        </div>
+                        <div className="space-y-2 ml-5">
+                          <div className="flex items-center gap-space-2">
+                            <Clock className="h-3 w-3 text-text-secondary" />
+                            <span className="text-sm text-text-primary">
+                              Started: {(currentChat as any).aiStartedAt 
+                                ? formatDistanceToNow(new Date((currentChat as any).aiStartedAt), { addSuffix: true })
+                                : 'Unknown'
+                              }
+                            </span>
+                          </div>
+                          {(currentChat as any).aiResponseCount && (
+                            <div className="flex items-center gap-space-2">
+                              <MessageCircle className="h-3 w-3 text-text-secondary" />
+                              <span className="text-sm text-text-primary">
+                                {(currentChat as any).aiResponseCount} AI responses
+                              </span>
+                            </div>
+                          )}
+                          {(currentChat as any).escalationReason && (
+                            <div className="p-2 bg-yellow-50 border border-yellow-200 rounded">
+                              <p className="text-xs text-yellow-800">
+                                <strong>Escalation:</strong> {(currentChat as any).escalationReason}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </>
+                  )}
 
                   <Separator />
 
