@@ -11,6 +11,11 @@ import { WidgetSettings } from '@/hooks/useWidgetSettings';
  * based on widget settings and chat properties
  */
 export function isActiveAIChat(chat: Chat, widgetSettings?: WidgetSettings): boolean {
+  // Exclude final statuses - these should not be considered active
+  if (chat.status === 'missed' || chat.status === 'closed') {
+    return false;
+  }
+
   // Backward compatibility: if no AI settings, use legacy logic
   if (!widgetSettings?.aiSettings?.enableAIFirst) {
     return chat.status === 'waiting' && !chat.assignedAgentId;
@@ -27,6 +32,7 @@ export function isActiveAIChat(chat: Chat, widgetSettings?: WidgetSettings): boo
   // 1. Has valid requester identification based on settings
   // 2. Is handled by AI or waiting for assignment
   // 3. Not assigned to human agent yet
+  // 4. Not in a final status (already checked above)
   return !!(
     hasValidRequester &&
     (chat.handledBy === 'ai' || 
@@ -67,17 +73,18 @@ export function categorizeChats(chats: Chat[], widgetSettings?: WidgetSettings) 
   };
 
   chats.forEach(chat => {
-    // Prioritize human queue first - these need immediate human attention
-    if (isHumanQueueChat(chat)) {
-      result.humanQueue.push(chat);
-    } else if (isActiveAIChat(chat, widgetSettings)) {
-      result.aiActive.push(chat);
-    } else if (chat.status === 'active') {
-      result.active.push(chat);
-    } else if (chat.status === 'missed') {
+    // Prioritize final statuses first - these should not be misclassified
+    if (chat.status === 'missed') {
       result.missed.push(chat);
     } else if (chat.status === 'closed') {
       result.closed.push(chat);
+    } else if (chat.status === 'active') {
+      result.active.push(chat);
+    } else if (isHumanQueueChat(chat)) {
+      // Human queue - these need immediate human attention
+      result.humanQueue.push(chat);
+    } else if (isActiveAIChat(chat, widgetSettings)) {
+      result.aiActive.push(chat);
     }
   });
 
