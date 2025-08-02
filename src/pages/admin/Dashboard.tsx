@@ -6,6 +6,7 @@ import { useFeatureFlags } from "@/hooks/useFeatureFlag";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { CheckCircle, XCircle, AlertTriangle, RefreshCw, Wrench } from "lucide-react";
 import { useState } from "react";
+import { AIMetricsCard } from "@/components/admin/AIMetricsCard";
 
 export default function Dashboard() {
   const { data: healthData, isLoading: healthLoading, error: healthError, refetch } = useHealthCheck();
@@ -183,18 +184,23 @@ export default function Dashboard() {
         </Card>
       </div>
 
-      <Card className="col-span-4">
-        <CardHeader>
-          <CardTitle>Dashboard Coming Soon</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-muted-foreground">
-            Advanced analytics, real-time monitoring, and comprehensive reporting features 
-            will be available here. This dashboard will provide insights into chat volume, 
-            agent performance, customer satisfaction, and AI efficiency metrics.
-          </p>
-        </CardContent>
-      </Card>
+      {/* AI Metrics Card */}
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <AIMetricsCard />
+        
+        <Card className="lg:col-span-2">
+          <CardHeader>
+            <CardTitle>Dashboard Coming Soon</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-muted-foreground">
+              Advanced analytics, real-time monitoring, and comprehensive reporting features 
+              will be available here. This dashboard will provide insights into chat volume, 
+              agent performance, customer satisfaction, and AI efficiency metrics.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }
