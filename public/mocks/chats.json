@@ -30,7 +30,9 @@
       "createdAt": "2025-01-27T09:15:00Z",
       "lastUpdatedAt": "2025-01-27T09:15:00Z",
       "geo": "Los Angeles, CA",
-      "summary": "Inquiry about enterprise pricing plans and custom integration options. Evaluating solution for 500+ employee organization."
+      "summary": "Inquiry about enterprise pricing plans and custom integration options. Evaluating solution for 500+ employee organization.",
+      "handledBy": "ai",
+      "aiStartedAt": "2025-01-27T09:15:00Z"
     },
     {
       "id": "chat_003",
@@ -78,7 +80,9 @@
       "createdAt": "2025-01-27T10:30:00Z",
       "lastUpdatedAt": "2025-01-27T10:30:00Z",
       "geo": "Austin, TX",
-      "summary": "General product demonstration request. Interested in features for inventory management and analytics dashboard capabilities."
+      "summary": "General product demonstration request. Interested in features for inventory management and analytics dashboard capabilities.",
+      "handledBy": "ai",
+      "aiStartedAt": "2025-01-27T08:30:00Z"
     },
     {
       "id": "chat_006",

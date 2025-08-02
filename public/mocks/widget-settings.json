@@ -11,7 +11,14 @@
     "tone": "friendly",
     "customPrompt": "",
     "sessionTimeout": 30,
-    "idleTimeout": 10
+    "idleTimeout": 10,
+    "enableAIFirst": true,
+    "requestWaitingTime": 5,
+    "aiHandoffRules": {
+      "escalateOnKeywords": ["urgent", "emergency", "complaint", "refund"],
+      "maxAIAttempts": 3,
+      "requireHumanForComplex": true
+    }
   },
   "appearance": {
     "headerText": "Customer Support",

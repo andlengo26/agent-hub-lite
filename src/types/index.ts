@@ -49,6 +49,30 @@ export interface Chat {
   lastUpdatedAt: string;
   geo: string;
   summary: string;
+  
+  // AI-first routing extensions (backward compatible)
+  handledBy?: 'ai' | 'human';
+  aiStartedAt?: string;
+  humanHandoffAt?: string;
+  anonymousUserId?: string; // For anonymous chat support
+  aiTimeoutAt?: string; // When AI should timeout and escalate
+}
+
+// Legacy status type for backward compatibility
+export type LegacyChatStatus = 'waiting' | 'active' | 'missed' | 'closed';
+
+// Extended status type for AI-first routing
+export type ChatStatus = LegacyChatStatus | 'ai-handling' | 'ai-timeout' | 'escalated';
+
+// Chat filtering utilities
+export interface ChatFilters {
+  status?: ChatStatus[];
+  handledBy?: ('ai' | 'human')[];
+  agentId?: string;
+  timeRange?: {
+    start: string;
+    end: string;
+  };
 }
 
 export interface Engagement {

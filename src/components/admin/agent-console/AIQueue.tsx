@@ -7,61 +7,49 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Chat } from '@/types';
 import { useAgentConsole } from '@/contexts/AgentConsoleContext';
 import { useWidgetSettings } from '@/hooks/useWidgetSettings';
-import { isHumanQueueChat, migrateLegacyChat } from '@/utils/chatFilters';
-import { MapPin, Clock, Phone, Brain, User } from 'lucide-react';
+import { isActiveAIChat, migrateLegacyChat, shouldAITimeout } from '@/utils/chatFilters';
+import { MapPin, Clock, Phone, Brain, AlertTriangle } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
-interface WaitingQueueProps {
+interface AIQueueProps {
   chats: Chat[];
   isLoading?: boolean;
 }
 
-export function WaitingQueue({ chats, isLoading }: WaitingQueueProps) {
-  const { acceptChat, selectedQueueChat, setSelectedQueueChat } = useAgentConsole();
+export function AIQueue({ chats, isLoading }: AIQueueProps) {
+  const { acceptAIHandoff, selectedAIChat, setSelectedAIChat, escalateChat } = useAgentConsole();
   const { settings: widgetSettings } = useWidgetSettings();
   
-  // Filter and migrate chats for compatibility
+  // Filter and migrate chats for AI handling
   const processedChats = React.useMemo(() => {
     return chats
       .map(migrateLegacyChat)
-      .filter(chat => isHumanQueueChat(chat));
-  }, [chats]);
+      .filter(chat => isActiveAIChat(chat, widgetSettings));
+  }, [chats, widgetSettings]);
 
-  const getStatusBadgeVariant = (status: string) => {
-    switch (status) {
-      case 'active': return 'default';
-      case 'missed': return 'destructive';
-      case 'closed': return 'secondary';
-      case 'escalated': return 'destructive';
-      case 'ai-timeout': return 'destructive';
-      default: return 'outline';
+  const getAIStatusBadgeVariant = (chat: Chat) => {
+    if (shouldAITimeout(chat, widgetSettings)) {
+      return 'destructive';
     }
+    return 'default';
   };
 
-  const getChatTypeIcon = (chat: Chat) => {
-    if (chat.handledBy === 'ai' || chat.aiStartedAt) {
-      return (
-        <div title="AI handled">
-          <Brain className="h-3 w-3 text-blue-500" />
-        </div>
-      );
+  const getAIStatusText = (chat: Chat) => {
+    if (shouldAITimeout(chat, widgetSettings)) {
+      return 'Timeout';
     }
-    return (
-      <div title="Human handled">
-        <User className="h-3 w-3 text-green-500" />
-      </div>
-    );
+    return 'AI Active';
   };
 
   if (isLoading) {
     return (
       <>
         <CardHeader>
-          <CardTitle className="text-lg">Waiting Queue</CardTitle>
+          <CardTitle className="text-lg">AI Queue</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
-            {[...Array(5)].map((_, i) => (
+            {[...Array(3)].map((_, i) => (
               <div key={i} className="space-y-2">
                 <Skeleton className="h-4 w-3/4" />
                 <Skeleton className="h-3 w-1/2" />
@@ -78,28 +66,31 @@ export function WaitingQueue({ chats, isLoading }: WaitingQueueProps) {
     <>
       <CardHeader>
         <CardTitle className="text-lg flex items-center justify-between">
-          Human Queue
+          <div className="flex items-center gap-2">
+            <Brain className="h-5 w-5 text-blue-500" />
+            AI Queue
+          </div>
           <Badge variant="secondary" className="ml-2">
             {processedChats.length}
           </Badge>
         </CardTitle>
       </CardHeader>
       <CardContent className="p-0">
-        <ScrollArea className="h-[calc(100vh-12rem)]">
+        <ScrollArea className="h-[calc(50vh-8rem)]">
           <div className="space-y-2 p-4">
             {processedChats.length === 0 ? (
               <div className="text-center py-6 text-muted-foreground">
-                <Clock className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                <p>No chats waiting for human agents</p>
+                <Brain className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                <p>No AI chats active</p>
               </div>
             ) : (
               processedChats.map((chat) => (
                 <div
                   key={chat.id}
                   className={`p-3 border rounded-md cursor-pointer transition-colors hover:bg-muted ${
-                    selectedQueueChat?.id === chat.id ? 'bg-muted border-primary' : ''
+                    selectedAIChat?.id === chat.id ? 'bg-muted border-primary' : ''
                   }`}
-                  onClick={() => setSelectedQueueChat(chat)}
+                  onClick={() => setSelectedAIChat(chat)}
                 >
                   <div className="space-y-2">
                     <div className="flex items-start justify-between">
@@ -108,19 +99,19 @@ export function WaitingQueue({ chats, isLoading }: WaitingQueueProps) {
                           <h4 className="font-medium text-sm truncate">
                             {chat.requesterName || 'Anonymous User'}
                           </h4>
-                          {getChatTypeIcon(chat)}
+                          {shouldAITimeout(chat, widgetSettings) && (
+                            <AlertTriangle className="h-3 w-3 text-orange-500" />
+                          )}
                         </div>
                         <p className="text-xs text-muted-foreground truncate">
                           {chat.requesterEmail || chat.anonymousUserId || 'No email provided'}
                         </p>
                       </div>
                       <Badge 
-                        variant={getStatusBadgeVariant((chat as any).status)}
+                        variant={getAIStatusBadgeVariant(chat)}
                         className="text-xs ml-2 flex-shrink-0"
                       >
-                        {(chat as any).status === 'ai-timeout' ? 'AI Timeout' : 
-                         (chat as any).status === 'escalated' ? 'Escalated' : 
-                         chat.status}
+                        {getAIStatusText(chat)}
                       </Badge>
                     </div>
                     
@@ -138,24 +129,42 @@ export function WaitingQueue({ chats, isLoading }: WaitingQueueProps) {
                     </div>
                     
                     <div className="text-xs text-muted-foreground">
-                      {formatDistanceToNow(new Date(chat.createdAt), { addSuffix: true })}
+                      AI started: {chat.aiStartedAt 
+                        ? formatDistanceToNow(new Date(chat.aiStartedAt), { addSuffix: true })
+                        : formatDistanceToNow(new Date(chat.createdAt), { addSuffix: true })
+                      }
                     </div>
                     
                     <p className="text-xs text-muted-foreground line-clamp-2">
                       {chat.summary}
                     </p>
 
-                    <Button
-                      size="sm"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        acceptChat(chat);
-                      }}
-                      className="w-full"
-                      variant="default"
-                    >
-                      Accept Chat
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          acceptAIHandoff(chat);
+                        }}
+                        className="flex-1"
+                        variant="default"
+                      >
+                        Take Over
+                      </Button>
+                      {shouldAITimeout(chat, widgetSettings) && (
+                        <Button
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            escalateChat(chat.id, 'AI timeout - escalated to human agent');
+                          }}
+                          variant="destructive"
+                          className="flex-1"
+                        >
+                          Escalate
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 </div>
               ))

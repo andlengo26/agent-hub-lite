@@ -17,9 +17,15 @@ interface AgentConsoleContextType {
   switchToChat: (chatId: string) => void;
   closeChat: (chatId: string) => void;
   
+  // AI-to-human handoff actions
+  acceptAIHandoff: (chat: Chat) => void;
+  escalateChat: (chatId: string, reason?: string) => void;
+  
   // UI state
   selectedQueueChat: Chat | null;
   setSelectedQueueChat: (chat: Chat | null) => void;
+  selectedAIChat: Chat | null;
+  setSelectedAIChat: (chat: Chat | null) => void;
   
   // Context panel state
   contextPanelTab: 'details' | 'history' | 'notes';
@@ -32,13 +38,17 @@ export function AgentConsoleProvider({ children }: { children: React.ReactNode }
   const [activeChats, setActiveChats] = useState<ActiveChat[]>([]);
   const [currentChatId, setCurrentChatId] = useState<string | null>(null);
   const [selectedQueueChat, setSelectedQueueChat] = useState<Chat | null>(null);
+  const [selectedAIChat, setSelectedAIChat] = useState<Chat | null>(null);
   const [contextPanelTab, setContextPanelTab] = useState<'details' | 'history' | 'notes'>('details');
 
   const acceptChat = useCallback((chat: Chat) => {
     const newActiveChat: ActiveChat = {
       ...chat,
+      status: 'active',
       isActive: true,
       unreadCount: 0,
+      handledBy: 'human',
+      humanHandoffAt: new Date().toISOString(),
     };
     
     setActiveChats(prev => {
@@ -49,6 +59,58 @@ export function AgentConsoleProvider({ children }: { children: React.ReactNode }
     
     setCurrentChatId(chat.id);
     setSelectedQueueChat(null);
+    
+    toast({
+      title: "Chat Accepted",
+      description: `You are now chatting with ${chat.requesterName}`,
+    });
+  }, []);
+
+  const acceptAIHandoff = useCallback((chat: Chat) => {
+    const handoffChat: ActiveChat = {
+      ...chat,
+      status: 'active',
+      isActive: true,
+      unreadCount: 0,
+      handledBy: 'human',
+      humanHandoffAt: new Date().toISOString(),
+    };
+    
+    setActiveChats(prev => {
+      const exists = prev.find(c => c.id === chat.id);
+      if (exists) {
+        return prev.map(c => c.id === chat.id ? handoffChat : c);
+      }
+      return [...prev, handoffChat];
+    });
+    
+    setCurrentChatId(chat.id);
+    setSelectedAIChat(null);
+    
+    toast({
+      title: "AI Handoff Accepted",
+      description: `Taking over AI chat with ${chat.requesterName}`,
+    });
+  }, []);
+
+  const escalateChat = useCallback((chatId: string, reason?: string) => {
+    setActiveChats(prev => 
+      prev.map(chat => 
+        chat.id === chatId 
+          ? { 
+              ...chat, 
+              status: 'escalated' as any,
+              handledBy: 'human',
+              humanHandoffAt: new Date().toISOString()
+            }
+          : chat
+      )
+    );
+    
+    toast({
+      title: "Chat Escalated",
+      description: reason || "Chat has been escalated to human agent",
+    });
   }, []);
 
   const switchToChat = useCallback((chatId: string) => {
@@ -97,10 +159,14 @@ export function AgentConsoleProvider({ children }: { children: React.ReactNode }
     activeChats,
     currentChatId,
     acceptChat,
+    acceptAIHandoff,
+    escalateChat,
     switchToChat,
     closeChat,
     selectedQueueChat,
     setSelectedQueueChat,
+    selectedAIChat,
+    setSelectedAIChat,
     contextPanelTab,
     setContextPanelTab,
   };

@@ -19,6 +19,14 @@ export interface WidgetSettings {
     customPrompt: string;
     sessionTimeout: number;
     idleTimeout: number;
+    // AI-first routing settings
+    enableAIFirst?: boolean;
+    requestWaitingTime?: number; // Minutes before AI hands off to human
+    aiHandoffRules?: {
+      escalateOnKeywords?: string[];
+      maxAIAttempts?: number;
+      requireHumanForComplex?: boolean;
+    };
   };
   appearance: {
     headerText: string;
