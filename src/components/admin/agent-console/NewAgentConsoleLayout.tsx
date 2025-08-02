@@ -80,6 +80,7 @@ export function NewAgentConsoleLayout({
         <Card className="h-full p-0 overflow-hidden">
           <QueuePreview
             chats={queueChats}
+            users={users}
             isLoading={isLoading}
             selectedChatId={selectedQueueChatId}
             onChatSelect={setSelectedQueueChatId}

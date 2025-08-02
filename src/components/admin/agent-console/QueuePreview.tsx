@@ -14,7 +14,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Checkbox } from '@/components/ui/checkbox';
 import { BulkActionsToolbar } from '@/components/common/BulkActionsToolbar';
-import { Chat } from '@/types';
+import { AgentAvatar } from './AgentAvatar';
+import { Chat, User } from '@/types';
 import { formatDistanceToNow, format, isToday, isSameDay, isYesterday, isThisWeek, isThisMonth } from 'date-fns';
 import { Clock, MessageCircle, ChevronDown, CalendarIcon, Download } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -22,6 +23,7 @@ import { exportChatsCSV } from '@/lib/csv-export';
 
 interface QueuePreviewProps {
   chats: Chat[];
+  users: User[];
   isLoading?: boolean;
   selectedChatId?: string;
   onChatSelect: (chatId: string) => void;
@@ -35,6 +37,7 @@ type DateFilterOption = 'today' | 'yesterday' | 'this-week' | 'this-month' | 'al
 
 export function QueuePreview({
   chats,
+  users,
   isLoading,
   selectedChatId,
   onChatSelect,
@@ -137,7 +140,7 @@ export function QueuePreview({
     <div
       key={chat.id}
       className={cn(
-        "p-3 transition-colors hover:bg-surface/50 border-b border-border last:border-b-0 cursor-pointer",
+        "p-3 transition-colors hover:bg-surface/50 border-b border-border last:border-b-0 cursor-pointer relative",
         selectedChatId === chat.id && "bg-surface border-l-4 border-l-primary"
       )}
       onClick={() => onChatSelect(chat.id)}
@@ -165,6 +168,16 @@ export function QueuePreview({
               </Badge>
             )}
           </div>
+        </div>
+        
+        {/* Agent Avatar in upper right corner */}
+        <div className="absolute top-2 right-2">
+          <AgentAvatar 
+            assignedAgentId={chat.assignedAgentId}
+            handledBy={chat.handledBy}
+            users={users}
+            size="sm"
+          />
         </div>
       </div>
     </div>
