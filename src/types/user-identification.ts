@@ -8,9 +8,20 @@ export interface UserIdentificationData {
   name?: string;
   email?: string;
   mobile?: string;
-  studentId?: string; // For future Moodle integration
+  studentId?: string; // Moodle username/student ID
   department?: string;
   customFields?: Record<string, string>;
+}
+
+export interface MoodleConfig {
+  moodleUrl: string;
+  apiToken: string;
+  enabled: boolean;
+  autoLogin: boolean;
+  requiredFields: {
+    studentId: boolean;
+    department: boolean;
+  };
 }
 
 export interface IdentificationSession {

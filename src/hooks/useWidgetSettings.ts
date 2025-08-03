@@ -69,8 +69,19 @@ export interface WidgetSettings {
     };
     // User identification settings
     enableUserIdentification?: boolean;
-    identificationMethod?: 'manual_form_submission' | 'moodle_authentication';
+    identificationMethod?: 'manual_form_submission' | 'moodle_authentication' | 'both';
     sessionDurationHours?: number;
+    customWelcomeMessage?: string;
+    moodleConfig?: {
+      moodleUrl: string;
+      apiToken: string;
+      enabled: boolean;
+      autoLogin: boolean;
+      requiredFields: {
+        studentId: boolean;
+        department: boolean;
+      };
+    };
   };
   embed: {
     script: string;

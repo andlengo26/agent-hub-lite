@@ -58,8 +58,18 @@
       "mobile": true
     },
     "enableUserIdentification": true,
-    "identificationMethod": "manual_form_submission",
-    "sessionDurationHours": 24
+    "identificationMethod": "both",
+    "customWelcomeMessage": "Welcome! Please identify yourself to continue.",
+    "moodleConfig": {
+      "moodleUrl": "",
+      "apiToken": "",
+      "enabled": false,
+      "autoLogin": true,
+      "requiredFields": {
+        "studentId": true,
+        "department": false
+      }
+    }
   },
   "embed": {
     "script": "<script>\n(function() {\n  var widget = document.createElement('div');\n  widget.id = 'support-widget';\n  widget.innerHTML = '<iframe src=\"https://your-domain.com/widget\" frameborder=\"0\"></iframe>';\n  document.body.appendChild(widget);\n})();\n</script>"

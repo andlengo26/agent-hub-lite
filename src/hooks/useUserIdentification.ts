@@ -6,13 +6,15 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { WidgetSettings } from '@/hooks/useWidgetSettings';
+import { MoodleAuthService } from '@/services/moodleAuthService';
 import {
   IdentificationType,
   UserIdentificationData,
   IdentificationSession,
   IdentificationFormData,
   IdentificationValidationResult,
-  UserIdentificationState
+  UserIdentificationState,
+  MoodleConfig
 } from '@/types/user-identification';
 
 interface UseUserIdentificationProps {
@@ -216,6 +218,77 @@ export function useUserIdentification({ settings, onIdentificationComplete }: Us
     }
   }, [state.formData, validateForm, onIdentificationComplete, toast]);
 
+  // Submit Moodle authentication
+  const submitMoodleAuthentication = useCallback(async (moodleConfig: MoodleConfig): Promise<boolean> => {
+    try {
+      // Check if we're in a Moodle context
+      if (!MoodleAuthService.isMoodleContext()) {
+        toast({
+          title: "Error",
+          description: "Moodle context not detected. Please ensure you are accessing this from within Moodle.",
+          variant: "destructive"
+        });
+        return false;
+      }
+
+      // Attempt authentication
+      const authResult = await MoodleAuthService.authenticateWithMoodle(moodleConfig);
+
+      if (!authResult.success) {
+        toast({
+          title: "Authentication Failed",
+          description: authResult.error || "Failed to authenticate with Moodle",
+          variant: "destructive"
+        });
+        return false;
+      }
+
+      if (!authResult.user || !authResult.token) {
+        toast({
+          title: "Error",
+          description: "Invalid authentication response from Moodle",
+          variant: "destructive"
+        });
+        return false;
+      }
+
+      // Create identification session
+      const session = MoodleAuthService.createIdentificationSession(
+        authResult.user,
+        authResult.token
+      );
+
+      // Save to storage
+      localStorage.setItem(IDENTIFICATION_STORAGE_KEY, JSON.stringify(session));
+
+      // Update state
+      setState(prev => ({
+        ...prev,
+        isCompleted: true,
+        session,
+        validationResult: null
+      }));
+
+      // Notify completion
+      onIdentificationComplete?.(session);
+
+      toast({
+        title: "Authentication Successful",
+        description: `Welcome ${authResult.user.firstname} ${authResult.user.lastname}!`,
+      });
+
+      return true;
+    } catch (error) {
+      console.error('Moodle authentication error:', error);
+      toast({
+        title: "Error",
+        description: "Failed to authenticate with Moodle. Please try again.",
+        variant: "destructive"
+      });
+      return false;
+    }
+  }, [onIdentificationComplete, toast]);
+
   // Clear identification session
   const clearIdentification = useCallback(() => {
     localStorage.removeItem(IDENTIFICATION_STORAGE_KEY);
@@ -264,6 +337,7 @@ export function useUserIdentification({ settings, onIdentificationComplete }: Us
     hideIdentificationForm,
     updateFormData,
     submitManualIdentification,
+    submitMoodleAuthentication,
     clearIdentification,
     
     // Utils

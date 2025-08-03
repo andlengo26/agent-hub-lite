@@ -542,8 +542,17 @@ export function InteractiveWidget() {
                 }
                 return success;
               }}
+              onMoodleAuth={(session) => {
+                // Handle successful Moodle authentication
+                userIdentification.hideIdentificationForm();
+                handleIdentificationComplete();
+              }}
               onCancel={userIdentification.hideIdentificationForm}
-              appearance={appearance}
+              isSubmitting={false}
+              appearance={{
+                primaryColor: appearance.primaryColor,
+                textColor: '#FFFFFF'
+              }}
             />
           )}
 
