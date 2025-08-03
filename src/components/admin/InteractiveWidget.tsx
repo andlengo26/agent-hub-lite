@@ -7,6 +7,8 @@ import { useWidgetSettings } from "@/hooks/useWidgetSettings";
 import { useToast } from "@/hooks/use-toast";
 import { useConversationLifecycle } from "@/hooks/useConversationLifecycle";
 import { ConversationEndModal } from "./ConversationEndModal";
+import { CountdownBadge } from "@/components/widget/CountdownBadge";
+import { MaxDurationBanner } from "@/components/widget/MaxDurationBanner";
 import { conversationService } from "@/services/conversationService";
 
 interface Message {
@@ -37,7 +39,9 @@ export function InteractiveWidget() {
     requestHumanAgent,
     confirmEndConversation,
     cancelEndConversation,
-    handleConfirmedEnd
+    handleConfirmedEnd,
+    sessionTimer,
+    startAISession
   } = useConversationLifecycle(settings);
 
   useEffect(() => {
@@ -148,6 +152,11 @@ export function InteractiveWidget() {
       setMessages(prev => [...prev, aiResponse]);
       incrementMessageCount();
       setIsTyping(false);
+      
+      // Start the AI session timer on first AI response
+      if (messages.length === 1) { // welcome message + user message = 2, so first AI response
+        startAISession();
+      }
     }, 1000 + Math.random() * 2000);
   };
 
@@ -330,6 +339,15 @@ export function InteractiveWidget() {
             )}
           </div>
           <div className="flex items-center gap-1">
+            {/* Session Timer Countdown Badge */}
+            {sessionTimer.timerState.isActive && sessionTimer.getRemainingMinutes() <= 5 && (
+              <CountdownBadge
+                remainingMinutes={sessionTimer.getRemainingMinutes()}
+                showCountdown={true}
+                variant={sessionTimer.getRemainingMinutes() <= 2 ? 'danger' : 'warning'}
+              />
+            )}
+            
             {voice.enableVoiceCalls && (
               <Button
                 variant="ghost"
@@ -364,6 +382,17 @@ export function InteractiveWidget() {
         </CardHeader>
 
         <CardContent className="flex-1 flex flex-col p-0 overflow-hidden">
+          {/* Session Warning Banner */}
+          {sessionTimer.timerState.showMaxDurationBanner && (
+            <MaxDurationBanner
+              remainingMinutes={sessionTimer.getRemainingMinutes()}
+              onTalkToHuman={handleTalkToHuman}
+              onExtendSession={sessionTimer.extendSession}
+              onDismiss={() => sessionTimer.extendSession()}
+              showTalkToHumanButton={aiSettings.showTalkToHumanButton}
+            />
+          )}
+
           {/* User Form Modal */}
           {showUserForm && (
             <div className="absolute inset-0 bg-background z-10 p-4 flex flex-col">
