@@ -23,7 +23,7 @@
     "talkToHumanButtonText": "Talk to Human Agent",
     "showEndConversationButton": true,
     "endConversationButtonText": "End Conversation",
-    "enableIdleTimeout": false,
+    "enableIdleTimeout": true,
     "enableMaxSessionLength": false,
     "maxSessionMinutes": 30,
     "enableMessageQuota": false,

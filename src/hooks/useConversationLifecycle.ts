@@ -14,6 +14,7 @@ export interface ConversationState {
   lastActivityTime: Date;
   idleTimeoutId?: NodeJS.Timeout;
   sessionTimeoutId?: NodeJS.Timeout;
+  showIdleWarning: boolean;
 }
 
 export interface ConversationTransitionLocal {
@@ -29,7 +30,8 @@ export function useConversationLifecycle(settings: WidgetSettings | null) {
     status: 'active',
     messageCount: 0,
     sessionStartTime: new Date(),
-    lastActivityTime: new Date()
+    lastActivityTime: new Date(),
+    showIdleWarning: false
   });
   
   const [transitions, setTransitions] = useState<ConversationTransitionLocal[]>([]);
@@ -40,6 +42,7 @@ export function useConversationLifecycle(settings: WidgetSettings | null) {
   const timeoutRefs = useRef<{
     idle?: NodeJS.Timeout;
     session?: NodeJS.Timeout;
+    idleWarning?: NodeJS.Timeout;
   }>({});
 
   // Clear timeouts on unmount
@@ -47,6 +50,7 @@ export function useConversationLifecycle(settings: WidgetSettings | null) {
     return () => {
       if (timeoutRefs.current.idle) clearTimeout(timeoutRefs.current.idle);
       if (timeoutRefs.current.session) clearTimeout(timeoutRefs.current.session);
+      if (timeoutRefs.current.idleWarning) clearTimeout(timeoutRefs.current.idleWarning);
     };
   }, []);
 
@@ -87,17 +91,31 @@ export function useConversationLifecycle(settings: WidgetSettings | null) {
   const setIdleTimeout = useCallback(() => {
     if (!settings?.aiSettings.enableIdleTimeout) return;
     
-    // Clear existing timeout
+    // Clear existing timeouts
     if (timeoutRefs.current.idle) {
       clearTimeout(timeoutRefs.current.idle);
     }
+    if (timeoutRefs.current.idleWarning) {
+      clearTimeout(timeoutRefs.current.idleWarning);
+    }
 
     const idleTimeMinutes = settings.aiSettings.idleTimeout || 10;
+    const warningMinutes = Math.max(1, Math.floor(idleTimeMinutes / 4)); // Show warning at 25% of idle time
+    
+    // Set warning timeout
+    timeoutRefs.current.idleWarning = setTimeout(() => {
+      setConversationState(prev => ({
+        ...prev,
+        showIdleWarning: true
+      }));
+    }, (idleTimeMinutes - warningMinutes) * 60 * 1000);
+    
+    // Set actual timeout
     timeoutRefs.current.idle = setTimeout(() => {
       setConversationState(prev => {
         if (prev.status === 'active') {
           logTransition('active', 'idle_timeout', `No activity for ${idleTimeMinutes} minutes`, 'system');
-          return { ...prev, status: 'idle_timeout' };
+          return { ...prev, status: 'idle_timeout', showIdleWarning: false };
         }
         return prev;
       });
@@ -137,7 +155,8 @@ export function useConversationLifecycle(settings: WidgetSettings | null) {
       status: 'active',
       messageCount: 0,
       sessionStartTime: now,
-      lastActivityTime: now
+      lastActivityTime: now,
+      showIdleWarning: false
     });
     
     setIdleTimeout();
@@ -149,12 +168,21 @@ export function useConversationLifecycle(settings: WidgetSettings | null) {
   const recordActivity = useCallback(() => {
     setConversationState(prev => ({
       ...prev,
-      lastActivityTime: new Date()
+      lastActivityTime: new Date(),
+      showIdleWarning: false
     }));
     
     // Reset idle timeout
     setIdleTimeout();
   }, [setIdleTimeout]);
+
+  const keepActiveFromWarning = useCallback(() => {
+    recordActivity();
+    toast({
+      title: "Session Extended",
+      description: "Your conversation will remain active.",
+    });
+  }, [recordActivity, toast]);
 
   const incrementMessageCount = useCallback(() => {
     setConversationState(prev => {
@@ -235,6 +263,7 @@ export function useConversationLifecycle(settings: WidgetSettings | null) {
     confirmEndConversation,
     cancelEndConversation,
     handleConfirmedEnd,
-    initializeConversation
+    initializeConversation,
+    keepActiveFromWarning
   };
 }
