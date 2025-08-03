@@ -6,6 +6,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { conversationService } from '@/services/conversationService';
 import { ConversationSummary } from '@/services/summaryService';
+import { waitTimeService } from '@/services/waitTimeService';
 
 export interface ConversationAnalytics {
   conversationId: string;
@@ -24,6 +25,10 @@ export interface ConversationAnalytics {
     messageCount: number;
     handoffRequested: boolean;
     outcome: string;
+    waitTimeMetrics?: {
+      totalMissedByTimeout: number;
+      averageWaitTime: number;
+    };
   };
 }
 
@@ -75,6 +80,9 @@ export function useConversationAnalytics({
     enabled: true,
   });
 
+  // Get wait time analytics
+  const waitTimeStats = waitTimeService.getWaitTimeStats();
+
   // Calculate analytics for conversation or customer
   const analytics = useMemo((): ConversationAnalytics | null => {
     const relevantTransitions = conversationId ? transitions : allTransitions;
@@ -104,6 +112,10 @@ export function useConversationAnalytics({
         messageCount: relevantSummary?.messageCount || 0,
         handoffRequested,
         outcome,
+        waitTimeMetrics: {
+          totalMissedByTimeout: waitTimeStats.totalMissedByTimeout,
+          averageWaitTime: waitTimeStats.averageWaitTime
+        }
       },
     };
   }, [conversationId, transitions, allTransitions, summaries]);

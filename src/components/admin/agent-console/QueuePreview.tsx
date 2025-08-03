@@ -16,12 +16,15 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { BulkActionsToolbar } from '@/components/common/BulkActionsToolbar';
 import { AgentAvatar } from './AgentAvatar';
 import { SectionVisibilityDropdown } from './SectionVisibilityDropdown';
+import { WaitTimeIndicator } from '@/components/admin/WaitTimeIndicator';
 import { Chat, User } from '@/types';
 import { formatDistanceToNow, format, isToday, isSameDay, isYesterday, isThisWeek, isThisMonth } from 'date-fns';
 import { Clock, MessageCircle, ChevronDown, CalendarIcon, Download } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { categorizeChats } from '@/lib/chat-utils';
 import { useWidgetSettings } from '@/hooks/useWidgetSettings';
+import { useWaitTimeTracking } from '@/hooks/useWaitTimeTracking';
+import { waitTimeService } from '@/services/waitTimeService';
 import { 
   SectionVisibility, 
   getSectionVisibility, 
@@ -129,6 +132,21 @@ export function QueuePreview({
     }
   });
 
+  // Wait time tracking
+  const {
+    waitTimeState,
+    getElapsedWaitTime,
+    getRemainingWaitTime,
+    waitTimeMinutes
+  } = useWaitTimeTracking({
+    chats: filteredChats,
+    onChatMissed: async (chatId: string, waitTime: number) => {
+      console.log(`Chat ${chatId} transitioned to missed after ${waitTime} minutes`);
+      await waitTimeService.transitionToMissed(chatId, waitTime);
+      // In a real implementation, this would trigger a chat status update
+    }
+  });
+
   // Categorize chats using the new AI-first routing logic
   const categorizedChats = categorizeChats(filteredChats);
 
@@ -177,6 +195,14 @@ export function QueuePreview({
               <Badge variant="outline" className="text-xs">
                 New
               </Badge>
+            )}
+            {/* Wait time indicator for waiting chats */}
+            {chat.status === 'waiting' && waitTimeState.activeChatId === chat.id && (
+              <WaitTimeIndicator
+                elapsedMinutes={getElapsedWaitTime()}
+                remainingMinutes={getRemainingWaitTime()}
+                waitTimeMinutes={waitTimeMinutes}
+              />
             )}
           </div>
         </div>
@@ -351,7 +377,7 @@ export function QueuePreview({
       {/* Queue sections */}
       <ScrollArea className="flex-1">
         <div className="divide-y divide-border">
-          {sectionVisibility.waiting && renderSection("Waiting", "waiting", categorizedChats.humanQueue, "outline")}
+          {sectionVisibility.waiting && renderSection("Waiting", "waiting", categorizedChats.waiting, "outline")}
           {sectionVisibility.aiActive && renderSection("AI Assisted (Active)", "aiActive", categorizedChats.aiActive, "default")}
           {sectionVisibility.active && renderSection("Human Agent (Active)", "active", categorizedChats.active, "default")}
           {sectionVisibility.missed && renderSection("Missed", "missed", categorizedChats.missed, "destructive")}

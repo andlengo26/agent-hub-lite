@@ -7,6 +7,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { CheckCircle, XCircle, AlertTriangle, RefreshCw, Wrench } from "lucide-react";
 import { useState } from "react";
 import { AIMetricsCard } from "@/components/admin/AIMetricsCard";
+import { WaitTimeAnalytics } from "@/components/admin/WaitTimeAnalytics";
 
 export default function Dashboard() {
   const { data: healthData, isLoading: healthLoading, error: healthError, refetch } = useHealthCheck();
@@ -184,11 +185,12 @@ export default function Dashboard() {
         </Card>
       </div>
 
-      {/* AI Metrics Card */}
+      {/* AI Metrics and Analytics */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         <AIMetricsCard />
+        <WaitTimeAnalytics />
         
-        <Card className="lg:col-span-2">
+        <Card className="lg:col-span-1">
           <CardHeader>
             <CardTitle>Dashboard Coming Soon</CardTitle>
           </CardHeader>
