@@ -27,6 +27,16 @@ export interface WidgetSettings {
       maxAIAttempts?: number;
       requireHumanForComplex?: boolean;
     };
+    // Conversation lifecycle settings
+    showTalkToHumanButton?: boolean;
+    talkToHumanButtonText?: string;
+    showEndConversationButton?: boolean;
+    endConversationButtonText?: string;
+    enableIdleTimeout?: boolean;
+    enableMaxSessionLength?: boolean;
+    maxSessionMinutes?: number;
+    enableMessageQuota?: boolean;
+    maxMessagesPerSession?: number;
   };
   appearance: {
     headerText: string;

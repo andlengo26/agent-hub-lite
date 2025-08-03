@@ -1,10 +1,13 @@
 import { useState, useRef, useEffect } from "react";
-import { MessageCircle, X, Maximize2, Minimize2, Send, Paperclip, Mic, MicOff, Phone, User } from "lucide-react";
+import { MessageCircle, X, Maximize2, Minimize2, Send, Paperclip, Mic, MicOff, Phone, User, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useWidgetSettings } from "@/hooks/useWidgetSettings";
 import { useToast } from "@/hooks/use-toast";
+import { useConversationLifecycle } from "@/hooks/useConversationLifecycle";
+import { ConversationEndModal } from "./ConversationEndModal";
+import { conversationService } from "@/services/conversationService";
 
 interface Message {
   id: string;
@@ -22,10 +25,20 @@ export function InteractiveWidget() {
   const [isRecording, setIsRecording] = useState(false);
   const [userData, setUserData] = useState({ name: "", email: "", phone: "" });
   const [showUserForm, setShowUserForm] = useState(false);
-  const [isWaitingForHuman, setIsWaitingForHuman] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { settings } = useWidgetSettings();
   const { toast } = useToast();
+  
+  const {
+    conversationState,
+    showEndConfirmation,
+    incrementMessageCount,
+    recordActivity,
+    requestHumanAgent,
+    confirmEndConversation,
+    cancelEndConversation,
+    handleConfirmedEnd
+  } = useConversationLifecycle(settings);
 
   useEffect(() => {
     if (settings?.appearance.autoOpenWidget && !isExpanded && messages.length === 0) {
@@ -91,6 +104,16 @@ export function InteractiveWidget() {
 
   const handleSendMessage = async () => {
     if (!inputValue.trim()) return;
+    
+    // Check conversation state
+    if (conversationState.status !== 'active' && conversationState.status !== 'waiting_human') {
+      toast({
+        title: "Conversation Ended",
+        description: "This conversation has ended. Please start a new conversation.",
+        variant: "destructive"
+      });
+      return;
+    }
 
     // Check if user info is required and not provided
     if (!userInfo.anonymousChat && !userData.name && (
@@ -111,6 +134,7 @@ export function InteractiveWidget() {
 
     setMessages(prev => [...prev, userMessage]);
     setInputValue("");
+    incrementMessageCount();
     setIsTyping(true);
 
     // Simulate AI response
@@ -122,6 +146,7 @@ export function InteractiveWidget() {
         timestamp: new Date()
       };
       setMessages(prev => [...prev, aiResponse]);
+      incrementMessageCount();
       setIsTyping(false);
     }, 1000 + Math.random() * 2000);
   };
@@ -179,45 +204,84 @@ export function InteractiveWidget() {
     handleSendMessage();
   };
 
-  const handleTalkToHuman = () => {
-    setIsWaitingForHuman(true);
+  const handleTalkToHuman = async () => {
+    requestHumanAgent('User clicked Talk to Human button');
     
-    // Create a new chat request with human handoff
-    const chatRequest = {
-      id: `chat_${Date.now()}`,
-      customerId: `customer_${Date.now()}`,
-      requesterName: userData.name || 'Anonymous User',
-      requesterEmail: userData.email || '',
-      requesterPhone: userData.phone || '',
-      ipAddress: '127.0.0.1', // In real app, would be actual IP
-      browser: navigator.userAgent,
-      pageUrl: window.location.href,
-      status: 'waiting' as const,
-      handledBy: 'human' as const, // Set to human since user requested it
-      humanHandoffAt: new Date().toISOString(),
-      createdAt: new Date().toISOString(),
-      lastUpdatedAt: new Date().toISOString(),
-      geo: 'Unknown',
-      summary: 'User requested to talk to human agent',
-      anonymousUserId: userInfo.anonymousChat && !userData.email ? `anon_${Date.now()}` : undefined
-    };
-    
-    // In a real app, this would make an API call to create the chat
-    console.log('Chat request created:', chatRequest);
-    
-    toast({
-      title: "Human Agent Requested",
-      description: "You'll be connected to a human agent shortly. Please wait...",
-    });
-    
-    // Add system message
-    const systemMessage: Message = {
-      id: Date.now().toString(),
-      type: 'ai',
-      content: "I'm connecting you with a human agent. Please wait while we find someone to help you.",
-      timestamp: new Date()
-    };
-    setMessages(prev => [...prev, systemMessage]);
+    try {
+      // Create a new chat request with human handoff using the service
+      const handoffRequest = {
+        conversationId: `conv_${Date.now()}`,
+        reason: 'User requested human agent',
+        userData: {
+          name: userData.name || 'Anonymous User',
+          email: userData.email || '',
+          phone: userData.phone || ''
+        },
+        context: {
+          pageUrl: window.location.href,
+          browser: navigator.userAgent,
+          ipAddress: '127.0.0.1' // In real app, would be actual IP
+        }
+      };
+      
+      const { chatId } = await conversationService.requestHumanHandoff(handoffRequest);
+      
+      toast({
+        title: "Human Agent Requested",
+        description: "You'll be connected to a human agent shortly. Please wait...",
+      });
+      
+      // Add system message
+      const systemMessage: Message = {
+        id: Date.now().toString(),
+        type: 'ai',
+        content: "I'm connecting you with a human agent. Please wait while we find someone to help you.",
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, systemMessage]);
+      
+      console.log('Chat request created with ID:', chatId);
+    } catch (error) {
+      console.error('Failed to request human handoff:', error);
+      toast({
+        title: "Error",
+        description: "Failed to connect to human agent. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleEndConversationWithFeedback = async (feedback?: { rating: string; comment: string }) => {
+    try {
+      // End conversation through service
+      await conversationService.endConversation({
+        conversationId: `conv_${Date.now()}`,
+        reason: 'User ended conversation',
+        feedback
+      });
+      
+      handleConfirmedEnd();
+      
+      // Add system message
+      const endMessage: Message = {
+        id: Date.now().toString(),
+        type: 'ai',
+        content: "Thank you for using our support chat. Your conversation has been ended.",
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, endMessage]);
+      
+      if (feedback) {
+        console.log('Conversation feedback submitted:', feedback);
+      }
+    } catch (error) {
+      console.error('Failed to end conversation:', error);
+      toast({
+        title: "Error",
+        description: "Failed to end conversation properly. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
 
   if (!isExpanded) {
@@ -404,23 +468,39 @@ export function InteractiveWidget() {
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Human Request Button */}
-          {!isWaitingForHuman && messages.length > 1 && (
-            <div className="border-t px-4 py-2 bg-muted/30">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleTalkToHuman}
-                className="w-full text-xs"
-              >
-                <User className="h-3 w-3 mr-1" />
-                Talk to Human Agent
-              </Button>
+          {/* Action Buttons Area */}
+          {conversationState.status === 'active' && messages.length > 1 && (
+            <div className="border-t px-4 py-2 bg-muted/30 space-y-2">
+              {/* Talk to Human Button */}
+              {aiSettings.showTalkToHumanButton && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleTalkToHuman}
+                  className="w-full text-xs"
+                >
+                  <User className="h-3 w-3 mr-1" />
+                  {aiSettings.talkToHumanButtonText || 'Talk to Human Agent'}
+                </Button>
+              )}
+              
+              {/* End Conversation Button */}
+              {aiSettings.showEndConversationButton && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={confirmEndConversation}
+                  className="w-full text-xs"
+                >
+                  <LogOut className="h-3 w-3 mr-1" />
+                  {aiSettings.endConversationButtonText || 'End Conversation'}
+                </Button>
+              )}
             </div>
           )}
 
-          {/* Waiting for Human Indicator */}
-          {isWaitingForHuman && (
+          {/* Conversation Status Indicators */}
+          {conversationState.status === 'waiting_human' && (
             <div className="border-t px-4 py-3 bg-yellow-50 border-yellow-200">
               <div className="flex items-center justify-center text-sm text-yellow-800">
                 <div className="animate-spin mr-2 h-4 w-4 border-2 border-yellow-600 border-t-transparent rounded-full"></div>
@@ -429,52 +509,119 @@ export function InteractiveWidget() {
             </div>
           )}
 
-          {/* Input Area */}
-          <div className="border-t p-4 shrink-0">
-            <div className="flex items-center space-x-2">
-              <div className="flex items-center space-x-1">
+          {conversationState.status === 'idle_timeout' && (
+            <div className="border-t px-4 py-3 bg-orange-50 border-orange-200">
+              <div className="text-center text-sm text-orange-800">
+                Session ended due to inactivity
+              </div>
+            </div>
+          )}
+
+          {conversationState.status === 'max_session' && (
+            <div className="border-t px-4 py-3 bg-red-50 border-red-200">
+              <div className="text-center text-sm text-red-800 space-y-2">
+                <div>Session limit reached</div>
                 <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8"
-                  onClick={handleFileUpload}
+                  variant="outline"
+                  size="sm"
+                  onClick={handleTalkToHuman}
+                  className="text-xs"
                 >
-                  <Paperclip className="h-4 w-4" />
+                  <User className="h-3 w-3 mr-1" />
+                  Talk to Human Agent
                 </Button>
-                
-                {voice.enableVoiceCalls && (
+              </div>
+            </div>
+          )}
+
+          {conversationState.status === 'quota_exceeded' && (
+            <div className="border-t px-4 py-3 bg-red-50 border-red-200">
+              <div className="text-center text-sm text-red-800 space-y-2">
+                <div>Message limit reached</div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleTalkToHuman}
+                  className="text-xs"
+                >
+                  <User className="h-3 w-3 mr-1" />
+                  Talk to Human Agent
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {conversationState.status === 'ended' && (
+            <div className="border-t px-4 py-3 bg-gray-50 border-gray-200">
+              <div className="text-center text-sm text-gray-800">
+                Conversation ended
+              </div>
+            </div>
+          )}
+
+          {/* Input Area */}
+          {conversationState.status === 'active' || conversationState.status === 'waiting_human' ? (
+            <div className="border-t p-4 shrink-0">
+              <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-1">
                   <Button
                     variant="ghost"
                     size="icon"
-                    className={`h-8 w-8 ${isRecording ? 'text-red-500' : ''}`}
-                    onClick={handleVoiceRecording}
+                    className="h-8 w-8"
+                    onClick={handleFileUpload}
+                    disabled={conversationState.status !== 'active'}
                   >
-                    {isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+                    <Paperclip className="h-4 w-4" />
                   </Button>
-                )}
+                  
+                  {voice.enableVoiceCalls && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className={`h-8 w-8 ${isRecording ? 'text-red-500' : ''}`}
+                      onClick={handleVoiceRecording}
+                      disabled={conversationState.status !== 'active'}
+                    >
+                      {isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+                    </Button>
+                  )}
+                </div>
+                
+                <Input
+                  value={inputValue}
+                  onChange={(e) => setInputValue(e.target.value)}
+                  placeholder={
+                    conversationState.status === 'waiting_human' 
+                      ? "Waiting for human agent..." 
+                      : "Type your message..."
+                  }
+                  className="flex-1"
+                  onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+                  disabled={conversationState.status !== 'active'}
+                />
+                
+                <Button
+                  onClick={handleSendMessage}
+                  size="icon"
+                  className="h-8 w-8 text-white"
+                  style={{ backgroundColor: appearance.highlightColor }}
+                  disabled={!inputValue.trim() || conversationState.status !== 'active'}
+                >
+                  <Send className="h-4 w-4" />
+                </Button>
               </div>
-              
-              <Input
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-                placeholder="Type your message..."
-                className="flex-1"
-                onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-              />
-              
-              <Button
-                onClick={handleSendMessage}
-                size="icon"
-                className="h-8 w-8 text-white"
-                style={{ backgroundColor: appearance.highlightColor }}
-                disabled={!inputValue.trim()}
-              >
-                <Send className="h-4 w-4" />
-              </Button>
             </div>
-          </div>
+          ) : null}
         </CardContent>
       </Card>
+
+      {/* Conversation End Modal */}
+      <ConversationEndModal
+        isOpen={showEndConfirmation}
+        onClose={cancelEndConversation}
+        onConfirm={handleEndConversationWithFeedback}
+        appearance={appearance}
+      />
     </div>
   );
 }

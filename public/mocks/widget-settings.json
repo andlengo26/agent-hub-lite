@@ -20,7 +20,14 @@
       "requireHumanForComplex": true
     },
     "showTalkToHumanButton": true,
-    "talkToHumanButtonText": "Talk to Human Agent"
+    "talkToHumanButtonText": "Talk to Human Agent",
+    "showEndConversationButton": true,
+    "endConversationButtonText": "End Conversation",
+    "enableIdleTimeout": false,
+    "enableMaxSessionLength": false,
+    "maxSessionMinutes": 30,
+    "enableMessageQuota": false,
+    "maxMessagesPerSession": 20
   },
   "appearance": {
     "headerText": "Customer Support",

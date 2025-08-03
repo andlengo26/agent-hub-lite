@@ -1,0 +1,61 @@
+{
+  "transitions": [
+    {
+      "id": "trans_001",
+      "conversationId": "conv_001",
+      "from": "active",
+      "to": "ended",
+      "reason": "User ended conversation",
+      "triggeredBy": "user",
+      "timestamp": "2025-01-21T10:15:00Z",
+      "metadata": {
+        "sessionDuration": 1800,
+        "messageCount": 15,
+        "feedback": {
+          "rating": "satisfied",
+          "comment": "Great help, thank you!"
+        }
+      }
+    },
+    {
+      "id": "trans_002", 
+      "conversationId": "conv_002",
+      "from": "active",
+      "to": "waiting_human",
+      "reason": "User requested human agent",
+      "triggeredBy": "user",
+      "timestamp": "2025-01-21T11:30:00Z",
+      "metadata": {
+        "messageCount": 8,
+        "handoffReason": "Complex technical question"
+      }
+    },
+    {
+      "id": "trans_003",
+      "conversationId": "conv_003", 
+      "from": "active",
+      "to": "idle_timeout",
+      "reason": "No activity for 10 minutes",
+      "triggeredBy": "system",
+      "timestamp": "2025-01-21T12:45:00Z",
+      "metadata": {
+        "idleTimeMinutes": 10,
+        "messageCount": 3
+      }
+    }
+  ],
+  "summary": {
+    "totalConversations": 150,
+    "endedByUser": 89,
+    "endedByTimeout": 31,
+    "handoffToHuman": 25,
+    "quotaExceeded": 5,
+    "averageSessionDuration": 1200,
+    "averageMessageCount": 12,
+    "feedbackStats": {
+      "satisfied": 67,
+      "neutral": 18,
+      "unsatisfied": 4
+    }
+  }
+}
