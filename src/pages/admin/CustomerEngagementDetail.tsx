@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -18,6 +18,10 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { CustomerEngagement } from '@/types';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
+import { ConversationTimeline, TimelineTransition } from '@/components/admin/ConversationTimeline';
+import { ConversationSummaryCard, ConversationSummary } from '@/components/admin/ConversationSummaryCard';
+import { conversationService } from '@/services/conversationService';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const channelOptions = [
   { value: 'chat', label: 'Chat' },
@@ -50,6 +54,10 @@ export default function CustomerEngagementDetail() {
 
   // Selection state
   const [selectedEngagements, setSelectedEngagements] = useState<Set<string>>(new Set());
+  
+  // Timeline and summary state
+  const [conversationTransitions, setConversationTransitions] = useState<TimelineTransition[]>([]);
+  const [conversationSummaries, setConversationSummaries] = useState<ConversationSummary[]>([]);
 
   // Fetch customer engagements
   const { 
@@ -61,6 +69,27 @@ export default function CustomerEngagementDetail() {
 
   // Use all engagements without filtering
   const engagements = customerData?.engagements || [];
+
+  // Load conversation timeline data
+  useEffect(() => {
+    const loadTimelineData = async () => {
+      if (!customerId) return;
+      
+      try {
+        // Get transitions from localStorage (mock persistent storage)
+        const allTransitions = JSON.parse(localStorage.getItem('conversation-transitions') || '[]');
+        setConversationTransitions(allTransitions);
+        
+        // Get summaries from localStorage (mock persistent storage)
+        const allSummaries = JSON.parse(localStorage.getItem('conversation-summaries') || '[]');
+        setConversationSummaries(allSummaries.filter((s: any) => s.customerId === customerId));
+      } catch (error) {
+        console.error('Failed to load timeline data:', error);
+      }
+    };
+    
+    loadTimelineData();
+  }, [customerId]);
 
   // Enable real-time sync for this customer's engagements
   useRealTimeSync({
@@ -310,10 +339,10 @@ export default function CustomerEngagementDetail() {
         />
       )}
 
-      {/* Engagement History Accordion */}
+      {/* Enhanced Engagement History with Tabs */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-          <CardTitle>Engagement History ({engagements.length})</CardTitle>
+          <CardTitle>Customer Engagement Analysis</CardTitle>
           {engagements.length > 0 && (
             <div className="flex items-center gap-2">
               <Checkbox
@@ -326,22 +355,59 @@ export default function CustomerEngagementDetail() {
           )}
         </CardHeader>
         <CardContent>
-          {engagements.length === 0 ? (
-            <div className="text-center py-8">
-              <p className="text-text-secondary">No engagements found.</p>
-            </div>
-          ) : (
-            <EngagementAccordion
-              engagements={engagements}
-              onDeleteEngagement={handleDeleteEngagement}
-              onEditEngagement={handleEditEngagement}
-              expandedRow={expandedRow}
-              onExpandedRowChange={setExpandedRow}
-              selectedEngagements={selectedEngagements}
-              onSelectEngagement={handleSelectEngagement}
-              showActions={false}
-            />
-          )}
+          <Tabs defaultValue="engagements" className="space-y-4">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="engagements">Engagement History ({engagements.length})</TabsTrigger>
+              <TabsTrigger value="timeline">Conversation Timeline</TabsTrigger>
+              <TabsTrigger value="summaries">AI Summaries</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="engagements" className="space-y-4">
+              {engagements.length === 0 ? (
+                <div className="text-center py-8">
+                  <p className="text-text-secondary">No engagements found.</p>
+                </div>
+              ) : (
+                <EngagementAccordion
+                  engagements={engagements}
+                  onDeleteEngagement={handleDeleteEngagement}
+                  onEditEngagement={handleEditEngagement}
+                  expandedRow={expandedRow}
+                  onExpandedRowChange={setExpandedRow}
+                  selectedEngagements={selectedEngagements}
+                  onSelectEngagement={handleSelectEngagement}
+                  showActions={false}
+                />
+              )}
+            </TabsContent>
+            
+            <TabsContent value="timeline" className="space-y-4">
+              <ConversationTimeline 
+                transitions={conversationTransitions}
+                className="w-full"
+              />
+            </TabsContent>
+            
+            <TabsContent value="summaries" className="space-y-4">
+              {conversationSummaries.length === 0 ? (
+                <div className="text-center py-8">
+                  <p className="text-text-secondary">No AI summaries available.</p>
+                  <p className="text-xs text-text-secondary mt-2">
+                    Summaries are automatically generated when conversations end.
+                  </p>
+                </div>
+              ) : (
+                <div className="grid gap-4">
+                  {conversationSummaries.map((summary) => (
+                    <ConversationSummaryCard 
+                      key={summary.id} 
+                      summary={summary}
+                    />
+                  ))}
+                </div>
+              )}
+            </TabsContent>
+          </Tabs>
         </CardContent>
       </Card>
 

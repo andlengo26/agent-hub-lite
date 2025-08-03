@@ -7,6 +7,7 @@ import { useToast } from '@/hooks/use-toast';
 import { WidgetSettings } from './useWidgetSettings';
 import { conversationService, ConversationTransition } from '@/services/conversationService';
 import { useSessionTimer } from './useSessionTimer';
+import { summaryService, ConversationSummary } from '@/services/summaryService';
 
 export interface ConversationState {
   status: 'active' | 'ended' | 'waiting_human' | 'idle_timeout' | 'max_session' | 'quota_exceeded';
@@ -38,6 +39,7 @@ export function useConversationLifecycle(settings: WidgetSettings | null) {
   });
   
   const [transitions, setTransitions] = useState<ConversationTransitionLocal[]>([]);
+  const [conversationSummary, setConversationSummary] = useState<ConversationSummary | null>(null);
   const conversationIdRef = useRef(`conv_${Date.now()}`);
   const [showEndConfirmation, setShowEndConfirmation] = useState(false);
   const { toast } = useToast();
@@ -226,7 +228,7 @@ export function useConversationLifecycle(settings: WidgetSettings | null) {
     recordActivity();
   }, [settings, logTransition, toast, recordActivity]);
 
-  const endConversation = useCallback((reason = 'User ended conversation') => {
+  const endConversation = useCallback(async (reason = 'User ended conversation', feedback?: { rating: string; comment?: string }) => {
     // Clear all timeouts
     if (timeoutRefs.current.idle) clearTimeout(timeoutRefs.current.idle);
     if (timeoutRefs.current.session) clearTimeout(timeoutRefs.current.session);
@@ -235,16 +237,45 @@ export function useConversationLifecycle(settings: WidgetSettings | null) {
     // Stop session timer
     sessionTimer.stopTimer();
 
-    setConversationState(prev => {
-      logTransition(prev.status, 'ended', reason, 'user');
-      return { ...prev, status: 'ended' };
-    });
+    // Log final transition
+    await logTransition(conversationState.status, 'ended', reason, 'user');
 
-    toast({
-      title: "Conversation Ended",
-      description: "Thank you for using our support chat.",
-    });
-  }, [logTransition, toast, sessionTimer]);
+    // Update state
+    setConversationState(prev => ({ ...prev, status: 'ended' }));
+
+    // Generate AI summary for completed conversation
+    try {
+      const summary = await summaryService.generateConversationSummary(
+        conversationIdRef.current,
+        [...transitions, {
+          from: conversationState.status,
+          to: 'ended',
+          timestamp: new Date(),
+          reason,
+          triggeredBy: 'user' as const
+        }],
+        [], // Mock messages - in real implementation, this would come from chat history
+        {
+          sessionDuration: sessionTimer.timerState.elapsedSeconds,
+          messageCount: conversationState.messageCount,
+          feedback
+        }
+      );
+      
+      setConversationSummary(summary);
+      
+      toast({
+        title: "Conversation Ended",
+        description: "Summary generated and saved to your engagement history.",
+      });
+    } catch (error) {
+      console.error('Failed to generate conversation summary:', error);
+      toast({
+        title: "Conversation Ended",
+        description: "Thank you for using our support chat.",
+      });
+    }
+  }, [logTransition, toast, sessionTimer, conversationState, transitions]);
 
   const requestHumanAgent = useCallback((reason = 'User requested human agent') => {
     setConversationState(prev => {
@@ -290,6 +321,7 @@ export function useConversationLifecycle(settings: WidgetSettings | null) {
   return {
     conversationState,
     transitions,
+    conversationSummary,
     showEndConfirmation,
     sessionTimer,
     incrementMessageCount,

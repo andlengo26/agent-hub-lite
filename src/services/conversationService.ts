@@ -83,6 +83,15 @@ class ConversationService {
     // Mock API call
     console.log('API: Log conversation transition', transition);
     
+    // Store in localStorage for development (simulate persistent storage)
+    try {
+      const existingTransitions = JSON.parse(localStorage.getItem('conversation-transitions') || '[]');
+      existingTransitions.push(transition);
+      localStorage.setItem('conversation-transitions', JSON.stringify(existingTransitions));
+    } catch (error) {
+      console.warn('Failed to store transition in localStorage:', error);
+    }
+    
     // In real implementation:
     // const response = await fetch(`${this.baseUrl}/transitions`, {
     //   method: 'POST',
@@ -95,6 +104,20 @@ class ConversationService {
     // }
     
     return Promise.resolve();
+  }
+
+  async getConversationTransitions(conversationId: string): Promise<ConversationTransition[]> {
+    // Mock API call
+    console.log('API: Get conversation transitions', conversationId);
+    
+    // Retrieve from localStorage for development
+    try {
+      const allTransitions = JSON.parse(localStorage.getItem('conversation-transitions') || '[]');
+      return allTransitions.filter((t: ConversationTransition) => t.conversationId === conversationId);
+    } catch (error) {
+      console.warn('Failed to retrieve transitions from localStorage:', error);
+      return [];
+    }
   }
 
   async getConversationState(conversationId: string): Promise<any> {

@@ -56,6 +56,8 @@
       "satisfied": 67,
       "neutral": 18,
       "unsatisfied": 4
-    }
+    },
+    "aiSummariesGenerated": 134,
+    "summaryAccuracy": 94.2
   }
 }
