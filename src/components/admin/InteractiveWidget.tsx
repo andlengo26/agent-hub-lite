@@ -6,16 +6,23 @@ import { Input } from "@/components/ui/input";
 import { useWidgetSettings } from "@/hooks/useWidgetSettings";
 import { useToast } from "@/hooks/use-toast";
 import { useConversationLifecycle } from "@/hooks/useConversationLifecycle";
+import { useMessageQuota } from "@/hooks/useMessageQuota";
+import { useSpamPrevention } from "@/hooks/useSpamPrevention";
 import { ConversationEndModal } from "./ConversationEndModal";
 import { CountdownBadge } from "@/components/widget/CountdownBadge";
 import { MaxDurationBanner } from "@/components/widget/MaxDurationBanner";
+import { MessageFeedback } from "@/components/widget/MessageFeedback";
+import { QuotaBadge } from "@/components/widget/QuotaBadge";
+import { QuotaWarningBanner } from "@/components/widget/QuotaWarningBanner";
 import { conversationService } from "@/services/conversationService";
+import { feedbackService } from "@/services/feedbackService";
 
 interface Message {
   id: string;
   type: 'user' | 'ai';
   content: string;
   timestamp: Date;
+  feedbackSubmitted?: boolean;
 }
 
 export function InteractiveWidget() {
@@ -27,6 +34,7 @@ export function InteractiveWidget() {
   const [isRecording, setIsRecording] = useState(false);
   const [userData, setUserData] = useState({ name: "", email: "", phone: "" });
   const [showUserForm, setShowUserForm] = useState(false);
+  const [showQuotaWarning, setShowQuotaWarning] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { settings } = useWidgetSettings();
   const { toast } = useToast();
@@ -43,6 +51,23 @@ export function InteractiveWidget() {
     sessionTimer,
     startAISession
   } = useConversationLifecycle(settings);
+
+  // Message quota management
+  const messageQuota = useMessageQuota({
+    maxDailyMessages: settings?.aiSettings.maxDailyMessages || 50,
+    maxHourlyMessages: settings?.aiSettings.maxHourlyMessages || 10,
+    maxSessionMessages: settings?.aiSettings.maxMessagesPerSession || 20,
+    enableDailyQuota: settings?.aiSettings.enableDailyQuota || false,
+    enableHourlyQuota: settings?.aiSettings.enableHourlyQuota || false,
+    enableSessionQuota: settings?.aiSettings.enableMessageQuota || false,
+    quotaWarningThreshold: settings?.aiSettings.quotaWarningThreshold || 5
+  });
+
+  // Spam prevention
+  const spamPrevention = useSpamPrevention({
+    minDelaySeconds: settings?.aiSettings.minMessageDelaySeconds || 3,
+    enabled: settings?.aiSettings.enableSpamPrevention || false
+  });
 
   useEffect(() => {
     if (settings?.appearance.autoOpenWidget && !isExpanded && messages.length === 0) {
@@ -65,6 +90,35 @@ export function InteractiveWidget() {
       setMessages([welcomeMessage]);
     }
   }, [isExpanded, messages.length, settings?.aiSettings.welcomeMessage]);
+
+  // Reset session quota when conversation ends
+  useEffect(() => {
+    if (conversationState.status === 'ended') {
+      messageQuota.resetSessionQuota();
+      spamPrevention.resetCooldown();
+    }
+  }, [conversationState.status, messageQuota, spamPrevention]);
+
+  const handleFeedback = async (messageId: string, feedback: 'positive' | 'negative', comment?: string) => {
+    try {
+      await feedbackService.submitFeedback({
+        messageId,
+        conversationId: `conv_${Date.now()}`,
+        type: feedback,
+        comment: comment || ''
+      });
+
+      // Update message to mark feedback as submitted
+      setMessages(prev => prev.map(msg => 
+        msg.id === messageId 
+          ? { ...msg, feedbackSubmitted: true }
+          : msg
+      ));
+
+    } catch (error) {
+      console.error('Failed to submit feedback:', error);
+    }
+  };
 
   if (!settings) return null;
 
@@ -119,6 +173,21 @@ export function InteractiveWidget() {
       return;
     }
 
+    // Check message quota
+    if (!messageQuota.canSendMessage) {
+      toast({
+        title: "Message Limit Reached",
+        description: "You've reached your message limit. Please wait or talk to a human agent.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Check spam prevention
+    if (spamPrevention.checkSpamAttempt()) {
+      return; // Spam prevention will show its own toast
+    }
+
     // Check if user info is required and not provided
     if (!userInfo.anonymousChat && !userData.name && (
       userInfo.requiredFields.name || 
@@ -139,6 +208,8 @@ export function InteractiveWidget() {
     setMessages(prev => [...prev, userMessage]);
     setInputValue("");
     incrementMessageCount();
+    messageQuota.incrementQuota();
+    spamPrevention.recordMessage();
     setIsTyping(true);
 
     // Simulate AI response
@@ -147,10 +218,12 @@ export function InteractiveWidget() {
         id: (Date.now() + 1).toString(),
         type: 'ai',
         content: `Thank you for your message: "${userMessage.content}". This is a demo response from the ${aiSettings.assistantName}. In production, this would connect to your configured AI model (${settings.integrations.aiModel}) to provide intelligent responses.`,
-        timestamp: new Date()
+        timestamp: new Date(),
+        feedbackSubmitted: false
       };
       setMessages(prev => [...prev, aiResponse]);
       incrementMessageCount();
+      messageQuota.incrementQuota();
       setIsTyping(false);
       
       // Start the AI session timer on first AI response
@@ -348,6 +421,27 @@ export function InteractiveWidget() {
               />
             )}
             
+            {/* Quota Badges */}
+            {aiSettings.enableDailyQuota && messageQuota.quotaState.remainingDaily <= (aiSettings.quotaWarningThreshold || 5) && (
+              <QuotaBadge
+                remaining={messageQuota.quotaState.remainingDaily}
+                total={aiSettings.maxDailyMessages || 50}
+                type="daily"
+                showBadge={true}
+                variant={messageQuota.quotaState.remainingDaily <= 2 ? 'danger' : 'warning'}
+              />
+            )}
+            
+            {aiSettings.enableHourlyQuota && messageQuota.quotaState.remainingHourly <= (aiSettings.quotaWarningThreshold || 5) && (
+              <QuotaBadge
+                remaining={messageQuota.quotaState.remainingHourly}
+                total={aiSettings.maxHourlyMessages || 10}
+                type="hourly"
+                showBadge={true}
+                variant={messageQuota.quotaState.remainingHourly <= 2 ? 'danger' : 'warning'}
+              />
+            )}
+            
             {voice.enableVoiceCalls && (
               <Button
                 variant="ghost"
@@ -390,6 +484,17 @@ export function InteractiveWidget() {
               onExtendSession={sessionTimer.extendSession}
               onDismiss={() => sessionTimer.extendSession()}
               showTalkToHumanButton={aiSettings.showTalkToHumanButton}
+            />
+          )}
+
+          {/* Quota Warning Banner */}
+          {showQuotaWarning && (
+            <QuotaWarningBanner
+              quotaState={messageQuota.quotaState}
+              onTalkToHuman={handleTalkToHuman}
+              onDismiss={() => setShowQuotaWarning(false)}
+              showTalkToHumanButton={aiSettings.showTalkToHumanButton || false}
+              quotaWarningThreshold={aiSettings.quotaWarningThreshold || 5}
             />
           )}
 
@@ -471,6 +576,16 @@ export function InteractiveWidget() {
                   <div className="text-xs text-muted-foreground mt-1">
                     {message.timestamp.toLocaleTimeString()}
                   </div>
+                  
+                  {/* Feedback buttons for AI messages */}
+                  {message.type === 'ai' && message.id !== 'welcome' && aiSettings.enableFeedback && !message.feedbackSubmitted && (
+                    <MessageFeedback
+                      messageId={message.id}
+                      onFeedback={handleFeedback}
+                      appearance={appearance}
+                      disabled={conversationState.status !== 'active'}
+                    />
+                  )}
                 </div>
               </div>
             ))}
@@ -632,11 +747,21 @@ export function InteractiveWidget() {
                 <Button
                   onClick={handleSendMessage}
                   size="icon"
-                  className="h-8 w-8 text-white"
+                  className="h-8 w-8 text-white relative"
                   style={{ backgroundColor: appearance.highlightColor }}
-                  disabled={!inputValue.trim() || conversationState.status !== 'active'}
+                  disabled={
+                    !inputValue.trim() || 
+                    conversationState.status !== 'active' || 
+                    !messageQuota.canSendMessage ||
+                    !spamPrevention.canSendMessage
+                  }
                 >
                   <Send className="h-4 w-4" />
+                  {spamPrevention.spamState.isInCooldown && (
+                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
+                      {spamPrevention.formatCooldownTime()}
+                    </span>
+                  )}
                 </Button>
               </div>
             </div>

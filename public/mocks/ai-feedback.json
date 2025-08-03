@@ -1,0 +1,42 @@
+{
+  "feedback": [
+    {
+      "id": "fb_001",
+      "messageId": "msg_001",
+      "conversationId": "conv_001",
+      "type": "positive",
+      "comment": "",
+      "timestamp": "2025-01-21T10:15:00Z",
+      "userAgent": "Mozilla/5.0...",
+      "ipAddress": "192.168.1.1"
+    },
+    {
+      "id": "fb_002",
+      "messageId": "msg_002",
+      "conversationId": "conv_001",
+      "type": "negative",
+      "comment": "Not helpful enough",
+      "timestamp": "2025-01-21T10:18:00Z",
+      "userAgent": "Mozilla/5.0...",
+      "ipAddress": "192.168.1.1"
+    },
+    {
+      "id": "fb_003",
+      "messageId": "msg_003",
+      "conversationId": "conv_002",
+      "type": "positive",
+      "comment": "",
+      "timestamp": "2025-01-21T11:30:00Z",
+      "userAgent": "Mozilla/5.0...",
+      "ipAddress": "192.168.1.2"
+    }
+  ],
+  "summary": {
+    "totalFeedback": 3,
+    "positive": 2,
+    "negative": 1,
+    "averageRating": 0.67,
+    "responsesWithFeedback": 3,
+    "feedbackRate": 0.6
+  }
+}

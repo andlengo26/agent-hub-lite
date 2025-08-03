@@ -26,8 +26,17 @@
     "enableIdleTimeout": true,
     "enableMaxSessionLength": true,
     "maxSessionMinutes": 30,
-    "enableMessageQuota": false,
-    "maxMessagesPerSession": 20
+    "enableMessageQuota": true,
+    "maxMessagesPerSession": 20,
+    "enableDailyQuota": true,
+    "maxDailyMessages": 50,
+    "enableHourlyQuota": false,
+    "maxHourlyMessages": 10,
+    "quotaWarningThreshold": 5,
+    "enableSpamPrevention": true,
+    "minMessageDelaySeconds": 3,
+    "enableFeedback": true,
+    "feedbackPrompt": "Was this response helpful?"
   },
   "appearance": {
     "headerText": "Customer Support",

@@ -37,6 +37,16 @@ export interface WidgetSettings {
     maxSessionMinutes?: number;
     enableMessageQuota?: boolean;
     maxMessagesPerSession?: number;
+    // Phase 4: New quota and spam prevention settings
+    enableDailyQuota?: boolean;
+    maxDailyMessages?: number;
+    enableHourlyQuota?: boolean;
+    maxHourlyMessages?: number;
+    quotaWarningThreshold?: number;
+    enableSpamPrevention?: boolean;
+    minMessageDelaySeconds?: number;
+    enableFeedback?: boolean;
+    feedbackPrompt?: string;
   };
   appearance: {
     headerText: string;
