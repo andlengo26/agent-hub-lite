@@ -29,6 +29,7 @@ interface MultiSelectProps {
   placeholder?: string;
   className?: string;
   disabled?: boolean;
+  hideSelectedInTrigger?: boolean;
 }
 
 export function MultiSelect({
@@ -38,6 +39,7 @@ export function MultiSelect({
   placeholder = "Select items...",
   className,
   disabled = false,
+  hideSelectedInTrigger = false,
 }: MultiSelectProps) {
   const [open, setOpen] = React.useState(false);
 
@@ -64,25 +66,35 @@ export function MultiSelect({
           disabled={disabled}
         >
           <div className="flex gap-1 flex-wrap">
-            {selected.length > 0
-              ? selected.map((item) => {
-                  const option = options.find((opt) => opt.value === item);
-                  return (
-                    <Badge
-                      variant="secondary"
-                      key={item}
-                      className="mr-1 mb-1"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleUnselect(item);
-                      }}
-                    >
-                      {option?.label}
-                      <X className="ml-1 h-3 w-3 cursor-pointer" />
-                    </Badge>
-                  );
-                })
-              : placeholder}
+            {hideSelectedInTrigger ? (
+              selected.length > 0 ? (
+                <span className="text-sm">
+                  {selected.length} item{selected.length === 1 ? '' : 's'} selected
+                </span>
+              ) : (
+                placeholder
+              )
+            ) : (
+              selected.length > 0
+                ? selected.map((item) => {
+                    const option = options.find((opt) => opt.value === item);
+                    return (
+                      <Badge
+                        variant="secondary"
+                        key={item}
+                        className="mr-1 mb-1"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleUnselect(item);
+                        }}
+                      >
+                        {option?.label}
+                        <X className="ml-1 h-3 w-3 cursor-pointer" />
+                      </Badge>
+                    );
+                  })
+                : placeholder
+            )}
           </div>
           <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-50" />
         </Button>
