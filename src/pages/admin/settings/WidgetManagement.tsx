@@ -414,14 +414,76 @@ export default function WidgetManagement() {
                             requiredFields: { ...settings.userInfo.requiredFields, mobile: !!checked }
                           })}
                         />
-                        <Label htmlFor="requiredMobile">Mobile Number</Label>
-                      </div>
-                    </div>
-                  </div>
-                )}
-                
-              </div>
-            </TabsContent>
+                         <Label htmlFor="requiredMobile">Mobile Number</Label>
+                       </div>
+                     </div>
+                   </div>
+                 )}
+
+                 {!settings.userInfo.anonymousChat && (
+                   <div className="space-y-4 border-t pt-4">
+                     <h4 className="text-sm font-medium">User Identification Settings</h4>
+                     
+                     <div className="flex items-center space-x-2">
+                       <Switch
+                         id="enableUserIdentification"
+                         checked={settings.userInfo.enableUserIdentification !== false}
+                         onCheckedChange={(checked) => updateSettings('userInfo', { 
+                           enableUserIdentification: checked 
+                         })}
+                       />
+                       <Label htmlFor="enableUserIdentification">Enable user identification system</Label>
+                     </div>
+
+                     {settings.userInfo.enableUserIdentification !== false && (
+                       <div className="space-y-3">
+                         <div>
+                           <Label>Identification Method</Label>
+                           <Select 
+                             value={settings.userInfo.identificationMethod || 'manual_form_submission'} 
+                             onValueChange={(value) => updateSettings('userInfo', { 
+                               identificationMethod: value as 'manual_form_submission' | 'moodle_authentication'
+                             })}
+                           >
+                             <SelectTrigger>
+                               <SelectValue placeholder="Select identification method" />
+                             </SelectTrigger>
+                             <SelectContent>
+                               <SelectItem value="manual_form_submission">Manual Form Submission</SelectItem>
+                               <SelectItem value="moodle_authentication" disabled>
+                                 Moodle Authentication (Coming Soon)
+                               </SelectItem>
+                             </SelectContent>
+                           </Select>
+                           <p className="text-xs text-muted-foreground mt-1">
+                             Manual form submission allows users to provide their information through an inline form.
+                           </p>
+                         </div>
+
+                         <div>
+                           <Label htmlFor="sessionDurationHours">Session Duration (hours)</Label>
+                           <Input
+                             id="sessionDurationHours"
+                             type="number"
+                             min="1"
+                             max="168"
+                             value={settings.userInfo.sessionDurationHours || 24}
+                             onChange={(e) => updateSettings('userInfo', { 
+                               sessionDurationHours: parseInt(e.target.value) || 24 
+                             })}
+                             placeholder="24"
+                           />
+                           <p className="text-xs text-muted-foreground mt-1">
+                             How long user identification remains valid (1-168 hours).
+                           </p>
+                         </div>
+                       </div>
+                     )}
+                   </div>
+                 )}
+                 
+               </div>
+             </TabsContent>
 
             <TabsContent value="embed" className="space-y-4">
               <div className="space-y-4">

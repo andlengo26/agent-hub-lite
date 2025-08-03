@@ -97,3 +97,17 @@ export type WidgetAiSettingsInput = z.infer<typeof widgetAiSettingsSchema>;
 export type WidgetAppearanceInput = z.infer<typeof widgetAppearanceSchema>;
 export type WidgetUserInfoInput = z.infer<typeof widgetUserInfoSchema>;
 export type WidgetVoiceInput = z.infer<typeof widgetVoiceSchema>;
+
+// User identification validation schemas
+export const userIdentificationFormSchema = z.object({
+  name: z.string().min(2, 'Name must be at least 2 characters').max(50, 'Name too long').optional(),
+  email: z.string().email('Invalid email address').optional(),
+  mobile: z.string().regex(/^[\+]?[1-9][\d\s\-\(\)]{8,15}$/, 'Invalid phone number').optional(),
+}).refine((data) => {
+  return data.name || data.email || data.mobile;
+}, {
+  message: "At least one field is required",
+  path: ["name"]
+});
+
+export type UserIdentificationFormInput = z.infer<typeof userIdentificationFormSchema>;

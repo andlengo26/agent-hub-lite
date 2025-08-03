@@ -3,6 +3,7 @@
  */
 
 import { Customer } from '@/types';
+import { IdentificationSession } from '@/types/user-identification';
 import { apiClient } from '@/lib/api-client';
 
 interface CustomersResponse {
@@ -144,5 +145,24 @@ export class CustomerService {
       console.error('Failed to upsert customer:', error);
       throw error;
     }
+  }
+
+  /**
+   * Create customer from identification session
+   */
+  static async createCustomerFromIdentification(session: IdentificationSession): Promise<Customer> {
+    const customerData: Partial<Customer> & { email: string } = {
+      name: session.userData.name || 'Unknown',
+      email: session.userData.email || `anonymous_${session.id}@widget.local`,
+      phone: session.userData.mobile || '',
+      // Add identification type as metadata
+    };
+
+    const customer = await this.upsertCustomer(customerData);
+    
+    // Log identification type for engagement history
+    console.log(`Customer identified via ${session.type}:`, customer);
+    
+    return customer;
   }
 }

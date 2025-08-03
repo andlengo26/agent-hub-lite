@@ -1,0 +1,24 @@
+{
+  "sessions": [
+    {
+      "id": "manual_1704067200000_abc123",
+      "type": "manual_form_submission",
+      "userData": {
+        "name": "John Doe",
+        "email": "john.doe@example.com",
+        "mobile": "+1234567890"
+      },
+      "timestamp": "2024-01-01T10:00:00Z",
+      "isValid": true
+    }
+  ],
+  "validationRules": {
+    "manual_form_submission": {
+      "requiredFields": ["name", "email"],
+      "validationPatterns": {
+        "email": "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$",
+        "mobile": "^[\\+]?[1-9][\\d\\s\\-\\(\\)]{8,15}$"
+      }
+    }
+  }
+}

@@ -8,14 +8,17 @@ import { useToast } from "@/hooks/use-toast";
 import { useConversationLifecycle } from "@/hooks/useConversationLifecycle";
 import { useMessageQuota } from "@/hooks/useMessageQuota";
 import { useSpamPrevention } from "@/hooks/useSpamPrevention";
+import { useUserIdentification } from "@/hooks/useUserIdentification";
 import { ConversationEndModal } from "./ConversationEndModal";
 import { CountdownBadge } from "@/components/widget/CountdownBadge";
 import { MaxDurationBanner } from "@/components/widget/MaxDurationBanner";
 import { MessageFeedback } from "@/components/widget/MessageFeedback";
 import { QuotaBadge } from "@/components/widget/QuotaBadge";
 import { QuotaWarningBanner } from "@/components/widget/QuotaWarningBanner";
+import { UserIdentificationForm } from "@/components/widget/UserIdentificationForm";
 import { conversationService } from "@/services/conversationService";
 import { feedbackService } from "@/services/feedbackService";
+import { CustomerService } from "@/services/customerService";
 
 interface Message {
   id: string;
@@ -32,8 +35,6 @@ export function InteractiveWidget() {
   const [inputValue, setInputValue] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
-  const [userData, setUserData] = useState({ name: "", email: "", phone: "" });
-  const [showUserForm, setShowUserForm] = useState(false);
   const [showQuotaWarning, setShowQuotaWarning] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { settings } = useWidgetSettings();
@@ -67,6 +68,20 @@ export function InteractiveWidget() {
   const spamPrevention = useSpamPrevention({
     minDelaySeconds: settings?.aiSettings.minMessageDelaySeconds || 3,
     enabled: settings?.aiSettings.enableSpamPrevention || false
+  });
+
+  // User identification
+  const userIdentification = useUserIdentification({
+    settings,
+    onIdentificationComplete: async (session) => {
+      // Create customer record when identification is complete
+      try {
+        await CustomerService.createCustomerFromIdentification(session);
+        console.log('Customer created from identification session:', session.id);
+      } catch (error) {
+        console.error('Failed to create customer from identification:', error);
+      }
+    }
   });
 
   useEffect(() => {
@@ -188,13 +203,9 @@ export function InteractiveWidget() {
       return; // Spam prevention will show its own toast
     }
 
-    // Check if user info is required and not provided
-    if (!userInfo.anonymousChat && !userData.name && (
-      userInfo.requiredFields.name || 
-      userInfo.requiredFields.email || 
-      userInfo.requiredFields.mobile
-    )) {
-      setShowUserForm(true);
+    // Check if user identification is required
+    if (!userIdentification.canSendMessage()) {
+      userIdentification.showIdentificationForm();
       return;
     }
 
@@ -212,12 +223,15 @@ export function InteractiveWidget() {
     spamPrevention.recordMessage();
     setIsTyping(true);
 
-    // Simulate AI response
+    // Simulate AI response with user context
     setTimeout(() => {
+      const userContext = userIdentification.getUserContext();
+      const contextSuffix = userContext ? ` (${userContext})` : '';
+      
       const aiResponse: Message = {
         id: (Date.now() + 1).toString(),
         type: 'ai',
-        content: `Thank you for your message: "${userMessage.content}". This is a demo response from the ${aiSettings.assistantName}. In production, this would connect to your configured AI model (${settings.integrations.aiModel}) to provide intelligent responses.`,
+        content: `Thank you for your message: "${userMessage.content}". This is a demo response from the ${aiSettings.assistantName}. In production, this would connect to your configured AI model (${settings.integrations.aiModel}) to provide intelligent responses.${contextSuffix}`,
         timestamp: new Date(),
         feedbackSubmitted: false
       };
@@ -281,9 +295,24 @@ export function InteractiveWidget() {
     });
   };
 
-  const handleUserFormSubmit = () => {
-    setShowUserForm(false);
-    handleSendMessage();
+  // Handle identification completion - AI acknowledges user
+  const handleIdentificationComplete = () => {
+    if (userIdentification.session) {
+      const { userData } = userIdentification.session;
+      const welcomeFields = [];
+      if (userData.name) welcomeFields.push(`name: ${userData.name}`);
+      if (userData.email) welcomeFields.push(`email: ${userData.email}`);
+      if (userData.mobile) welcomeFields.push(`phone: ${userData.mobile}`);
+      
+      const acknowledgmentMessage: Message = {
+        id: `ack_${Date.now()}`,
+        type: 'ai',
+        content: `Thank you for providing your information${welcomeFields.length > 0 ? ` (${welcomeFields.join(', ')})` : ''}. I can now assist you more effectively. How can I help you today?`,
+        timestamp: new Date()
+      };
+      
+      setMessages(prev => [...prev, acknowledgmentMessage]);
+    }
   };
 
   const handleTalkToHuman = async () => {
@@ -291,20 +320,21 @@ export function InteractiveWidget() {
     
     try {
       // Create a new chat request with human handoff using the service
-      const handoffRequest = {
-        conversationId: `conv_${Date.now()}`,
-        reason: 'User requested human agent',
-        userData: {
-          name: userData.name || 'Anonymous User',
-          email: userData.email || '',
-          phone: userData.phone || ''
-        },
-        context: {
-          pageUrl: window.location.href,
-          browser: navigator.userAgent,
-          ipAddress: '127.0.0.1' // In real app, would be actual IP
-        }
-      };
+        const handoffRequest = {
+          conversationId: `conv_${Date.now()}`,
+          reason: 'User requested human agent',
+          userData: {
+            name: userIdentification.session?.userData?.name || 'Anonymous User',
+            email: userIdentification.session?.userData?.email || '',
+            phone: userIdentification.session?.userData?.mobile || ''
+          },
+          context: {
+            pageUrl: window.location.href,
+            browser: navigator.userAgent,
+            ipAddress: '127.0.0.1', // In real app, would be actual IP
+            identificationType: userIdentification.session?.type || 'anonymous'
+          }
+        };
       
       const { chatId } = await conversationService.requestHumanHandoff(handoffRequest);
       
@@ -498,53 +528,23 @@ export function InteractiveWidget() {
             />
           )}
 
-          {/* User Form Modal */}
-          {showUserForm && (
-            <div className="absolute inset-0 bg-background z-10 p-4 flex flex-col">
-              <h3 className="font-medium mb-4">Please provide your information</h3>
-              <div className="space-y-3 flex-1">
-                {userInfo.requiredFields.name && (
-                  <div>
-                    <label className="text-sm font-medium">Name *</label>
-                    <Input
-                      value={userData.name}
-                      onChange={(e) => setUserData(prev => ({ ...prev, name: e.target.value }))}
-                      placeholder="Your name"
-                    />
-                  </div>
-                )}
-                {userInfo.requiredFields.email && (
-                  <div>
-                    <label className="text-sm font-medium">Email *</label>
-                    <Input
-                      type="email"
-                      value={userData.email}
-                      onChange={(e) => setUserData(prev => ({ ...prev, email: e.target.value }))}
-                      placeholder="your@email.com"
-                    />
-                  </div>
-                )}
-                {userInfo.requiredFields.mobile && (
-                  <div>
-                    <label className="text-sm font-medium">Phone *</label>
-                    <Input
-                      type="tel"
-                      value={userData.phone}
-                      onChange={(e) => setUserData(prev => ({ ...prev, phone: e.target.value }))}
-                      placeholder="Your phone number"
-                    />
-                  </div>
-                )}
-              </div>
-              <div className="flex gap-2 mt-4">
-                <Button variant="outline" onClick={() => setShowUserForm(false)} className="flex-1">
-                  Cancel
-                </Button>
-                <Button onClick={handleUserFormSubmit} className="flex-1">
-                  Continue
-                </Button>
-              </div>
-            </div>
+          {/* User Identification Form */}
+          {userIdentification.showForm && (
+            <UserIdentificationForm
+              settings={settings}
+              formData={userIdentification.formData}
+              validationResult={userIdentification.validationResult}
+              onUpdateFormData={userIdentification.updateFormData}
+              onSubmit={async () => {
+                const success = await userIdentification.submitManualIdentification();
+                if (success) {
+                  handleIdentificationComplete();
+                }
+                return success;
+              }}
+              onCancel={userIdentification.hideIdentificationForm}
+              appearance={appearance}
+            />
           )}
 
           {/* Messages */}

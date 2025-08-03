@@ -23,6 +23,7 @@ export interface HumanHandoffRequest {
     pageUrl: string;
     browser: string;
     ipAddress: string;
+    identificationType?: string;
   };
 }
 

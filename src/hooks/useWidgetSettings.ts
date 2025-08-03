@@ -67,6 +67,10 @@ export interface WidgetSettings {
       email: boolean;
       mobile: boolean;
     };
+    // User identification settings
+    enableUserIdentification?: boolean;
+    identificationMethod?: 'manual_form_submission' | 'moodle_authentication';
+    sessionDurationHours?: number;
   };
   embed: {
     script: string;

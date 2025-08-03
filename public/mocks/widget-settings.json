@@ -56,7 +56,10 @@
       "name": false,
       "email": false,
       "mobile": false
-    }
+    },
+    "enableUserIdentification": true,
+    "identificationMethod": "manual_form_submission",
+    "sessionDurationHours": 24
   },
   "embed": {
     "script": "<script>\n(function() {\n  var widget = document.createElement('div');\n  widget.id = 'support-widget';\n  widget.innerHTML = '<iframe src=\"https://your-domain.com/widget\" frameborder=\"0\"></iframe>';\n  document.body.appendChild(widget);\n})();\n</script>"
