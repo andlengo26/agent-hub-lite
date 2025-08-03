@@ -51,11 +51,11 @@
     "paddingY": 24
   },
   "userInfo": {
-    "anonymousChat": true,
+    "anonymousChat": false,
     "requiredFields": {
-      "name": false,
-      "email": false,
-      "mobile": false
+      "name": true,
+      "email": true,
+      "mobile": true
     },
     "enableUserIdentification": true,
     "identificationMethod": "manual_form_submission",
