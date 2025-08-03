@@ -553,6 +553,7 @@ export function InteractiveWidget() {
                 primaryColor: appearance.primaryColor,
                 textColor: '#FFFFFF'
               }}
+              getIdentificationMethodPriority={userIdentification.getIdentificationMethodPriority}
             />
           )}
 

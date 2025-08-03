@@ -59,6 +59,8 @@
     },
     "enableUserIdentification": true,
     "identificationMethod": "both",
+    "enableMoodleAuth": false,
+    "enableManualForm": true,
     "customWelcomeMessage": "Welcome! Please identify yourself to continue.",
     "moodleConfig": {
       "moodleUrl": "",
@@ -72,7 +74,8 @@
     }
   },
   "embed": {
-    "script": "<script>\n(function() {\n  var widget = document.createElement('div');\n  widget.id = 'support-widget';\n  widget.innerHTML = '<iframe src=\"https://your-domain.com/widget\" frameborder=\"0\"></iframe>';\n  document.body.appendChild(widget);\n})();\n</script>"
+    "script": "<script>\n(function() {\n  var widget = document.createElement('div');\n  widget.id = 'support-widget';\n  widget.innerHTML = '<iframe src=\"https://your-domain.com/widget\" frameborder=\"0\"></iframe>';\n  document.body.appendChild(widget);\n})();\n</script>",
+    "moodleChatPluginIntegration": false
   },
   "voice": {
     "enableVoiceCalls": false,

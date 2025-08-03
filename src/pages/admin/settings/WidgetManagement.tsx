@@ -435,30 +435,39 @@ export default function WidgetManagement() {
                        <Label htmlFor="enableUserIdentification">Enable user identification system</Label>
                      </div>
 
-                     {settings.userInfo.enableUserIdentification !== false && (
-                       <div className="space-y-3">
-                         <div>
-                           <Label>Identification Method</Label>
-                           <Select 
-                             value={settings.userInfo.identificationMethod || 'manual_form_submission'} 
-                             onValueChange={(value) => updateSettings('userInfo', { 
-                               identificationMethod: value as 'manual_form_submission' | 'moodle_authentication'
-                             })}
-                           >
-                             <SelectTrigger>
-                               <SelectValue placeholder="Select identification method" />
-                             </SelectTrigger>
-                             <SelectContent>
-                               <SelectItem value="manual_form_submission">Manual Form Submission</SelectItem>
-                               <SelectItem value="moodle_authentication" disabled>
-                                 Moodle Authentication (Coming Soon)
-                               </SelectItem>
-                             </SelectContent>
-                           </Select>
-                           <p className="text-xs text-muted-foreground mt-1">
-                             Manual form submission allows users to provide their information through an inline form.
-                           </p>
-                         </div>
+                      {settings.userInfo.enableUserIdentification !== false && (
+                        <div className="space-y-4">
+                          <div>
+                            <Label>Available Identification Methods</Label>
+                            <div className="space-y-3 mt-2">
+                              <div className="flex items-center space-x-2">
+                                <Checkbox
+                                  id="enableManualForm"
+                                  checked={settings.userInfo.enableManualForm !== false}
+                                  onCheckedChange={(checked) => updateSettings('userInfo', { 
+                                    enableManualForm: !!checked 
+                                  })}
+                                />
+                                <Label htmlFor="enableManualForm">Manual Form Submission</Label>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <Checkbox
+                                  id="enableMoodleAuth"
+                                  checked={settings.userInfo.enableMoodleAuth || false}
+                                  onCheckedChange={(checked) => updateSettings('userInfo', { 
+                                    enableMoodleAuth: !!checked 
+                                  })}
+                                />
+                                <Label htmlFor="enableMoodleAuth">Moodle Authentication</Label>
+                              </div>
+                            </div>
+                            <p className="text-xs text-muted-foreground mt-2">
+                              {settings.embed.moodleChatPluginIntegration 
+                                ? "When Moodle Chat Plugin integration is enabled, Moodle authentication takes priority when available."
+                                : "Users can choose from available identification methods."
+                              }
+                            </p>
+                          </div>
 
                          <div>
                            <Label htmlFor="sessionDurationHours">Session Duration (hours)</Label>
@@ -487,6 +496,18 @@ export default function WidgetManagement() {
 
             <TabsContent value="embed" className="space-y-4">
               <div className="space-y-4">
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    id="moodleChatPluginIntegration"
+                    checked={settings.embed.moodleChatPluginIntegration || false}
+                    onCheckedChange={(checked) => updateSettings('embed', { moodleChatPluginIntegration: checked })}
+                  />
+                  <Label htmlFor="moodleChatPluginIntegration">Integrate with Moodle Chat Plugin</Label>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  When enabled, the widget will prioritize Moodle authentication and seamlessly integrate with the Moodle chat plugin workflow.
+                </p>
+                
                 <div>
                   <Label htmlFor="embedScript">Embed Code</Label>
                   <div className="relative">

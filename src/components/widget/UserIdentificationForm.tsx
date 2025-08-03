@@ -26,6 +26,7 @@ interface UserIdentificationFormProps {
     primaryColor: string;
     textColor: string;
   };
+  getIdentificationMethodPriority: () => { methods: string[]; prioritizeMoodle: boolean };
 }
 
 export function UserIdentificationForm({
@@ -37,7 +38,8 @@ export function UserIdentificationForm({
   onMoodleAuth,
   onCancel,
   isSubmitting,
-  appearance
+  appearance,
+  getIdentificationMethodPriority
 }: UserIdentificationFormProps) {
   const [isSubmittingLocal, setIsSubmittingLocal] = useState(false);
 
@@ -56,12 +58,14 @@ export function UserIdentificationForm({
     }
   };
 
-  const showMoodleAuth = settings.userInfo?.moodleConfig?.enabled && 
-    (settings.userInfo.identificationMethod === 'moodle_authentication' || 
-     settings.userInfo.identificationMethod === 'both');
+  const { methods, prioritizeMoodle } = getIdentificationMethodPriority();
+  
+  const showMoodleAuth = settings.userInfo?.enableMoodleAuth && 
+    settings.userInfo?.moodleConfig?.enabled && 
+    methods.includes('moodle_authentication');
 
-  const showManualForm = settings.userInfo.identificationMethod === 'manual_form_submission' || 
-    settings.userInfo.identificationMethod === 'both';
+  const showManualForm = settings.userInfo?.enableManualForm !== false && 
+    methods.includes('manual_form_submission');
 
   return (
     <div className="p-4 bg-white border-t border-gray-200">
@@ -73,6 +77,11 @@ export function UserIdentificationForm({
             {settings.userInfo?.customWelcomeMessage || 
              "Please provide your information to continue."}
           </p>
+          {prioritizeMoodle && showMoodleAuth && (
+            <p className="text-xs text-blue-600 mt-1">
+              Moodle authentication is prioritized for this chat.
+            </p>
+          )}
         </div>
 
         {/* Moodle Authentication */}

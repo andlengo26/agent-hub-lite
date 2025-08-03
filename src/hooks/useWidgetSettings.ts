@@ -70,6 +70,8 @@ export interface WidgetSettings {
     // User identification settings
     enableUserIdentification?: boolean;
     identificationMethod?: 'manual_form_submission' | 'moodle_authentication' | 'both';
+    enableMoodleAuth?: boolean;
+    enableManualForm?: boolean;
     sessionDurationHours?: number;
     customWelcomeMessage?: string;
     moodleConfig?: {
@@ -85,6 +87,7 @@ export interface WidgetSettings {
   };
   embed: {
     script: string;
+    moodleChatPluginIntegration?: boolean;
   };
   voice: {
     enableVoiceCalls: boolean;
