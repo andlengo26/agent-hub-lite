@@ -4,7 +4,7 @@ import { Progress } from "@/components/ui/progress";
 import { Brain, Clock, Users, TrendingUp } from "lucide-react";
 import { useChats } from "@/hooks/useApiQuery";
 import { useWidgetSettings } from "@/hooks/useWidgetSettings";
-import { categorizeChats } from "@/utils/chatFilters";
+import { categorizeChats } from "@/lib/chat-utils";
 import { useMemo } from "react";
 
 export function AIMetricsCard() {
@@ -14,7 +14,7 @@ export function AIMetricsCard() {
   const chats = chatsResponse?.data || [];
   
   const metrics = useMemo(() => {
-    const categorized = categorizeChats(chats, widgetSettings);
+    const categorized = categorizeChats(chats);
     const totalChats = chats.length;
     const aiHandledChats = chats.filter(chat => chat.handledBy === 'ai').length;
     const humanHandledChats = chats.filter(chat => chat.handledBy === 'human' || chat.assignedAgentId).length;

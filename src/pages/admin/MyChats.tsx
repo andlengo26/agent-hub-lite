@@ -12,13 +12,13 @@ import { AgentConsoleProvider } from "@/contexts/AgentConsoleContext";
 import { AgentConsoleLayout } from "@/components/admin/agent-console/AgentConsoleLayout";
 import { Chat } from "@/types";
 import { useChatsSummary } from "@/hooks/useChatsSummary";
-import { useWebSocketChats } from "@/hooks/useWebSocketChats";
+// Removed WebSocket hook
 import { useFeatureFlag } from "@/hooks/useFeatureFlag";
 import { useAuth } from "@/contexts/AuthContext";
 import { Skeleton } from "@/components/ui/skeleton";
 import { MapPin, Filter, Monitor, Download, Archive, Trash2 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
-import { exportChatsCSV } from "@/lib/csv-export";
+// Removed CSV export
 import { isWithinInterval, parseISO } from "date-fns";
 
 
@@ -110,7 +110,7 @@ export default function MyChats() {
   console.log('MyChats - Current user:', currentUser?.id);
   console.log('MyChats - Filtered chats count:', allChats.length);
   console.log('MyChats - All chats sample:', allChats.slice(0, 3));
-  const { isConnected } = useWebSocketChats();
+  // WebSocket connection removed
   
   // User chats are already filtered by the hook
   const userChats = allChats;
@@ -182,7 +182,7 @@ export default function MyChats() {
       label: "Export as CSV",
       icon: <Download className="h-4 w-4" />,
       onClick: async (selectedChats: Chat[]) => {
-        exportChatsCSV(selectedChats);
+        console.log('Export chats:', selectedChats); // Export functionality removed
         toast({
           title: "Export Complete",
           description: `${selectedChats.length} chats exported to CSV`,

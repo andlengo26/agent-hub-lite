@@ -4,7 +4,7 @@
  */
 
 import { CustomerEngagement, Chat, Customer, Note } from '@/types';
-import { CustomerDataService } from './customerDataService';
+import { CustomerService } from './customerService';
 
 interface CreateEngagementFromChatParams {
   chat: Chat;
@@ -46,7 +46,7 @@ export class EngagementService {
     const { chat, agentId, agentName, aiSummary = '', notes = [] } = params;
 
     // Ensure customer exists
-    await CustomerDataService.upsertCustomer({
+    await CustomerService.upsertCustomer({
       id: chat.customerId,
       email: chat.requesterEmail,
       name: chat.requesterName,
@@ -82,9 +82,9 @@ export class EngagementService {
     const { customerEmail, customerName, agentId, agentName, subject, content, aiSummary = '', notes = [] } = params;
 
     // Find or create customer
-    let customer = await CustomerDataService.getCustomerByEmail(customerEmail);
+    let customer = await CustomerService.getCustomerByEmail(customerEmail);
     if (!customer) {
-      customer = await CustomerDataService.upsertCustomer({
+      customer = await CustomerService.upsertCustomer({
         email: customerEmail,
         name: customerName || customerEmail,
       });
@@ -119,12 +119,13 @@ export class EngagementService {
     // Find or create customer by phone
     let customer: Customer | null = null;
     if (params.customerId) {
-      const customers = await CustomerDataService.getCustomersFromChats();
+      const customersResponse = await CustomerService.getCustomers();
+      const customers = customersResponse.data;
       customer = customers.find(c => c.id === params.customerId) || null;
     }
 
     if (!customer) {
-      customer = await CustomerDataService.upsertCustomer({
+      customer = await CustomerService.upsertCustomer({
         email: customerName ? `${customerName.toLowerCase().replace(/\s+/g, '.')}@phone.contact` : `${customerPhone}@phone.contact`,
         name: customerName || `Phone Contact ${customerPhone}`,
         phone: customerPhone,

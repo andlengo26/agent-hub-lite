@@ -1,12 +1,10 @@
 /**
- * Consolidated hook for chat summary data and counts with deduplication
- * Replaces multiple separate hooks with a unified interface
+ * Simplified hook for chat summary data and counts
  */
 
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
 import { Chat, User } from '@/types';
-import { ChatDeduplicationService, ConsolidatedChat } from '@/services/chatDeduplicationService';
 import { logger } from '@/lib/logger';
 import { useMemo } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
@@ -22,7 +20,7 @@ interface ChatsSummaryParams {
 }
 
 interface ChatsSummary {
-  chats: Chat[] | ConsolidatedChat[];
+  chats: Chat[];
   users: User[];
   counts: {
     total: number;
@@ -31,17 +29,13 @@ interface ChatsSummary {
     closed: number;
     waiting: number;
   };
-  validationResult?: {
-    isValid: boolean;
-    warnings: string[];
-    errors: string[];
-  };
   isLoading: boolean;
   error: Error | null;
 }
 
 export function useChatsSummary(params: ChatsSummaryParams = {}): ChatsSummary {
   const { currentUser } = useAuth();
+  
   const { data: chatsData, isLoading: chatsLoading, error: chatsError } = useQuery({
     queryKey: ['chats', params],
     queryFn: () => apiClient.getChats({
@@ -83,55 +77,19 @@ export function useChatsSummary(params: ChatsSummaryParams = {}): ChatsSummary {
       return true;
     });
 
-    // Validate data integrity
-    const validationResult = ChatDeduplicationService.validateChats(filteredChats);
-    
-    // Log validation results
-    if (validationResult.warnings.length > 0) {
-      logger.warn('Chat data validation warnings', { warnings: validationResult.warnings });
-    }
-    if (validationResult.errors.length > 0) {
-      logger.error('Chat data validation errors', { errors: validationResult.errors });
-    }
+    // Calculate counts based on filtered data
+    const counts = {
+      total: filteredChats.length,
+      active: filteredChats.filter(chat => chat.status === 'active').length,
+      missed: filteredChats.filter(chat => chat.status === 'missed').length,
+      closed: filteredChats.filter(chat => chat.status === 'closed').length,
+      waiting: filteredChats.filter(chat => chat.status === 'waiting').length,
+    };
 
-    // Apply deduplication if enabled
-    if (params.enableDeduplication) {
-      // Filter conflicting chats first
-      filteredChats = ChatDeduplicationService.filterConflictingChats(filteredChats);
-      
-      // Then consolidate by customer
-      const consolidatedChats = ChatDeduplicationService.consolidateChats(filteredChats);
-      
-      // Calculate counts based on consolidated data
-      const counts = {
-        total: consolidatedChats.length,
-        active: consolidatedChats.filter(chat => chat.status === 'active').length,
-        missed: consolidatedChats.filter(chat => chat.status === 'missed').length,
-        closed: consolidatedChats.filter(chat => chat.status === 'closed').length,
-        waiting: consolidatedChats.filter(chat => chat.status === 'waiting').length,
-      };
-
-      return {
-        chats: consolidatedChats,
-        counts,
-        validationResult
-      };
-    } else {
-      // Calculate counts based on original filtered data
-      const counts = {
-        total: filteredChats.length,
-        active: filteredChats.filter(chat => chat.status === 'active').length,
-        missed: filteredChats.filter(chat => chat.status === 'missed').length,
-        closed: filteredChats.filter(chat => chat.status === 'closed').length,
-        waiting: filteredChats.filter(chat => chat.status === 'waiting').length,
-      };
-
-      return {
-        chats: filteredChats,
-        counts,
-        validationResult
-      };
-    }
+    return {
+      chats: filteredChats,
+      counts,
+    };
   }, [chats, params, currentUser]);
 
   // Debug logging

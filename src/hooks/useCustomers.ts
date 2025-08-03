@@ -5,7 +5,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Customer } from '@/types';
 import { toast } from '@/hooks/use-toast';
-import { CustomerDataService } from '@/services/customerDataService';
+import { CustomerService } from '@/services/customerService';
 
 interface CustomersResponse {
   data: Customer[];
@@ -29,7 +29,7 @@ export function useCustomers(params: UseCustomersParams = {}) {
     queryKey: ['customers', params],
     queryFn: async () => {
       console.log('🔄 useCustomers: Fetching customers with params:', params);
-      const result = await CustomerDataService.getCustomers(params);
+      const result = await CustomerService.getCustomers(params);
       console.log('✅ useCustomers: Successfully fetched customers:', {
         count: result.data.length,
         total: result.pagination.total,
@@ -47,7 +47,7 @@ export function useCustomers(params: UseCustomersParams = {}) {
 export function useCustomerByEmail(email: string) {
   return useQuery({
     queryKey: ['customer', 'email', email],
-    queryFn: () => CustomerDataService.getCustomerByEmail(email),
+    queryFn: () => CustomerService.getCustomerByEmail(email),
     enabled: !!email,
   });
 }
@@ -58,7 +58,7 @@ export function useUpsertCustomer() {
 
   return useMutation({
     mutationFn: (customerData: Partial<Customer> & { email: string }) => 
-      CustomerDataService.upsertCustomer(customerData),
+      CustomerService.upsertCustomer(customerData),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['customers'] });
       queryClient.invalidateQueries({ queryKey: ['chats'] });

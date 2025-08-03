@@ -19,8 +19,7 @@ import { Chat, User } from '@/types';
 import { formatDistanceToNow, format, isToday, isSameDay, isYesterday, isThisWeek, isThisMonth } from 'date-fns';
 import { Clock, MessageCircle, ChevronDown, CalendarIcon, Download } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { exportChatsCSV } from '@/lib/csv-export';
-import { categorizeChats } from '@/utils/chatFilters';
+import { categorizeChats } from '@/lib/chat-utils';
 import { useWidgetSettings } from '@/hooks/useWidgetSettings';
 
 interface QueuePreviewProps {
@@ -86,8 +85,8 @@ export function QueuePreview({
   };
 
   const handleBulkExport = () => {
-    const selectedChatData = chats.filter(chat => selectedChats.includes(chat.id));
-    exportChatsCSV(selectedChatData);
+    // Export functionality simplified - could be implemented later
+    console.log('Export selected chats:', selectedChats);
   };
 
   const clearSelection = () => {
@@ -119,7 +118,7 @@ export function QueuePreview({
   });
 
   // Categorize chats using the new AI-first routing logic
-  const categorizedChats = categorizeChats(filteredChats, settings);
+  const categorizedChats = categorizeChats(filteredChats);
 
   const toggleSection = (section: keyof typeof openSections) => {
     setOpenSections(prev => {

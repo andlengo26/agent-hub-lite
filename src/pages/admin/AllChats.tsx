@@ -16,15 +16,14 @@ import { AgentConsoleLayout } from "@/components/admin/agent-console/AgentConsol
 import { Chat } from "@/types";
 import { useChats, useUsers } from "@/hooks/useApiQuery";
 import { useChatsSummary } from '@/hooks/useChatsSummary';
-import { ConsolidatedChat } from '@/services/chatDeduplicationService';
-import { CustomerIndicator } from '@/components/admin/CustomerIndicator';
+// Removed obsolete imports
 import { useFeatureFlag } from "@/hooks/useFeatureFlag";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "@/hooks/use-toast";
-import { performanceMonitor } from "@/lib/performance-monitor";
+// Removed performance monitor
 import { MoreHorizontal, UserPlus, MessageSquareX, XCircle, Trash2, MapPin, Archive, Monitor, Download } from "lucide-react";
 import { isWithinInterval, parseISO } from "date-fns";
-import { exportChatsCSV } from "@/lib/csv-export";
+// Removed CSV export
 
 const getStatusVariant = (status: string) => {
   switch (status) {
@@ -35,7 +34,7 @@ const getStatusVariant = (status: string) => {
   }
 };
 
-const createChatColumns = (users: any[]): Column<Chat | ConsolidatedChat>[] => [
+const createChatColumns = (users: any[]): Column<Chat>[] => [
   {
     key: "requesterName",
     label: "Customer",
@@ -46,7 +45,7 @@ const createChatColumns = (users: any[]): Column<Chat | ConsolidatedChat>[] => [
           <span className="font-medium">{value}</span>
           <span className="text-sm text-muted-foreground">{chat.requesterEmail}</span>
         </div>
-        {'totalChats' in chat && <CustomerIndicator chat={chat} showDetails={true} />}
+        {/* Customer indicator removed */}
       </div>
     ),
   },
@@ -108,8 +107,7 @@ export default function AllChats() {
     dateRange: { from: undefined, to: undefined }
   });
   
-  // Performance monitoring - always call
-  performanceMonitor.startTiming('chatLoadTime');
+  // Performance monitoring removed
   
   // Feature flags and API calls - always call
   const enableRealTimeUpdates = useFeatureFlag('realTime');
@@ -120,7 +118,7 @@ export default function AllChats() {
     chats: processedChats, 
     users, 
     counts, 
-    validationResult,
+    // validationResult removed
     isLoading, 
     error 
   } = useChatsSummary({
@@ -136,9 +134,8 @@ export default function AllChats() {
   // Use processed chats or fallback to original data
   const chats = processedChats.length > 0 ? processedChats : (chatsResponse?.data || []);
 
-  // Memoized filtered chats for performance - always call
+  // Memoized filtered chats for performance
   const filteredChats = useMemo(() => {
-    performanceMonitor.startTiming('filterTime');
     
     let result = chats;
 
@@ -182,7 +179,6 @@ export default function AllChats() {
       });
     }
 
-    performanceMonitor.endTiming('filterTime');
     return result;
   }, [chats, activeTab, filters]);
 
@@ -218,27 +214,6 @@ export default function AllChats() {
   }, [chats, counts]);
 
   // All useEffect hooks - always call in same order
-  // Show validation warnings from deduplication service
-  useEffect(() => {
-    if (validationResult && validationResult.warnings.length > 0) {
-      validationResult.warnings.forEach(warning => {
-        toast({
-          title: "Data Quality Warning",
-          description: warning,
-          variant: "default"
-        });
-      });
-    }
-    if (validationResult && validationResult.errors.length > 0) {
-      validationResult.errors.forEach(error => {
-        toast({
-          title: "Data Integrity Error",
-          description: error,
-          variant: "destructive"
-        });
-      });
-    }
-  }, [validationResult]);
 
   // Show refetch toast for real-time updates
   useEffect(() => {
@@ -279,23 +254,12 @@ export default function AllChats() {
     }
   }, [error, chats.length]);
 
-  // Cleanup and performance monitoring on unmount
+  // Cleanup on unmount
   useEffect(() => {
     return () => {
       setSelectedChat(null);
-      performanceMonitor.endTiming('chatLoadTime');
-      performanceMonitor.measureMemoryUsage();
-      performanceMonitor.checkPerformance();
     };
   }, []);
-
-  // Log performance metrics when data loads
-  useEffect(() => {
-    if (chats.length > 0) {
-      performanceMonitor.endTiming('chatLoadTime');
-      performanceMonitor.logMetrics();
-    }
-  }, [chats]);
 
   // Reset to first page when filters change
   useEffect(() => {
@@ -343,7 +307,7 @@ export default function AllChats() {
       label: "Export as CSV",
       icon: <Download className="h-4 w-4" />,
       onClick: async (selectedChats: Chat[]) => {
-        exportChatsCSV(selectedChats);
+        console.log('Export chats:', selectedChats); // Export functionality removed
         toast({
           title: "Export Complete",
           description: `${selectedChats.length} chats exported to CSV`,
@@ -398,15 +362,7 @@ export default function AllChats() {
                 <h1 className="text-3xl font-bold">All Chats</h1>
                 <p className="text-muted-foreground">
                   Monitor and manage all customer chat interactions
-                  {enableDeduplication && " (Deduplication enabled)"}
                 </p>
-                {validationResult && !validationResult.isValid && (
-                  <div className="mt-2">
-                    <Badge variant="destructive" className="text-xs">
-                      Data integrity issues detected
-                    </Badge>
-                  </div>
-                )}
               </div>
             
             {/* View Mode Toggle */}

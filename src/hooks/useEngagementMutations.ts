@@ -5,7 +5,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { CustomerEngagement } from '@/types';
 import { toast } from '@/hooks/use-toast';
-import { useChatEngagementSync } from './useChatEngagementSync';
+// Removed sync dependency
 
 interface CreateEngagementParams {
   customerId: string;
@@ -25,7 +25,6 @@ interface DeleteEngagementParams {
 
 export function useCreateEngagement() {
   const queryClient = useQueryClient();
-  const { syncEngagementToChat } = useChatEngagementSync();
 
   return useMutation({
     mutationFn: async ({ customerId, engagement }: CreateEngagementParams) => {
@@ -54,9 +53,6 @@ export function useCreateEngagement() {
       return newEngagement;
     },
     onSuccess: (newEngagement, { customerId }) => {
-      // Sync to chat data
-      syncEngagementToChat(newEngagement);
-      
       // Invalidate related queries
       queryClient.invalidateQueries({ queryKey: ['customer-engagements', customerId] });
       queryClient.invalidateQueries({ queryKey: ['engagements'] });
@@ -80,7 +76,6 @@ export function useCreateEngagement() {
 
 export function useUpdateEngagement() {
   const queryClient = useQueryClient();
-  const { syncEngagementToChat } = useChatEngagementSync();
 
   return useMutation({
     mutationFn: async ({ customerId, engagementId, engagement }: UpdateEngagementParams) => {
@@ -104,11 +99,6 @@ export function useUpdateEngagement() {
       return updatedEngagement;
     },
     onSuccess: (updatedEngagement, { customerId }) => {
-      // Sync to chat data
-      if (updatedEngagement.id) {
-        syncEngagementToChat(updatedEngagement as CustomerEngagement);
-      }
-      
       // Invalidate related queries
       queryClient.invalidateQueries({ queryKey: ['customer-engagements', customerId] });
       queryClient.invalidateQueries({ queryKey: ['engagements'] });

@@ -31,7 +31,7 @@ export function AgentConsoleLayout({
   const [contextPanelExpanded, setContextPanelExpanded] = useState(false);
   const [selectedChats, setSelectedChats] = useState<string[]>([]);
   
-  const { isConnected, handleNewChatIngestion } = useRealTimeSync({
+  const { isConnected, triggerSync } = useRealTimeSync({
     onChatUpdate: (chat) => {
       console.log('Chat updated in agent console:', chat.id);
       // Automatically refresh queue if new chat arrives
