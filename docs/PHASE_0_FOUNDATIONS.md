@@ -6,23 +6,24 @@ This document describes the foundational systems and patterns for the Customer S
 
 ## 🎨 Design Tokens
 
-**Where:** `tailwind.config.ts` & `src/design-tokens.ts`
+**Where:** `tailwind.config.ts` & `index.css`
 
-- **Colors:** Brand palette only—no raw hexes in components  
-- **Spacing:** Semantic scale (`space-1` … `space-6`)  
-- **Typography:** Inter family, `text-sm` … `text-2xl`  
-- **Radii:** `rounded-sm` / `rounded-md` / `rounded-lg`  
-- **Dark Mode:** `dark:` variants for all tokens  
-- **Importable:** JS/TS modules in `src/design-tokens.ts` for runtime use
+- **Colors:** Brand palette using HSL color space—no raw hexes in components  
+- **Spacing:** Semantic scale (`space-1` through `space-6`)  
+- **Typography:** Inter font family, `text-sm` through `text-2xl`  
+- **Radii:** `radius-sm` / `radius-md` / `radius-lg`  
+- **Dark Mode:** Automatic dark mode support via CSS variables
+- **Semantic tokens:** All design tokens are accessible through CSS custom properties
 
-```ts
-// src/design-tokens.ts
-export const colors = {
-  primary: "hsl(var(--primary))",
-  surface: "hsl(var(--surface))",
-  text: "hsl(var(--text-primary))",
-  // …
-};
+```css
+/* index.css */
+:root {
+  --primary: 213 94% 68%;
+  --surface: 210 40% 98%; 
+  --text-primary: 222 84% 4.9%;
+  /* ... */
+}
+```
 🧩 Component Library
 All UI patterns use these reusable, token‑driven components:
 

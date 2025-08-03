@@ -10,7 +10,7 @@ import { format } from 'date-fns';
 import { useUsers } from '@/hooks/useApiQuery';
 import { cn } from '@/lib/utils';
 
-export interface ChatFilters {
+export interface ChatFiltersConfig {
   search: string;
   status: string;
   agent: string;
@@ -20,9 +20,12 @@ export interface ChatFilters {
   };
 }
 
+// Keep this export for backward compatibility
+export interface ChatFilters extends ChatFiltersConfig {}
+
 interface ChatFiltersProps {
-  filters: ChatFilters;
-  onFiltersChange: (filters: ChatFilters) => void;
+  filters: ChatFiltersConfig;
+  onFiltersChange: (filters: ChatFiltersConfig) => void;
   isCollapsed?: boolean;
   onToggleCollapse?: () => void;
 }
@@ -36,7 +39,7 @@ export function ChatFilters({
   const { data: usersResponse } = useUsers();
   const users = usersResponse?.data || [];
   
-  const updateFilter = (key: keyof ChatFilters, value: any) => {
+  const updateFilter = (key: keyof ChatFiltersConfig, value: any) => {
     onFiltersChange({ ...filters, [key]: value });
   };
 

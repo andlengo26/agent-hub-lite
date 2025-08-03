@@ -14,6 +14,7 @@ import { EmailComposer } from './EmailComposer';
 import { AgentAvatar } from './AgentAvatar';
 import { ChatReassignmentModal } from '../ChatReassignmentModal';
 import { Chat, EmailMessage, User } from '@/types';
+import { toast } from '@/hooks/use-toast';
 import { 
   CheckCircle, 
   XCircle, 
@@ -375,8 +376,11 @@ export function ActiveChat({
                       input.onchange = (e) => {
                         const file = (e.target as HTMLInputElement).files?.[0];
                         if (file) {
-                          console.log('File selected:', file.name);
-                          // TODO: Handle file upload
+                          // File upload implementation would handle file upload to server
+                          toast({
+                            title: "File Selected",
+                            description: `Selected file: ${file.name}`,
+                          });
                         }
                       };
                       input.click();

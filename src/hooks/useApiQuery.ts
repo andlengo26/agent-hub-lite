@@ -17,9 +17,8 @@ export function useChats(params?: {
   return useQuery({
     queryKey: ['chats', params],
     queryFn: async () => {
-      console.log('🔄 useChats: Fetching chats with params:', params);
       const result = await apiClient.getChats(params);
-      console.log('✅ useChats: Successfully fetched chats via API client:', result);
+      logger.debug('Fetched chats successfully', { count: result?.data?.length }, 'useChats');
       return result;
     },
     staleTime: 30000, // 30 seconds
@@ -71,9 +70,8 @@ export function useUsers(params?: {
   return useQuery({
     queryKey: ['users', params],
     queryFn: async () => {
-      console.log('🔄 useUsers: Fetching users with params:', params);
       const result = await apiClient.getUsers(params);
-      console.log('✅ useUsers: Successfully fetched users via API client:', result);
+      logger.debug('Fetched users successfully', { count: result?.data?.length }, 'useUsers');
       return result;
     },
     staleTime: 60000, // 1 minute
@@ -138,9 +136,8 @@ export function useOrganizations() {
   return useQuery({
     queryKey: ['organizations'],
     queryFn: async () => {
-      console.log('🔄 useOrganizations: Fetching organizations');
       const result = await apiClient.getOrganizations();
-      console.log('✅ useOrganizations: Successfully fetched organizations via API client:', result);
+      logger.debug('Fetched organizations successfully', { count: result?.data?.length }, 'useOrganizations');
       return result;
     },
     staleTime: 300000, // 5 minutes
@@ -255,9 +252,8 @@ export function useDocuments(params?: { page?: number; limit?: number; }) {
   return useQuery({
     queryKey: ['documents', params],
     queryFn: async () => {
-      console.log('🔄 useDocuments: Fetching documents with params:', params);
       const result = await apiClient.getDocuments(params);
-      console.log('✅ useDocuments: Successfully fetched documents via API client:', result);
+      logger.debug('Fetched documents successfully', { count: result?.data?.length }, 'useDocuments');
       return result;
     },
     staleTime: 60000, // 1 minute
@@ -272,9 +268,8 @@ export function useFAQs(params?: { page?: number; limit?: number; }) {
   return useQuery({
     queryKey: ['faqs', params],
     queryFn: async () => {
-      console.log('🔄 useFAQs: Fetching FAQs with params:', params);
       const result = await apiClient.getFAQs(params);
-      console.log('✅ useFAQs: Successfully fetched FAQs via API client:', result);
+      logger.debug('Fetched FAQs successfully', { count: result?.data?.length }, 'useFAQs');
       return result;
     },
     staleTime: 60000, // 1 minute
@@ -289,9 +284,8 @@ export function useScraperJobs(params?: { page?: number; limit?: number; }) {
   return useQuery({
     queryKey: ['scraper-jobs', params],
     queryFn: async () => {
-      console.log('🔄 useScraperJobs: Fetching scraper jobs with params:', params);
       const result = await apiClient.getScraperJobs(params);
-      console.log('✅ useScraperJobs: Successfully fetched scraper jobs via API client:', result);
+      logger.debug('Fetched scraper jobs successfully', { count: result?.data?.length }, 'useScraperJobs');
       return result;
     },
     staleTime: 60000, // 1 minute
@@ -306,9 +300,8 @@ export function useDomains(params?: { page?: number; limit?: number; }) {
   return useQuery({
     queryKey: ['domains', params],
     queryFn: async () => {
-      console.log('🔄 useDomains: Fetching domains with params:', params);
       const result = await apiClient.getDomains(params);
-      console.log('✅ useDomains: Successfully fetched domains via API client:', result);
+      logger.debug('Fetched domains successfully', { count: result?.data?.length }, 'useDomains');
       return result;
     },
     staleTime: 60000, // 1 minute
@@ -323,9 +316,8 @@ export function useResources(params?: { page?: number; limit?: number; }) {
   return useQuery({
     queryKey: ['resources', params],
     queryFn: async () => {
-      console.log('🔄 useResources: Fetching resources with params:', params);
       const result = await apiClient.getResources(params);
-      console.log('✅ useResources: Successfully fetched resources via API client:', result);
+      logger.debug('Fetched resources successfully', { count: result?.data?.length }, 'useResources');
       return result;
     },
     staleTime: 60000, // 1 minute

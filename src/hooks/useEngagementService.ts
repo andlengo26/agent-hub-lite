@@ -63,7 +63,6 @@ export function useCreateEngagementFromChat() {
       });
     },
     onError: (error) => {
-      console.error('Failed to create engagement from chat:', error);
       toast({
         title: "Error",
         description: "Failed to create engagement from chat",
@@ -90,7 +89,6 @@ export function useCreateEngagementFromEmail() {
       });
     },
     onError: (error) => {
-      console.error('Failed to create engagement from email:', error);
       toast({
         title: "Error",
         description: "Failed to create engagement from email",
@@ -117,7 +115,6 @@ export function useCreateEngagementFromPhone() {
       });
     },
     onError: (error) => {
-      console.error('Failed to create engagement from phone:', error);
       toast({
         title: "Error",
         description: "Failed to create engagement from phone",
@@ -142,7 +139,6 @@ export function useAddNoteToEngagement() {
       });
     },
     onError: (error) => {
-      console.error('Failed to add note to engagement:', error);
       toast({
         title: "Error",
         description: "Failed to add note to engagement",

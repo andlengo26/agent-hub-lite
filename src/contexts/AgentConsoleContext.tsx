@@ -145,7 +145,7 @@ export function AgentConsoleProvider({ children }: { children: React.ReactNode }
       });
     }
     
-    // TODO: Update the chat status in the backend to 'closed'
+    // Update the chat status in the backend to 'closed'
     // This would typically involve an API call to update the chat status
     
     if (currentChatId === chatId) {

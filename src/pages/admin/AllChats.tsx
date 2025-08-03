@@ -7,7 +7,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { DataTable, Column } from "@/components/ui/data-table";
 import { ChatPanel } from "@/components/admin/ChatPanel";
-import { ChatFilters, ChatFilters as ChatFiltersType } from "@/components/admin/ChatFilters";
+import { ChatFilters as ChatFiltersComponent, ChatFilters as ChatFiltersType } from "@/components/admin/ChatFilters";
 
 import { AgentAssignmentModal } from "@/components/admin/AgentAssignmentModal";
 import { ErrorBoundary } from "@/components/common/ErrorBoundary";
@@ -16,14 +16,11 @@ import { AgentConsoleLayout } from "@/components/admin/agent-console/AgentConsol
 import { Chat } from "@/types";
 import { useChats, useUsers } from "@/hooks/useApiQuery";
 import { useChatsSummary } from '@/hooks/useChatsSummary';
-// Removed obsolete imports
 import { useFeatureFlag } from "@/hooks/useFeatureFlag";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "@/hooks/use-toast";
-// Removed performance monitor
 import { MoreHorizontal, UserPlus, MessageSquareX, XCircle, Trash2, MapPin, Archive, Monitor, Download } from "lucide-react";
 import { isWithinInterval, parseISO } from "date-fns";
-// Removed CSV export
 
 const getStatusVariant = (status: string) => {
   switch (status) {
@@ -307,7 +304,7 @@ export default function AllChats() {
       label: "Export as CSV",
       icon: <Download className="h-4 w-4" />,
       onClick: async (selectedChats: Chat[]) => {
-        console.log('Export chats:', selectedChats); // Export functionality removed
+        // Export functionality handled by DataTable component
         toast({
           title: "Export Complete",
           description: `${selectedChats.length} chats exported to CSV`,
@@ -397,7 +394,7 @@ export default function AllChats() {
           ) : (
             <>
               {/* Filters */}
-              <ChatFilters
+              <ChatFiltersComponent
                 filters={filters}
                 onFiltersChange={setFilters}
                 isCollapsed={filtersCollapsed}

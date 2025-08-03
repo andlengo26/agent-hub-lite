@@ -33,7 +33,6 @@ export function AgentConsoleLayout({
   
   const { isConnected, triggerSync } = useRealTimeSync({
     onChatUpdate: (chat) => {
-      console.log('Chat updated in agent console:', chat.id);
       // Automatically refresh queue if new chat arrives
       if (chat.status === 'waiting') {
         // Trigger queue refresh
@@ -65,12 +64,12 @@ export function AgentConsoleLayout({
 
   const handleSendMessage = (message: string) => {
     // Handle message sending logic
-    console.log('Sending message:', message);
+    // Implementation would send message via API
   };
 
   const handleCloseChat = (chatId: string) => {
     // Handle chat closing logic
-    console.log('Closing chat:', chatId);
+    // Implementation would close chat via API
   };
 
   const handleTakeoverChat = (chat: Chat) => {
@@ -91,8 +90,7 @@ export function AgentConsoleLayout({
         description: `Chat has been reassigned to ${newAgent?.firstName} ${newAgent?.lastName}`,
       });
       
-      // Optional: Remove from current agent's active chats or update state
-      console.log('Chat reassigned:', chatId, 'to agent:', newAgentId);
+      // Remove from current agent's active chats or update state as needed
       
     } catch (error) {
       toast({

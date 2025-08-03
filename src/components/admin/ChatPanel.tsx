@@ -28,7 +28,6 @@ interface ChatPanelProps {
 }
 
 export const ChatPanel = memo<ChatPanelProps>(({ chat }) => {
-  console.log('ChatPanel: Rendering chat panel', { chatId: chat.id, status: chat.status, assignedAgent: chat.assignedAgentId });
   
   const [message, setMessage] = useState("");
   const [isSending, setIsSending] = useState(false);
@@ -82,7 +81,6 @@ export const ChatPanel = memo<ChatPanelProps>(({ chat }) => {
 
   const handleAgentChange = async (agentId: string) => {
     try {
-      console.log('ChatPanel: Assigning agent', { agentId, chatId: chat.id });
       setSelectedAgentId(agentId);
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 500));
@@ -100,7 +98,6 @@ export const ChatPanel = memo<ChatPanelProps>(({ chat }) => {
         });
       }
     } catch (error) {
-      console.error('ChatPanel: Failed to assign agent', error);
       toast({
         title: "Failed to assign agent",
         description: "Please try again",
