@@ -28,6 +28,8 @@ interface AgentConsoleContextType {
 
 const AgentConsoleContext = createContext<AgentConsoleContextType | undefined>(undefined);
 
+export { AgentConsoleContext };
+
 export function AgentConsoleProvider({ children }: { children: React.ReactNode }) {
   const [activeChats, setActiveChats] = useState<ActiveChat[]>([]);
   const [currentChatId, setCurrentChatId] = useState<string | null>(null);

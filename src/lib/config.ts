@@ -19,6 +19,7 @@ export interface AppConfig {
     enableAdvancedAnalytics: boolean;
     enableMultiTenant: boolean;
     enableRealTimeUpdates: boolean;
+    enableAILifecycle: boolean;
   };
   ui: {
     defaultPageSize: number;
@@ -47,6 +48,7 @@ const config: AppConfig = {
     enableAdvancedAnalytics: import.meta.env.VITE_FEATURE_ANALYTICS === 'true',
     enableMultiTenant: import.meta.env.VITE_FEATURE_MULTITENANT === 'true',
     enableRealTimeUpdates: import.meta.env.VITE_FEATURE_REALTIME === 'true',
+    enableAILifecycle: import.meta.env.VITE_FEATURE_AI_LIFECYCLE !== 'false',
   },
   ui: {
     defaultPageSize: 10,
@@ -72,4 +74,5 @@ export const featureFlags = {
   analytics: config.features.enableAdvancedAnalytics,
   multiTenant: config.features.enableMultiTenant,
   realTime: config.features.enableRealTimeUpdates,
+  aiLifecycle: config.features.enableAILifecycle,
 };
