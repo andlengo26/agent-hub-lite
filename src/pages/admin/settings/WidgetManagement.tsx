@@ -234,16 +234,105 @@ export default function WidgetManagement() {
                     />
                   </div>
                   <div>
-                    <Label htmlFor="idleTimeout">Idle Timeout (minutes)</Label>
+                    <Label htmlFor="requestWaitingTime">AI Response Wait Time (minutes)</Label>
                     <Input
-                      id="idleTimeout"
+                      id="requestWaitingTime"
                       type="number"
                       min="1"
-                      max="60"
-                      value={settings.aiSettings.idleTimeout}
-                      onChange={(e) => updateSettings('aiSettings', { idleTimeout: parseInt(e.target.value) })}
+                      max="30"
+                      value={settings.aiSettings.requestWaitingTime}
+                      onChange={(e) => updateSettings('aiSettings', { requestWaitingTime: parseInt(e.target.value) })}
                     />
                   </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="enableIdleTimeout">Enable Idle Timeout</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Automatically end conversations after inactivity
+                      </p>
+                    </div>
+                    <Switch
+                      id="enableIdleTimeout"
+                      checked={settings.aiSettings.enableIdleTimeout}
+                      onCheckedChange={(checked) => updateSettings('aiSettings', { enableIdleTimeout: checked })}
+                    />
+                  </div>
+
+                  {settings.aiSettings.enableIdleTimeout && (
+                    <div>
+                      <Label htmlFor="idleTimeout">Idle Timeout (minutes)</Label>
+                      <Input
+                        id="idleTimeout"
+                        type="number"
+                        min="1"
+                        max="60"
+                        value={settings.aiSettings.idleTimeout}
+                        onChange={(e) => updateSettings('aiSettings', { idleTimeout: parseInt(e.target.value) })}
+                      />
+                    </div>
+                  )}
+
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="enableMaxSessionLength">Enable Max AI Session Duration</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Limit AI session length and offer human handoff
+                      </p>
+                    </div>
+                    <Switch
+                      id="enableMaxSessionLength"
+                      checked={settings.aiSettings.enableMaxSessionLength}
+                      onCheckedChange={(checked) => updateSettings('aiSettings', { enableMaxSessionLength: checked })}
+                    />
+                  </div>
+
+                  {settings.aiSettings.enableMaxSessionLength && (
+                    <div>
+                      <Label htmlFor="maxSessionMinutes">Max AI Session Duration (minutes)</Label>
+                      <Input
+                        id="maxSessionMinutes"
+                        type="number"
+                        min="5"
+                        max="120"
+                        value={settings.aiSettings.maxSessionMinutes}
+                        onChange={(e) => updateSettings('aiSettings', { maxSessionMinutes: parseInt(e.target.value) })}
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">
+                        AI session will end after this duration with option to talk to human
+                      </p>
+                    </div>
+                  )}
+
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="enableMessageQuota">Enable Message Quota</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Limit number of messages per session
+                      </p>
+                    </div>
+                    <Switch
+                      id="enableMessageQuota"
+                      checked={settings.aiSettings.enableMessageQuota}
+                      onCheckedChange={(checked) => updateSettings('aiSettings', { enableMessageQuota: checked })}
+                    />
+                  </div>
+
+                  {settings.aiSettings.enableMessageQuota && (
+                    <div>
+                      <Label htmlFor="maxMessagesPerSession">Max Messages Per Session</Label>
+                      <Input
+                        id="maxMessagesPerSession"
+                        type="number"
+                        min="5"
+                        max="100"
+                        value={settings.aiSettings.maxMessagesPerSession}
+                        onChange={(e) => updateSettings('aiSettings', { maxMessagesPerSession: parseInt(e.target.value) })}
+                      />
+                    </div>
+                  )}
                 </div>
               </div>
             </TabsContent>
