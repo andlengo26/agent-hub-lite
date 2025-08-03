@@ -200,6 +200,176 @@ export default function AIResponse() {
               />
             </div>
           )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Daily & Hourly Quotas</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label htmlFor="daily-quota">Enable Daily Message Quota</Label>
+              <p className="text-sm text-muted-foreground">
+                Limit total messages per day across all sessions
+              </p>
+            </div>
+            <Switch 
+              id="daily-quota" 
+              checked={settings.aiSettings.enableDailyQuota}
+              onCheckedChange={(checked) => 
+                updateSettings('aiSettings', { enableDailyQuota: checked })
+              }
+            />
+          </div>
+
+          {settings.aiSettings.enableDailyQuota && (
+            <div className="space-y-2">
+              <Label htmlFor="max-daily">Max Daily Messages</Label>
+              <Input 
+                id="max-daily" 
+                type="number" 
+                value={settings.aiSettings.maxDailyMessages}
+                onChange={(e) => 
+                  updateSettings('aiSettings', { maxDailyMessages: parseInt(e.target.value) || 50 })
+                }
+                min="10" 
+                max="1000" 
+              />
+            </div>
+          )}
+
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label htmlFor="hourly-quota">Enable Hourly Message Quota</Label>
+              <p className="text-sm text-muted-foreground">
+                Limit messages per hour for rate limiting
+              </p>
+            </div>
+            <Switch 
+              id="hourly-quota" 
+              checked={settings.aiSettings.enableHourlyQuota}
+              onCheckedChange={(checked) => 
+                updateSettings('aiSettings', { enableHourlyQuota: checked })
+              }
+            />
+          </div>
+
+          {settings.aiSettings.enableHourlyQuota && (
+            <div className="space-y-2">
+              <Label htmlFor="max-hourly">Max Hourly Messages</Label>
+              <Input 
+                id="max-hourly" 
+                type="number" 
+                value={settings.aiSettings.maxHourlyMessages}
+                onChange={(e) => 
+                  updateSettings('aiSettings', { maxHourlyMessages: parseInt(e.target.value) || 10 })
+                }
+                min="5" 
+                max="100" 
+              />
+            </div>
+          )}
+
+          <div className="space-y-2">
+            <Label htmlFor="quota-warning">Quota Warning Threshold</Label>
+            <Input 
+              id="quota-warning" 
+              type="number" 
+              value={settings.aiSettings.quotaWarningThreshold}
+              onChange={(e) => 
+                updateSettings('aiSettings', { quotaWarningThreshold: parseInt(e.target.value) || 5 })
+              }
+              min="1" 
+              max="20" 
+            />
+            <p className="text-xs text-muted-foreground">
+              Show warning when remaining messages reach this threshold
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Spam Prevention</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label htmlFor="spam-prevention">Enable Spam Prevention</Label>
+              <p className="text-sm text-muted-foreground">
+                Prevent rapid consecutive messages from users
+              </p>
+            </div>
+            <Switch 
+              id="spam-prevention" 
+              checked={settings.aiSettings.enableSpamPrevention}
+              onCheckedChange={(checked) => 
+                updateSettings('aiSettings', { enableSpamPrevention: checked })
+              }
+            />
+          </div>
+
+          {settings.aiSettings.enableSpamPrevention && (
+            <div className="space-y-2">
+              <Label htmlFor="message-delay">Minimum Message Delay (seconds)</Label>
+              <Input 
+                id="message-delay" 
+                type="number" 
+                value={settings.aiSettings.minMessageDelaySeconds}
+                onChange={(e) => 
+                  updateSettings('aiSettings', { minMessageDelaySeconds: parseInt(e.target.value) || 3 })
+                }
+                min="1" 
+                max="30" 
+              />
+              <p className="text-xs text-muted-foreground">
+                Users must wait this long between messages
+              </p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>User Feedback</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label htmlFor="enable-feedback">Enable Message Feedback</Label>
+              <p className="text-sm text-muted-foreground">
+                Allow users to rate AI responses with thumbs up/down
+              </p>
+            </div>
+            <Switch 
+              id="enable-feedback" 
+              checked={settings.aiSettings.enableFeedback}
+              onCheckedChange={(checked) => 
+                updateSettings('aiSettings', { enableFeedback: checked })
+              }
+            />
+          </div>
+
+          {settings.aiSettings.enableFeedback && (
+            <div className="space-y-2">
+              <Label htmlFor="feedback-prompt">Feedback Prompt</Label>
+              <Input 
+                id="feedback-prompt" 
+                value={settings.aiSettings.feedbackPrompt}
+                onChange={(e) => 
+                  updateSettings('aiSettings', { feedbackPrompt: e.target.value })
+                }
+                placeholder="Was this response helpful?"
+              />
+              <p className="text-xs text-muted-foreground">
+                Text shown to users when asking for feedback
+              </p>
+            </div>
+          )}
 
           <Button onClick={handleSave}>Save Settings</Button>
         </CardContent>
