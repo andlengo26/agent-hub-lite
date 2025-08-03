@@ -24,7 +24,7 @@
     "showEndConversationButton": true,
     "endConversationButtonText": "End Conversation",
     "enableIdleTimeout": true,
-    "enableMaxSessionLength": false,
+    "enableMaxSessionLength": true,
     "maxSessionMinutes": 30,
     "enableMessageQuota": false,
     "maxMessagesPerSession": 20

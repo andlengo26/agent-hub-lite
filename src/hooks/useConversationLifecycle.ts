@@ -6,6 +6,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { WidgetSettings } from './useWidgetSettings';
 import { conversationService, ConversationTransition } from '@/services/conversationService';
+import { useSessionTimer } from './useSessionTimer';
 
 export interface ConversationState {
   status: 'active' | 'ended' | 'waiting_human' | 'idle_timeout' | 'max_session' | 'quota_exceeded';
@@ -15,6 +16,7 @@ export interface ConversationState {
   idleTimeoutId?: NodeJS.Timeout;
   sessionTimeoutId?: NodeJS.Timeout;
   showIdleWarning: boolean;
+  aiSessionStarted: boolean;
 }
 
 export interface ConversationTransitionLocal {
@@ -31,7 +33,8 @@ export function useConversationLifecycle(settings: WidgetSettings | null) {
     messageCount: 0,
     sessionStartTime: new Date(),
     lastActivityTime: new Date(),
-    showIdleWarning: false
+    showIdleWarning: false,
+    aiSessionStarted: false
   });
   
   const [transitions, setTransitions] = useState<ConversationTransitionLocal[]>([]);
@@ -44,6 +47,21 @@ export function useConversationLifecycle(settings: WidgetSettings | null) {
     session?: NodeJS.Timeout;
     idleWarning?: NodeJS.Timeout;
   }>({});
+
+  // Session timer hook
+  const sessionTimer = useSessionTimer({
+    maxDurationMinutes: settings?.aiSettings.maxSessionMinutes || 30,
+    enabled: settings?.aiSettings.enableMaxSessionLength || false,
+    onMaxDurationReached: () => {
+      setConversationState(prev => {
+        if (prev.status === 'active') {
+          logTransition('active', 'max_session', 'Maximum session duration reached', 'system');
+          return { ...prev, status: 'max_session' };
+        }
+        return prev;
+      });
+    }
+  });
 
   // Clear timeouts on unmount
   useEffect(() => {
@@ -156,7 +174,8 @@ export function useConversationLifecycle(settings: WidgetSettings | null) {
       messageCount: 0,
       sessionStartTime: now,
       lastActivityTime: now,
-      showIdleWarning: false
+      showIdleWarning: false,
+      aiSessionStarted: false
     });
     
     setIdleTimeout();
@@ -211,6 +230,10 @@ export function useConversationLifecycle(settings: WidgetSettings | null) {
     // Clear all timeouts
     if (timeoutRefs.current.idle) clearTimeout(timeoutRefs.current.idle);
     if (timeoutRefs.current.session) clearTimeout(timeoutRefs.current.session);
+    if (timeoutRefs.current.idleWarning) clearTimeout(timeoutRefs.current.idleWarning);
+
+    // Stop session timer
+    sessionTimer.stopTimer();
 
     setConversationState(prev => {
       logTransition(prev.status, 'ended', reason, 'user');
@@ -221,7 +244,7 @@ export function useConversationLifecycle(settings: WidgetSettings | null) {
       title: "Conversation Ended",
       description: "Thank you for using our support chat.",
     });
-  }, [logTransition, toast]);
+  }, [logTransition, toast, sessionTimer]);
 
   const requestHumanAgent = useCallback((reason = 'User requested human agent') => {
     setConversationState(prev => {
@@ -245,6 +268,18 @@ export function useConversationLifecycle(settings: WidgetSettings | null) {
     endConversation('User confirmed end conversation');
   }, [endConversation]);
 
+  // Start AI session timer on first AI message
+  const startAISession = useCallback(() => {
+    if (!conversationState.aiSessionStarted) {
+      setConversationState(prev => ({
+        ...prev,
+        aiSessionStarted: true
+      }));
+      sessionTimer.startTimer();
+      logTransition('active', 'active', 'AI session started', 'ai');
+    }
+  }, [conversationState.aiSessionStarted, sessionTimer, logTransition]);
+
   // Initialize conversation when settings are available
   useEffect(() => {
     if (settings && conversationState.status === 'active' && conversationState.messageCount === 0) {
@@ -256,6 +291,7 @@ export function useConversationLifecycle(settings: WidgetSettings | null) {
     conversationState,
     transitions,
     showEndConfirmation,
+    sessionTimer,
     incrementMessageCount,
     recordActivity,
     endConversation,
@@ -264,6 +300,7 @@ export function useConversationLifecycle(settings: WidgetSettings | null) {
     cancelEndConversation,
     handleConfirmedEnd,
     initializeConversation,
-    keepActiveFromWarning
+    keepActiveFromWarning,
+    startAISession
   };
 }
