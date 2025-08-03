@@ -64,7 +64,7 @@ export function filterChats(chats: Chat[], filters: ChatFilters): Chat[] {
  */
 export function categorizeChats(chats: Chat[]) {
   return {
-    active: chats.filter(chat => chat.status === 'active'),
+    active: chats.filter(chat => chat.status === 'active' && chat.handledBy !== 'ai'),
     waiting: chats.filter(chat => chat.status === 'waiting'),
     missed: chats.filter(chat => chat.status === 'missed'),
     closed: chats.filter(chat => chat.status === 'closed'),
