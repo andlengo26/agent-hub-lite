@@ -69,7 +69,10 @@ export function MultiSelect({
             {hideSelectedInTrigger ? (
               selected.length > 0 ? (
                 <span className="text-sm">
-                  {selected.length} item{selected.length === 1 ? '' : 's'} selected
+                  {selected.length === options.length 
+                    ? "All sections" 
+                    : `${selected.length} section${selected.length === 1 ? '' : 's'} selected`
+                  }
                 </span>
               ) : (
                 placeholder

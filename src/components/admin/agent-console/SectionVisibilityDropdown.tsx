@@ -47,6 +47,7 @@ export function SectionVisibilityDropdown({
       placeholder="Show sections..."
       disabled={disabled}
       className="w-full text-xs"
+      hideSelectedInTrigger={true}
     />
   );
 }
