@@ -21,6 +21,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "@/hooks/use-toast";
 import { MoreHorizontal, UserPlus, MessageSquareX, XCircle, Trash2, MapPin, Archive, Monitor, Download } from "lucide-react";
 import { isWithinInterval, parseISO } from "date-fns";
+import { applySectionVisibility } from '@/lib/chat-utils';
+import { getSectionVisibility } from '@/lib/section-visibility';
 
 const getStatusVariant = (status: string) => {
   switch (status) {
@@ -101,7 +103,8 @@ export default function AllChats() {
     search: '',
     status: '',
     agent: '',
-    dateRange: { from: undefined, to: undefined }
+    dateRange: { from: undefined, to: undefined },
+    sectionVisibility: getSectionVisibility()
   });
   
   // Performance monitoring removed
@@ -175,6 +178,9 @@ export default function AllChats() {
         return chatDate >= filters.dateRange.from!;
       });
     }
+
+    // Apply section visibility filtering
+    result = applySectionVisibility(result, filters.sectionVisibility);
 
     return result;
   }, [chats, activeTab, filters]);

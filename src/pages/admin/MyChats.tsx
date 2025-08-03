@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { DataTable } from "@/components/ui/data-table";
-import { ChatFilters } from "@/components/admin/ChatFilters";
+import { ChatFilters, ChatFiltersConfig } from "@/components/admin/ChatFilters";
 import { ChatPanel } from "@/components/admin/ChatPanel";
 import { ErrorBoundary } from "@/components/common/ErrorBoundary";
 import { AgentConsoleProvider } from "@/contexts/AgentConsoleContext";
@@ -20,6 +20,8 @@ import { MapPin, Filter, Monitor, Download, Archive, Trash2 } from "lucide-react
 import { toast } from "@/hooks/use-toast";
 // Removed CSV export
 import { isWithinInterval, parseISO } from "date-fns";
+import { applySectionVisibility } from '@/lib/chat-utils';
+import { getSectionVisibility } from '@/lib/section-visibility';
 
 
 
@@ -91,11 +93,12 @@ export default function MyChats() {
   const [activeTab, setActiveTab] = useState("all");
   const [filtersCollapsed, setFiltersCollapsed] = useState(false);
   const [viewMode, setViewMode] = useState<'table' | 'console'>('console');
-  const [filters, setFilters] = useState({
+  const [filters, setFilters] = useState<ChatFiltersConfig>({
     search: '',
-    status: '',
-    agent: '',
-    dateRange: { from: undefined, to: undefined }
+    status: 'all',
+    agent: 'all',
+    dateRange: { from: undefined, to: undefined },
+    sectionVisibility: getSectionVisibility()
   });
 
   const { currentUser } = useAuth();
@@ -158,6 +161,9 @@ export default function MyChats() {
         return true;
       });
     }
+
+    // Apply section visibility filtering
+    filtered = applySectionVisibility(filtered, filters.sectionVisibility);
 
     return filtered;
   }, [userChats, activeTab, filters]);

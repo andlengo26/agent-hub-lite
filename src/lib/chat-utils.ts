@@ -68,7 +68,36 @@ export function categorizeChats(chats: Chat[]) {
     waiting: chats.filter(chat => chat.status === 'waiting'),
     missed: chats.filter(chat => chat.status === 'missed'),
     closed: chats.filter(chat => chat.status === 'closed'),
-    humanQueue: chats.filter(chat => chat.status === 'waiting' || chat.status === 'missed'),
+    humanQueue: chats.filter(chat => chat.status === 'waiting'), // Fixed: Only waiting chats
     aiActive: chats.filter(chat => chat.status === 'active' && chat.handledBy === 'ai'),
   };
+}
+
+/**
+ * Apply section visibility filtering to chats
+ */
+export function applySectionVisibility(chats: Chat[], sectionVisibility?: any): Chat[] {
+  if (!sectionVisibility) {
+    return chats;
+  }
+
+  return chats.filter(chat => {
+    // Map chat status to section visibility settings
+    switch (chat.status) {
+      case 'waiting':
+        return sectionVisibility.waiting;
+      case 'active':
+        if (chat.handledBy === 'ai') {
+          return sectionVisibility.aiActive;
+        } else {
+          return sectionVisibility.active;
+        }
+      case 'missed':
+        return sectionVisibility.missed;
+      case 'closed':
+        return sectionVisibility.closed;
+      default:
+        return true;
+    }
+  });
 }

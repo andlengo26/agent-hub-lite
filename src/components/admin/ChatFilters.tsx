@@ -1,14 +1,20 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { SearchInput } from '@/components/common/SearchInput';
+import { SectionVisibilityDropdown } from '@/components/admin/agent-console/SectionVisibilityDropdown';
 import { CalendarIcon, Filter, X } from 'lucide-react';
 import { format } from 'date-fns';
 import { useUsers } from '@/hooks/useApiQuery';
 import { cn } from '@/lib/utils';
+import { 
+  SectionVisibility, 
+  getSectionVisibility, 
+  setSectionVisibility 
+} from '@/lib/section-visibility';
 
 export interface ChatFiltersConfig {
   search: string;
@@ -18,6 +24,7 @@ export interface ChatFiltersConfig {
     from: Date | undefined;
     to: Date | undefined;
   };
+  sectionVisibility?: SectionVisibility;
 }
 
 // Keep this export for backward compatibility
@@ -38,17 +45,29 @@ export function ChatFilters({
 }: ChatFiltersProps) {
   const { data: usersResponse } = useUsers();
   const users = usersResponse?.data || [];
+  const [sectionVisibility, setSectionVisibilityState] = useState<SectionVisibility>(
+    filters.sectionVisibility || getSectionVisibility()
+  );
+
+  // Update localStorage and filters when visibility changes
+  useEffect(() => {
+    setSectionVisibility(sectionVisibility);
+    onFiltersChange({ ...filters, sectionVisibility });
+  }, [sectionVisibility]);
   
   const updateFilter = (key: keyof ChatFiltersConfig, value: any) => {
     onFiltersChange({ ...filters, [key]: value });
   };
 
   const clearFilters = () => {
+    const defaultVisibility = getSectionVisibility();
+    setSectionVisibilityState(defaultVisibility);
     onFiltersChange({
       search: '',
       status: 'all',
       agent: 'all',
-      dateRange: { from: undefined, to: undefined }
+      dateRange: { from: undefined, to: undefined },
+      sectionVisibility: defaultVisibility
     });
   };
 
@@ -93,7 +112,16 @@ export function ChatFilters({
           </div>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+          {/* Section Visibility */}
+          <div>
+            <label className="text-sm font-medium mb-2 block">Show Sections</label>
+            <SectionVisibilityDropdown
+              visibility={sectionVisibility}
+              onChange={setSectionVisibilityState}
+            />
+          </div>
+
           {/* Search */}
           <div>
             <label className="text-sm font-medium mb-2 block">Search</label>

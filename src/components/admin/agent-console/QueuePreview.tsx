@@ -3,7 +3,7 @@
  * Shows categorized chats with date filtering and simplified UI
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -15,12 +15,18 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { Checkbox } from '@/components/ui/checkbox';
 import { BulkActionsToolbar } from '@/components/common/BulkActionsToolbar';
 import { AgentAvatar } from './AgentAvatar';
+import { SectionVisibilityDropdown } from './SectionVisibilityDropdown';
 import { Chat, User } from '@/types';
 import { formatDistanceToNow, format, isToday, isSameDay, isYesterday, isThisWeek, isThisMonth } from 'date-fns';
 import { Clock, MessageCircle, ChevronDown, CalendarIcon, Download } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { categorizeChats } from '@/lib/chat-utils';
 import { useWidgetSettings } from '@/hooks/useWidgetSettings';
+import { 
+  SectionVisibility, 
+  getSectionVisibility, 
+  setSectionVisibility 
+} from '@/lib/section-visibility';
 
 interface QueuePreviewProps {
   chats: Chat[];
@@ -49,14 +55,20 @@ export function QueuePreview({
 }: QueuePreviewProps) {
   const [dateFilter, setDateFilter] = useState<DateFilterOption>('all');
   const [customDate, setCustomDate] = useState<Date>(new Date());
+  const [sectionVisibility, setSectionVisibilityState] = useState<SectionVisibility>(getSectionVisibility);
   const [openSections, setOpenSections] = useState({
-    humanQueue: true,
+    waiting: true,
     aiActive: false,
     active: false,
     missed: false,
     closed: false,
   });
   const { settings } = useWidgetSettings();
+
+  // Update localStorage when visibility changes
+  useEffect(() => {
+    setSectionVisibility(sectionVisibility);
+  }, [sectionVisibility]);
 
   // Bulk selection handlers
   const handleChatSelection = (chatId: string, checked: boolean) => {
@@ -124,7 +136,7 @@ export function QueuePreview({
     setOpenSections(prev => {
       // Close all sections first, then open the clicked one
       const newState = {
-        humanQueue: false,
+        waiting: false,
         aiActive: false,
         active: false,
         missed: false,
@@ -277,9 +289,17 @@ export function QueuePreview({
         />
       )}
 
-      {/* Header with simplified date filter */}
+        {/* Header with section visibility and date filters */}
       <div className="p-4 border-b border-border">
         <h3 className="font-medium text-text-primary mb-3">Queue</h3>
+        
+        {/* Section visibility dropdown */}
+        <div className="mb-3">
+          <SectionVisibilityDropdown
+            visibility={sectionVisibility}
+            onChange={setSectionVisibilityState}
+          />
+        </div>
         
         {/* Compact date filter dropdown */}
         <Select value={dateFilter} onValueChange={(value: DateFilterOption) => setDateFilter(value)}>
@@ -331,11 +351,11 @@ export function QueuePreview({
       {/* Queue sections */}
       <ScrollArea className="flex-1">
         <div className="divide-y divide-border">
-          {renderSection("Waiting", "humanQueue", categorizedChats.humanQueue, "outline")}
-          {renderSection("AI Assisted (Active)", "aiActive", categorizedChats.aiActive, "default")}
-          {renderSection("Human Agent (Active)", "active", categorizedChats.active, "default")}
-          {renderSection("Missed", "missed", categorizedChats.missed, "destructive")}
-          {renderSection("Closed", "closed", categorizedChats.closed, "secondary")}
+          {sectionVisibility.waiting && renderSection("Waiting", "waiting", categorizedChats.humanQueue, "outline")}
+          {sectionVisibility.aiActive && renderSection("AI Assisted (Active)", "aiActive", categorizedChats.aiActive, "default")}
+          {sectionVisibility.active && renderSection("Human Agent (Active)", "active", categorizedChats.active, "default")}
+          {sectionVisibility.missed && renderSection("Missed", "missed", categorizedChats.missed, "destructive")}
+          {sectionVisibility.closed && renderSection("Closed", "closed", categorizedChats.closed, "secondary")}
         </div>
       </ScrollArea>
     </div>
