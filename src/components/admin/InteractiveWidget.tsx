@@ -44,6 +44,11 @@ export function InteractiveWidget() {
   const [isConversationClosed, setIsConversationClosed] = useState(false);
   const [activeTab, setActiveTab] = useState<'home' | 'messages' | 'resources'>('home');
   const [searchQuery, setSearchQuery] = useState("");
+  const [currentPanel, setCurrentPanel] = useState<'main' | 'chat' | 'faq-detail' | 'resource-detail' | 'message-detail'>('main');
+  const [selectedFAQ, setSelectedFAQ] = useState<any>(null);
+  const [selectedResource, setSelectedResource] = useState<any>(null);
+  const [selectedChat, setSelectedChat] = useState<any>(null);
+  const [hasActiveChat, setHasActiveChat] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { settings } = useWidgetSettings();
   const { toast } = useToast();
@@ -249,6 +254,11 @@ export function InteractiveWidget() {
       setMessages([welcomeMessage]);
     }
   }, [settings?.aiSettings?.welcomeMessage]);
+
+  // Track if there's an active chat session
+  useEffect(() => {
+    setHasActiveChat(messages.length > 0 && conversationState.status === 'active');
+  }, [messages.length, conversationState.status]);
 
   // Reset session quota when conversation ends
   useEffect(() => {
@@ -632,6 +642,49 @@ export function InteractiveWidget() {
     }
   };
 
+  // Panel navigation handlers
+  const handleStartChat = () => {
+    setCurrentPanel('chat');
+  };
+
+  const handleContinueChat = () => {
+    setCurrentPanel('chat');
+  };
+
+  const handleBackToMain = () => {
+    setCurrentPanel('main');
+  };
+
+  const handleFAQDetail = (faq: any) => {
+    setSelectedFAQ(faq);
+    setCurrentPanel('faq-detail');
+  };
+
+  const handleResourceDetail = (resource: any) => {
+    setSelectedResource(resource);
+    setCurrentPanel('resource-detail');
+  };
+
+  const handleMessageDetail = (chat: any) => {
+    setSelectedChat(chat);
+    setCurrentPanel('message-detail');
+  };
+
+  const handleUseFAQInChat = (faq: any) => {
+    // Add FAQ to chat
+    const faqMessage: Message = {
+      id: `faq_${Date.now()}`,
+      type: 'ai',
+      content: `**${faq.question}**\n\n${faq.answer}`,
+      timestamp: new Date()
+    };
+    setMessages(prev => [...prev, faqMessage]);
+    sessionPersistence.addMessage(faqMessage, isExpanded);
+    
+    // Navigate to chat panel
+    setCurrentPanel('chat');
+  };
+
   // Test function for manual auto-identification trigger (demo purposes)
   const handleTestAutoIdentification = async () => {
     try {
@@ -687,7 +740,24 @@ export function InteractiveWidget() {
     );
   }
 
-  const renderTabContent = () => {
+  const renderPanelContent = () => {
+    switch (currentPanel) {
+      case 'main':
+        return renderMainPanel();
+      case 'chat':
+        return renderChatPanel();
+      case 'faq-detail':
+        return renderFAQDetailPanel();
+      case 'resource-detail':
+        return renderResourceDetailPanel();
+      case 'message-detail':
+        return renderMessageDetailPanel();
+      default:
+        return renderMainPanel();
+    }
+  };
+
+  const renderMainPanel = () => {
     switch (activeTab) {
       case 'home':
         return (
@@ -697,6 +767,18 @@ export function InteractiveWidget() {
               <h2 className="text-lg font-semibold text-foreground">
                 {aiSettings.welcomeMessage || "How can we help you today?"}
               </h2>
+            </div>
+
+            {/* Chat Button */}
+            <div className="space-y-3">
+              <Button
+                onClick={hasActiveChat ? handleContinueChat : handleStartChat}
+                className="w-full text-white py-3 text-base font-medium"
+                style={{ backgroundColor: appearance.primaryColor }}
+              >
+                <MessageCircle className="h-5 w-5 mr-2" />
+                {hasActiveChat ? "Continue Chatting" : "Chat with Us"}
+              </Button>
             </div>
 
             {/* FAQ Search */}
@@ -721,7 +803,7 @@ export function InteractiveWidget() {
                     <div
                       key={faq.id}
                       className="p-3 bg-muted/50 rounded-lg cursor-pointer hover:bg-muted transition-colors"
-                      onClick={() => handleFAQSelect(faq.question, faq.answer)}
+                      onClick={() => handleFAQDetail(faq)}
                     >
                       <h3 className="font-medium text-sm text-foreground">{faq.question}</h3>
                       <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
@@ -753,7 +835,6 @@ export function InteractiveWidget() {
       case 'messages':
         return (
           <div className="space-y-4">
-            {/* Check if user is authenticated - replace with actual auth check */}
             {userIdentification.session ? (
               <div>
                 <h2 className="text-lg font-semibold text-foreground mb-4">Message History</h2>
@@ -767,14 +848,7 @@ export function InteractiveWidget() {
                       <div
                         key={chat.id}
                         className="p-3 bg-muted/50 rounded-lg cursor-pointer hover:bg-muted transition-colors"
-                        onClick={() => {
-                          // Load this chat session
-                          setMessages(chat.messages.map(msg => ({
-                            ...msg,
-                            timestamp: new Date(msg.timestamp)
-                          })));
-                          setActiveTab('home');
-                        }}
+                        onClick={() => handleMessageDetail(chat)}
                       >
                         <div className="flex justify-between items-start">
                           <h3 className="font-medium text-sm text-foreground">
@@ -815,7 +889,6 @@ export function InteractiveWidget() {
                 </p>
                 <Button
                   onClick={() => {
-                    // Trigger identification flow
                     const identificationMessage: Message = {
                       id: `identification_${Date.now()}`,
                       type: 'identification',
@@ -823,7 +896,7 @@ export function InteractiveWidget() {
                       isCompleted: false
                     };
                     setMessages(prev => [...prev, identificationMessage]);
-                    setActiveTab('home');
+                    setCurrentPanel('chat');
                   }}
                   style={{ backgroundColor: appearance.primaryColor }}
                   className="text-white"
@@ -862,7 +935,7 @@ export function InteractiveWidget() {
                   <div
                     key={resource.id}
                     className="p-3 bg-muted/50 rounded-lg cursor-pointer hover:bg-muted transition-colors"
-                    onClick={() => window.open(resource.url, '_blank')}
+                    onClick={() => handleResourceDetail(resource)}
                   >
                     <div className="flex items-start gap-3">
                       <div className="flex-shrink-0">
@@ -906,6 +979,307 @@ export function InteractiveWidget() {
       default:
         return null;
     }
+  };
+
+  const renderChatPanel = () => {
+    return (
+      <div className="h-full flex flex-col">
+        {/* Chat Header with Back Button */}
+        <div className="flex items-center gap-2 p-4 border-b">
+          <Button variant="ghost" size="sm" onClick={handleBackToMain}>
+            <X className="h-4 w-4" />
+          </Button>
+          <h3 className="font-medium text-sm">{hasActiveChat ? "Continue Conversation" : "Start New Chat"}</h3>
+        </div>
+        
+        {/* Chat Messages */}
+        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+          {messages.map((message) => (
+            <MessageRenderer
+              key={message.id}
+              message={message}
+              appearance={{
+                primaryColor: appearance.primaryColor,
+                secondaryColor: appearance.secondaryColor,
+                highlightColor: appearance.highlightColor
+              }}
+              aiSettings={{
+                assistantName: aiSettings.assistantName,
+                enableFeedback: aiSettings.enableFeedback
+              }}
+              conversationStatus={conversationState.status}
+              onFeedback={handleFeedback}
+              settings={settings}
+              formData={userIdentification.formData}
+              validationResult={userIdentification.validationResult}
+              onUpdateFormData={userIdentification.updateFormData}
+              onSubmitIdentification={userIdentification.submitManualIdentification}
+              onMoodleAuth={(session: any) => userIdentification.setIdentificationSession(session)}
+              getIdentificationMethodPriority={() => {
+                const priority = userIdentification.getIdentificationMethodPriority();
+                return priority.prioritizeMoodle ? 'moodle' : 'manual';
+              }}
+            />
+          ))}
+          
+          {/* Typing Indicator */}
+          {isTyping && (
+            <div className="flex justify-start">
+              <div className="bg-muted text-muted-foreground p-3 rounded-lg max-w-[80%]">
+                <div className="flex items-center gap-2">
+                  <div className="flex space-x-1">
+                    <div className="w-2 h-2 bg-current rounded-full animate-bounce"></div>
+                    <div className="w-2 h-2 bg-current rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                    <div className="w-2 h-2 bg-current rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+          <div ref={messagesEndRef} />
+        </div>
+
+        {/* Input Area */}
+        <div className="border-t border-border p-4">
+          <form onSubmit={(e) => { e.preventDefault(); handleSendMessage(); }} className="space-y-3">
+            <div className="flex gap-2">
+              <div className="flex-1 relative">
+                <Input
+                  value={inputValue}
+                  onChange={(e) => setInputValue(e.target.value)}
+                  placeholder={userIdentification.canSendMessage() ? "Type your message..." : "Complete identification to send messages"}
+                  className="min-h-[40px] pr-24"
+                  disabled={!userIdentification.canSendMessage()}
+                />
+                <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex gap-1">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="ghost"
+                    className="h-8 w-8 p-0"
+                    onClick={handleFileUpload}
+                    disabled={!userIdentification.canSendMessage()}
+                  >
+                    <Paperclip className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="ghost"
+                    className="h-8 w-8 p-0"
+                    onClick={handleVoiceRecording}
+                    disabled={!userIdentification.canSendMessage()}
+                  >
+                    {isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+                  </Button>
+                </div>
+              </div>
+              <Button
+                type="submit"
+                size="sm"
+                disabled={!inputValue.trim() || !userIdentification.canSendMessage()}
+                style={{ backgroundColor: appearance.primaryColor, color: '#ffffff' }}
+              >
+                <Send className="h-4 w-4" />
+              </Button>
+            </div>
+            
+            <div className="flex justify-between items-center">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={handleVoiceCall}
+                disabled={!userIdentification.canSendMessage()}
+              >
+                <Phone className="h-4 w-4 mr-2" />
+                Voice Call
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={handleTalkToHuman}
+                disabled={!userIdentification.canSendMessage()}
+              >
+                <User className="h-4 w-4 mr-2" />
+                Talk to Human
+              </Button>
+            </div>
+          </form>
+        </div>
+      </div>
+    );
+  };
+
+  const renderFAQDetailPanel = () => {
+    if (!selectedFAQ) return null;
+    
+    return (
+      <div className="h-full flex flex-col">
+        <div className="flex items-center gap-2 p-4 border-b">
+          <Button variant="ghost" size="sm" onClick={handleBackToMain}>
+            <X className="h-4 w-4" />
+          </Button>
+          <h3 className="font-medium text-sm">FAQ Details</h3>
+        </div>
+        
+        <div className="flex-1 overflow-y-auto p-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-sm">{selectedFAQ.question}</CardTitle>
+              <div className="flex gap-1 flex-wrap">
+                {selectedFAQ.tags.map((tag, index) => (
+                  <span key={index} className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded">
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground mb-4">
+                {selectedFAQ.answer}
+              </p>
+              <Button 
+                size="sm" 
+                onClick={() => handleUseFAQInChat(selectedFAQ)}
+                className="w-full"
+                style={{ backgroundColor: appearance.primaryColor }}
+              >
+                Use This FAQ in Chat
+                <MessageCircle className="h-3 w-3 ml-1" />
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  };
+
+  const renderResourceDetailPanel = () => {
+    if (!selectedResource) return null;
+    
+    return (
+      <div className="h-full flex flex-col">
+        <div className="flex items-center gap-2 p-4 border-b">
+          <Button variant="ghost" size="sm" onClick={handleBackToMain}>
+            <X className="h-4 w-4" />
+          </Button>
+          <h3 className="font-medium text-sm">Resource Details</h3>
+        </div>
+        
+        <div className="flex-1 overflow-y-auto p-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-sm">{selectedResource.title}</CardTitle>
+              <div className="flex gap-1 flex-wrap">
+                {selectedResource.tags.map((tag, index) => (
+                  <span key={index} className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded">
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <h4 className="text-sm font-medium mb-2">Type</h4>
+                <p className="text-sm text-muted-foreground capitalize">{selectedResource.type}</p>
+              </div>
+              
+              <div>
+                <h4 className="text-sm font-medium mb-2">Description</h4>
+                <p className="text-sm text-muted-foreground">{selectedResource.aiInstructions}</p>
+              </div>
+
+              {selectedResource.contentPreview && (
+                <div>
+                  <h4 className="text-sm font-medium mb-2">Preview</h4>
+                  <p className="text-sm text-muted-foreground">{selectedResource.contentPreview}</p>
+                </div>
+              )}
+
+              <div className="space-y-2">
+                <Button 
+                  size="sm" 
+                  onClick={() => window.open(selectedResource.url, '_blank')}
+                  className="w-full"
+                  style={{ backgroundColor: appearance.primaryColor }}
+                >
+                  View Resource
+                  <FileText className="h-3 w-3 ml-1" />
+                </Button>
+                
+                {selectedResource.fileName && (
+                  <Button 
+                    size="sm" 
+                    variant="outline"
+                    onClick={() => window.open(selectedResource.url, '_blank')}
+                    className="w-full"
+                  >
+                    Download ({selectedResource.fileSize ? `${Math.round(selectedResource.fileSize / 1024)}KB` : 'Unknown size'})
+                  </Button>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  };
+
+  const renderMessageDetailPanel = () => {
+    if (!selectedChat) return null;
+    
+    return (
+      <div className="h-full flex flex-col">
+        <div className="flex items-center gap-2 p-4 border-b">
+          <Button variant="ghost" size="sm" onClick={handleBackToMain}>
+            <X className="h-4 w-4" />
+          </Button>
+          <h3 className="font-medium text-sm">Chat History</h3>
+        </div>
+        
+        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+          <div className="bg-muted/30 p-3 rounded-lg">
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-sm font-medium">
+                {new Date(selectedChat.timestamp).toLocaleDateString()}
+              </span>
+              <span className={`text-xs px-2 py-0.5 rounded ${
+                selectedChat.status === 'active' ? 'bg-green-100 text-green-800' :
+                selectedChat.status === 'ended' ? 'bg-gray-100 text-gray-800' :
+                'bg-orange-100 text-orange-800'
+              }`}>
+                {selectedChat.status}
+              </span>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {selectedChat.messages.length} messages
+            </p>
+          </div>
+
+          {selectedChat.messages.map((message, index) => (
+            <div
+              key={index}
+              className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
+            >
+              <div
+                className={`max-w-[80%] p-3 rounded-lg ${
+                  message.type === 'user'
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-muted text-muted-foreground'
+                }`}
+              >
+                <p className="text-sm">{message.content}</p>
+                <span className="text-xs opacity-70 mt-1 block">
+                  {new Date(message.timestamp).toLocaleTimeString()}
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -975,41 +1349,43 @@ export function InteractiveWidget() {
         <CardContent className="flex-1 flex flex-col p-0 overflow-hidden">
           {/* Main Content Area */}
           <div className="flex-1 overflow-y-auto p-4">
-            {renderTabContent()}
+            {renderPanelContent()}
           </div>
 
-          {/* Bottom Navigation */}
-          <div className="border-t bg-background p-2 shrink-0">
-            <div className="flex justify-around">
-              <Button
-                variant={activeTab === 'home' ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => setActiveTab('home')}
-                className="flex-1 flex-col h-auto py-2 space-y-1"
-              >
-                <Home className="h-4 w-4" />
-                <span className="text-xs">Home</span>
-              </Button>
-              <Button
-                variant={activeTab === 'messages' ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => setActiveTab('messages')}
-                className="flex-1 flex-col h-auto py-2 space-y-1"
-              >
-                <MessageSquare className="h-4 w-4" />
-                <span className="text-xs">Messages</span>
-              </Button>
-              <Button
-                variant={activeTab === 'resources' ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => setActiveTab('resources')}
-                className="flex-1 flex-col h-auto py-2 space-y-1"
-              >
-                <FileText className="h-4 w-4" />
-                <span className="text-xs">Resources</span>
-              </Button>
+          {/* Bottom Navigation - Only show on main panel */}
+          {currentPanel === 'main' && (
+            <div className="border-t bg-background p-2 shrink-0">
+              <div className="flex justify-around">
+                <Button
+                  variant={activeTab === 'home' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setActiveTab('home')}
+                  className="flex-1 flex-col h-auto py-2 space-y-1"
+                >
+                  <Home className="h-4 w-4" />
+                  <span className="text-xs">Home</span>
+                </Button>
+                <Button
+                  variant={activeTab === 'messages' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setActiveTab('messages')}
+                  className="flex-1 flex-col h-auto py-2 space-y-1"
+                >
+                  <MessageSquare className="h-4 w-4" />
+                  <span className="text-xs">Messages</span>
+                </Button>
+                <Button
+                  variant={activeTab === 'resources' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setActiveTab('resources')}
+                  className="flex-1 flex-col h-auto py-2 space-y-1"
+                >
+                  <FileText className="h-4 w-4" />
+                  <span className="text-xs">Resources</span>
+                </Button>
+              </div>
             </div>
-          </div>
+          )}
         </CardContent>
       </Card>
 
