@@ -43,8 +43,13 @@ export function useIdentificationValidation({ settings }: UseIdentificationValid
       requiredFields.push('mobile');
       if (!formData.mobile.trim()) {
         errors.mobile = 'Phone number is required';
-      } else if (!/^[\+]?[1-9][\d]{0,15}$/.test(formData.mobile.replace(/[\s\-\(\)]/g, ''))) {
-        errors.mobile = 'Please enter a valid phone number';
+      } else {
+        // Allow both formats: 09989992746 and +639989992746
+        const cleanMobile = formData.mobile.replace(/[\s\-\(\)]/g, '');
+        const isValid = /^(\+63|0)[0-9]{10}$/.test(cleanMobile) || /^[\+]?[1-9][\d]{0,15}$/.test(cleanMobile);
+        if (!isValid) {
+          errors.mobile = 'Please enter a valid phone number (e.g., 09989992746 or +639989992746)';
+        }
       }
     }
 

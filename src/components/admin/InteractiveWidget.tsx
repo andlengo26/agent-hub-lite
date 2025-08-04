@@ -211,7 +211,7 @@ export function InteractiveWidget() {
   useEffect(() => {
     if (isExpanded && 
         messages.length === 0 && 
-        settings?.aiSettings.welcomeMessage && 
+        settings?.aiSettings?.welcomeMessage && 
         !sessionPersistence.currentSession) {
       console.log('📝 Creating welcome message for new session');
       const welcomeMessage: Message = {
@@ -223,7 +223,24 @@ export function InteractiveWidget() {
       setMessages([welcomeMessage]);
       sessionPersistence.createNewSession(welcomeMessage, true);
     }
-  }, [isExpanded, messages.length, settings?.aiSettings.welcomeMessage, sessionPersistence.currentSession]);
+  }, [isExpanded, messages.length, settings?.aiSettings?.welcomeMessage, sessionPersistence.currentSession]);
+
+  // Initialize welcome message when settings are loaded for the first time
+  useEffect(() => {
+    if (settings?.aiSettings?.welcomeMessage && 
+        !isExpanded && 
+        messages.length === 0 && 
+        !sessionPersistence.currentSession) {
+      console.log('📝 Initializing welcome message when settings loaded');
+      const welcomeMessage: Message = {
+        id: 'welcome_init',
+        type: 'ai',
+        content: settings.aiSettings.welcomeMessage,
+        timestamp: new Date()
+      };
+      setMessages([welcomeMessage]);
+    }
+  }, [settings?.aiSettings?.welcomeMessage]);
 
   // Reset session quota when conversation ends
   useEffect(() => {
@@ -1038,18 +1055,6 @@ export function InteractiveWidget() {
         </div>
       )}
 
-      {/* FAQ Browser Button */}
-      {!showFAQBrowser && !isConversationClosed && conversationState.status === 'active' && (
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => setShowFAQBrowser(true)}
-          className="absolute bottom-20 right-4 text-xs"
-        >
-          <Book className="h-3 w-3 mr-1" />
-          Browse FAQs
-        </Button>
-      )}
 
       {/* Conversation End Modal */}
       <ConversationEndModal

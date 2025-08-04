@@ -154,11 +154,14 @@ export function SetupIntegrationTab({ settings, updateSettings }: SetupIntegrati
           <CardTitle>Chat Plugin Integration</CardTitle>
           <CardDescription>Enable seamless integration with Moodle chat plugin</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
               <Label>Moodle Chat Plugin Integration</Label>
-              <p className="text-sm text-muted-foreground">Direct integration with Moodle's native chat functionality</p>
+              <p className="text-sm text-muted-foreground">
+                When enabled, this widget integrates directly with Moodle's native chat plugin. 
+                This provides seamless user experience within the Moodle environment.
+              </p>
             </div>
             <Switch
               checked={settings?.embed?.moodleChatPluginIntegration || false}
@@ -167,6 +170,28 @@ export function SetupIntegrationTab({ settings, updateSettings }: SetupIntegrati
               }
             />
           </div>
+          
+          <div className="p-4 bg-amber-50 border border-amber-200 rounded-md">
+            <h4 className="font-medium text-amber-800 mb-2">Integration Modes:</h4>
+            <div className="space-y-2 text-sm text-amber-700">
+              <div>
+                <strong>Moodle Chat Plugin Integration (This Setting):</strong> 
+                <p>Embeds the widget directly within Moodle's chat plugin interface. Users stay within Moodle and benefit from automatic authentication.</p>
+              </div>
+              <div>
+                <strong>Standalone Widget (When Disabled):</strong> 
+                <p>The widget operates independently and can be embedded on any website. Users need to authenticate manually or via configured methods.</p>
+              </div>
+            </div>
+          </div>
+          
+          {settings?.embed?.moodleChatPluginIntegration && (
+            <div className="p-3 bg-blue-50 border border-blue-200 rounded-md">
+              <p className="text-sm text-blue-800">
+                <strong>Note:</strong> When Moodle Chat Plugin Integration is enabled, Moodle authentication takes priority over manual form submission in the identification process.
+              </p>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

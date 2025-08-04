@@ -156,7 +156,10 @@ export function UserAccessAuthTab({ settings, updateSettings }: UserAccessAuthTa
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
               <Label>Manual Form Submission</Label>
-              <p className="text-sm text-muted-foreground">Users fill out a form to identify themselves</p>
+              <p className="text-sm text-muted-foreground">
+                Users fill out a form with their details (name, email, phone) to identify themselves. 
+                This is the traditional method where users manually enter their information.
+              </p>
             </div>
             <Switch
               checked={settings?.userInfo?.enableManualForm || false}
@@ -169,7 +172,10 @@ export function UserAccessAuthTab({ settings, updateSettings }: UserAccessAuthTa
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
               <Label>Moodle Authentication</Label>
-              <p className="text-sm text-muted-foreground">Use Moodle login credentials for authentication</p>
+              <p className="text-sm text-muted-foreground">
+                Users authenticate using their existing Moodle login credentials. 
+                This requires Moodle integration to be configured and allows seamless single sign-on experience.
+              </p>
             </div>
             <Switch
               checked={settings?.userInfo?.enableMoodleAuth || false}
@@ -188,20 +194,28 @@ export function UserAccessAuthTab({ settings, updateSettings }: UserAccessAuthTa
           <CardDescription>Personalize the greeting for authenticated users</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-2">
-            <Label htmlFor="customWelcome">Custom Welcome Message</Label>
-            <Textarea
-              id="customWelcome"
-              value={settings?.userInfo?.customWelcomeMessage || ''}
-              onChange={(e) => 
-                updateSettings('userInfo', { customWelcomeMessage: e.target.value })
-              }
-              placeholder="Welcome back! How can I help you today?"
-              rows={3}
-            />
-            <p className="text-sm text-muted-foreground">
-              This message will be shown to users after they authenticate
-            </p>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="customWelcome">Custom Welcome Message</Label>
+              <Textarea
+                id="customWelcome"
+                value={settings?.userInfo?.customWelcomeMessage || ''}
+                onChange={(e) => 
+                  updateSettings('userInfo', { customWelcomeMessage: e.target.value })
+                }
+                placeholder="Welcome back! How can I help you today?"
+                rows={3}
+              />
+              <p className="text-sm text-muted-foreground">
+                This message will be shown to users during the identification process (User Access & Auth tab).
+              </p>
+            </div>
+            <div className="p-3 bg-blue-50 border border-blue-200 rounded-md">
+              <p className="text-sm text-blue-800">
+                <strong>Note:</strong> This is different from the AI welcome message in the "AI Behavior & Routing" tab. 
+                This message appears during user identification, while the AI welcome message appears when the chat conversation starts.
+              </p>
+            </div>
           </div>
         </CardContent>
       </Card>

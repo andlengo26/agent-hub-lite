@@ -51,8 +51,7 @@ const menuItems = [
     submenu: [
       { title: "Organizations", url: "/settings/organizations" },
       { title: "Users", url: "/settings/users" },
-      { title: "Auto AI Response", url: "/settings/ai-response" },
-      { title: "Notifications", url: "/settings/notifications" },
+      { title: "User Preferences", url: "/settings/notifications" },
       { title: "Widget Management", url: "/settings/widget" },
       { title: "Security", url: "/settings/security" },
     ],

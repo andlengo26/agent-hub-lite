@@ -87,7 +87,7 @@ export function AvailabilityToggle({
 
   return (
     <div className="flex items-center gap-space-3">
-      {/* Quick Toggle Switch */}
+      {/* Simplified Toggle Switch */}
       <div className="flex items-center gap-space-2">
         <Switch 
           checked={status === 'available' || status === 'busy'} 
@@ -99,47 +99,16 @@ export function AvailabilityToggle({
         </span>
       </div>
 
-      {/* Status Dropdown */}
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="outline" size="sm" className="gap-space-2">
-            <IconComponent className="w-4 h-4" />
-            <Badge variant={currentConfig.badgeVariant} className="text-xs">
-              {currentConfig.label}
-            </Badge>
-            <span className="text-xs text-muted-foreground">
-              {currentStatus.activeChatCount}/{currentStatus.maxConcurrentChats}
-            </span>
-            <ChevronDown className="w-3 h-3" />
-          </Button>
-        </DropdownMenuTrigger>
-        
-        <DropdownMenuContent align="end" className="w-48">
-          <DropdownMenuLabel>Set Availability</DropdownMenuLabel>
-          <DropdownMenuSeparator />
-          
-          {Object.entries(statusConfig).map(([key, config]) => {
-            const Icon = config.icon;
-            return (
-              <DropdownMenuItem
-                key={key}
-                onClick={() => handleStatusChange(key as AvailabilityStatus['status'])}
-                className="flex items-center gap-space-2"
-              >
-                <Icon className="w-4 h-4" />
-                <span>{config.label}</span>
-                {key === status && <CheckCircle className="w-3 h-3 ml-auto text-success" />}
-              </DropdownMenuItem>
-            );
-          })}
-          
-          <DropdownMenuSeparator />
-          <DropdownMenuItem className="flex items-center gap-space-2">
-            <Settings className="w-4 h-4" />
-            <span>Availability Settings</span>
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+      {/* Status Display */}
+      <div className="flex items-center gap-space-2">
+        <IconComponent className="w-4 h-4" />
+        <Badge variant={currentConfig.badgeVariant} className="text-xs">
+          {currentConfig.label}
+        </Badge>
+        <span className="text-xs text-muted-foreground">
+          {currentStatus.activeChatCount}/{currentStatus.maxConcurrentChats}
+        </span>
+      </div>
     </div>
   );
 }

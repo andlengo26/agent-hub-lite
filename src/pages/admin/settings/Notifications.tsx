@@ -49,7 +49,7 @@ interface AvailabilitySettings {
   };
 }
 
-export default function Notifications() {
+export default function UserPreferences() {
   const [notificationSettings, setNotificationSettings] = useState<NotificationSettings>({
     newChat: { enabled: true, sound: true, desktop: true, email: false },
     chatMessage: { enabled: true, sound: true, desktop: true, email: false },
@@ -168,7 +168,7 @@ export default function Notifications() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">Agent Notification & Availability</h1>
+        <h1 className="text-3xl font-bold">Agent User Preferences</h1>
         <p className="text-muted-foreground">
           Configure your notification preferences and availability settings
         </p>
@@ -202,17 +202,33 @@ export default function Notifications() {
           {soundEnabled && (
             <div className="ml-6 space-y-2">
               <Label htmlFor="notification-sound">Notification Sound</Label>
-              <Select value={notificationSound} onValueChange={setNotificationSound}>
-                <SelectTrigger className="w-48">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="chime">Chime</SelectItem>
-                  <SelectItem value="bell">Bell</SelectItem>
-                  <SelectItem value="ding">Ding</SelectItem>
-                  <SelectItem value="ping">Ping</SelectItem>
-                </SelectContent>
-              </Select>
+              <div className="flex items-center gap-2">
+                <Select value={notificationSound} onValueChange={setNotificationSound}>
+                  <SelectTrigger className="w-48">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="chime">Chime</SelectItem>
+                    <SelectItem value="bell">Bell</SelectItem>
+                    <SelectItem value="ding">Ding</SelectItem>
+                    <SelectItem value="ping">Ping</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    // Simulate playing the selected sound
+                    toast({
+                      title: "Sound Preview",
+                      description: `Playing ${notificationSound} sound...`
+                    });
+                  }}
+                >
+                  <Volume2 className="h-4 w-4 mr-1" />
+                  Preview
+                </Button>
+              </div>
             </div>
           )}
 
