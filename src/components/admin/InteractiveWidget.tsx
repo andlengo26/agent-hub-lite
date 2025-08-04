@@ -52,6 +52,7 @@ export function InteractiveWidget() {
   const [selectedChat, setSelectedChat] = useState<any>(null);
   const [selectedMessage, setSelectedMessage] = useState<any>(null);
   const [hasActiveChat, setHasActiveChat] = useState(false);
+  const [lastDetailPanel, setLastDetailPanel] = useState<'faq-detail' | 'resource-detail' | 'message-detail' | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { settings } = useWidgetSettings();
   const { toast } = useToast();
@@ -669,21 +670,28 @@ export function InteractiveWidget() {
 
   const handleBackToMain = () => {
     setCurrentPanel('main');
+    // Remember which tab to return to when going back to detail
+    if (currentPanel === 'faq-detail' || currentPanel === 'resource-detail' || currentPanel === 'message-detail') {
+      setLastDetailPanel(currentPanel);
+    }
   };
 
   const handleFAQDetail = (faq: any) => {
     setSelectedFAQ(faq);
     setCurrentPanel('faq-detail');
+    setLastDetailPanel('faq-detail');
   };
 
   const handleResourceDetail = (resource: any) => {
     setSelectedResource(resource);
     setCurrentPanel('resource-detail');
+    setLastDetailPanel('resource-detail');
   };
 
   const handleMessageDetail = (chat: any) => {
     setSelectedChat(chat);
     setCurrentPanel('message-detail');
+    setLastDetailPanel('message-detail');
   };
 
   const handleUseFAQInChat = (faq: any) => {
@@ -846,7 +854,6 @@ export function InteractiveWidget() {
           <div className="space-y-4">
             {userIdentification.session ? (
               <div>
-                <h2 className="text-lg font-semibold text-foreground mb-4">Messages</h2>
                 {chatsLoading ? (
                   <div className="text-center py-4 text-muted-foreground text-sm">
                     Loading chat history...
@@ -1191,48 +1198,26 @@ export function InteractiveWidget() {
     if (!selectedChat) return null;
     
     return (
-      <div className="h-full flex flex-col">
-        <div className="flex-1 space-y-4">
-          <div className="bg-muted/30 p-3 rounded-lg">
-            <div className="flex justify-between items-center mb-2">
-              <span className="text-sm font-medium">
-                {new Date(selectedChat.timestamp).toLocaleDateString()}
-              </span>
-              <span className={`text-xs px-2 py-0.5 rounded ${
-                selectedChat.status === 'active' ? 'bg-green-100 text-green-800' :
-                selectedChat.status === 'ended' ? 'bg-gray-100 text-gray-800' :
-                'bg-orange-100 text-orange-800'
-              }`}>
-                {selectedChat.status}
+      <div className="space-y-4">
+        {selectedChat.messages.map((message, index) => (
+          <div
+            key={index}
+            className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
+          >
+            <div
+              className={`max-w-[80%] p-3 rounded-lg ${
+                message.type === 'user'
+                  ? 'bg-primary text-primary-foreground'
+                  : 'bg-muted text-muted-foreground'
+              }`}
+            >
+              <p className="text-sm">{message.content}</p>
+              <span className="text-xs opacity-70 mt-1 block">
+                {new Date(message.timestamp).toLocaleTimeString()}
               </span>
             </div>
-            <p className="text-xs text-muted-foreground">
-              {selectedChat.messages.length} messages
-            </p>
           </div>
-
-          <div className="space-y-4 max-h-96 overflow-y-auto">
-            {selectedChat.messages.map((message, index) => (
-              <div
-                key={index}
-                className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
-              >
-                <div
-                  className={`max-w-[80%] p-3 rounded-lg ${
-                    message.type === 'user'
-                      ? 'bg-primary text-primary-foreground'
-                      : 'bg-muted text-muted-foreground'
-                  }`}
-                >
-                  <p className="text-sm">{message.content}</p>
-                  <span className="text-xs opacity-70 mt-1 block">
-                    {new Date(message.timestamp).toLocaleTimeString()}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+        ))}
       </div>
     );
   };
@@ -1256,6 +1241,9 @@ export function InteractiveWidget() {
                   <p className="text-xs opacity-90 mt-1">{appearance.subheaderText}</p>
                 )}
               </div>
+            )}
+            {currentPanel === 'main' && activeTab === 'messages' && (
+              <CardTitle className="text-sm font-medium">Messages</CardTitle>
             )}
             {currentPanel === 'main' && activeTab === 'resources' && (
               <div className="flex items-center gap-3 flex-1">
@@ -1380,7 +1368,13 @@ export function InteractiveWidget() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => setActiveTab('messages')}
+                  onClick={() => {
+                    setActiveTab('messages');
+                    // If we have a last detail panel and we're coming back to messages, restore that panel
+                    if (currentPanel === 'main' && lastDetailPanel === 'message-detail' && selectedChat) {
+                      setCurrentPanel('message-detail');
+                    }
+                  }}
                   className={`flex-1 flex-col h-auto py-1 space-y-0.5 text-xs ${
                     activeTab === 'messages' ? 'text-primary' : 'text-muted-foreground'
                   }`}
