@@ -15,7 +15,7 @@ interface ChatSession {
   status: 'active' | 'waiting_human' | 'ended' | 'closed' | 'idle_timeout';
   conversationId?: string;
   userContext?: string;
-  isExpanded?: boolean;
+  isExpanded: boolean;
   lastInteractionTime?: Date;
 }
 
@@ -107,12 +107,15 @@ export function useSessionPersistence({ onSessionLoaded }: UseSessionPersistence
     setCurrentSession(null);
   }, []);
 
-  const addMessage = useCallback((message: Message) => {
+  const addMessage = useCallback((message: Message, widgetExpanded?: boolean) => {
     if (currentSession) {
       const updatedMessages = [...currentSession.messages, message];
       updateSession({ messages: updatedMessages });
+    } else if (widgetExpanded !== undefined) {
+      // Create new session with current widget state if none exists
+      createNewSession(message, widgetExpanded);
     }
-  }, [currentSession, updateSession]);
+  }, [currentSession, updateSession, createNewSession]);
 
   const updateMessages = useCallback((messages: Message[]) => {
     if (currentSession) {
@@ -127,8 +130,11 @@ export function useSessionPersistence({ onSessionLoaded }: UseSessionPersistence
         lastInteractionTime: new Date(),
         status: currentSession.status === 'idle_timeout' ? 'active' : currentSession.status
       });
+    } else {
+      // Create new session if none exists to capture widget state
+      createNewSession(undefined, isExpanded);
     }
-  }, [currentSession, updateSession]);
+  }, [currentSession, updateSession, createNewSession]);
 
   const updateLastInteraction = useCallback(() => {
     if (currentSession) {

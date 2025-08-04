@@ -129,7 +129,7 @@ export function InteractiveWidget() {
       timestamp: new Date()
     };
       setMessages(prev => [...prev, autoWelcomeMessage]);
-      sessionPersistence.addMessage(autoWelcomeMessage);
+      sessionPersistence.addMessage(autoWelcomeMessage, isExpanded);
     },
     onAutoIdentificationError: (error) => {
       console.log('Moodle auto-identification failed, will use manual identification if needed:', error);
@@ -303,7 +303,7 @@ export function InteractiveWidget() {
     };
 
     setMessages(prev => [...prev, userMessage]);
-    sessionPersistence.addMessage(userMessage);
+    sessionPersistence.addMessage(userMessage, isExpanded);
     setInputValue("");
     incrementMessageCount();
     messageQuota.incrementQuota();
@@ -324,7 +324,7 @@ export function InteractiveWidget() {
         feedbackSubmitted: false
       };
       setMessages(prev => [...prev, aiResponse]);
-      sessionPersistence.addMessage(aiResponse);
+      sessionPersistence.addMessage(aiResponse, isExpanded);
       incrementMessageCount();
       messageQuota.incrementQuota();
       sessionPersistence.updateLastInteraction?.();
@@ -403,7 +403,7 @@ export function InteractiveWidget() {
         timestamp: new Date()
       };
       
-      sessionPersistence.addMessage(acknowledgmentMessage);
+      sessionPersistence.addMessage(acknowledgmentMessage, isExpanded);
       return [...filtered, acknowledgmentMessage];
     });
   };
@@ -518,7 +518,7 @@ export function InteractiveWidget() {
       timestamp: new Date()
     };
     setMessages(prev => [...prev, faqMessage]);
-    sessionPersistence.addMessage(faqMessage);
+    sessionPersistence.addMessage(faqMessage, isExpanded);
     setShowFAQBrowser(false);
   };
 
