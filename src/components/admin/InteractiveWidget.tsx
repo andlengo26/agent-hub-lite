@@ -993,9 +993,15 @@ export function InteractiveWidget() {
   const renderChatPanel = () => {
     return (
       <div className="h-full flex flex-col">
+        {/* Back Button */}
+        <div className="flex items-center gap-2 pb-4">
+          <Button variant="ghost" size="sm" onClick={handleBackToMain}>
+            ← Back
+          </Button>
+        </div>
         
         {/* Chat Messages */}
-        <div className="flex-1 p-4 space-y-4">
+        <div className="flex-1 space-y-4">
           {messages.map((message) => (
             <MessageRenderer
               key={message.id}
@@ -1042,7 +1048,7 @@ export function InteractiveWidget() {
         </div>
 
         {/* Input Area */}
-        <div className="border-t border-border p-4">
+        <div className="border-t border-border pt-4">
           <form onSubmit={(e) => { e.preventDefault(); handleSendMessage(); }} className="space-y-3">
             <div className="flex gap-2">
               <div className="flex-1 relative">
@@ -1119,13 +1125,13 @@ export function InteractiveWidget() {
     
     return (
       <div className="h-full flex flex-col">
-        <div className="flex items-center gap-2 p-4 border-b">
+        <div className="flex items-center gap-2 pb-4">
           <Button variant="ghost" size="sm" onClick={handleBackToMain}>
             ← Back
           </Button>
         </div>
         
-        <div className="flex-1 p-4">
+        <div className="flex-1">
           <Card>
             <CardHeader>
               <CardTitle className="text-sm">{selectedFAQ.question}</CardTitle>
@@ -1162,13 +1168,13 @@ export function InteractiveWidget() {
     
     return (
       <div className="h-full flex flex-col">
-        <div className="flex items-center gap-2 p-4 border-b">
+        <div className="flex items-center gap-2 pb-4">
           <Button variant="ghost" size="sm" onClick={handleBackToMain}>
             ← Back
           </Button>
         </div>
         
-        <div className="flex-1 p-4">
+        <div className="flex-1">
           <Card>
             <CardHeader>
               <CardTitle className="text-sm">{selectedResource.title}</CardTitle>
@@ -1225,13 +1231,13 @@ export function InteractiveWidget() {
     
     return (
       <div className="h-full flex flex-col">
-        <div className="flex items-center gap-2 p-4 border-b">
+        <div className="flex items-center gap-2 pb-4">
           <Button variant="ghost" size="sm" onClick={handleBackToMain}>
             ← Back
           </Button>
         </div>
         
-        <div className="flex-1 p-4 space-y-4">
+        <div className="flex-1 space-y-4">
           <div className="bg-muted/30 p-3 rounded-lg">
             <div className="flex justify-between items-center mb-2">
               <span className="text-sm font-medium">
@@ -1338,9 +1344,9 @@ export function InteractiveWidget() {
           </div>
         </CardHeader>
 
-        <CardContent className="flex-1 flex flex-col p-0 overflow-hidden">
+        <CardContent className="flex-1 flex flex-col p-0 overflow-y-auto">
           {/* Main Content Area */}
-          <div className="flex-1 overflow-y-auto p-4">
+          <div className="flex-1 p-4">
             {renderPanelContent()}
           </div>
 
