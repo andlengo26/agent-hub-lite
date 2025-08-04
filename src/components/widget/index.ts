@@ -1,4 +1,5 @@
 export { FAQBrowser } from './FAQBrowser';
+export { ResourceBrowser } from './ResourceBrowser';
 export { ChatClosedState } from './ChatClosedState';
 export { PostChatFeedback } from './PostChatFeedback';
 export { MoodleReLoginPrompt } from './MoodleReLoginPrompt';

@@ -16,6 +16,7 @@ interface WidgetHeaderProps {
     primaryColor: string;
     textColor: string;
   };
+  companyLogo?: string;
   onToggleExpanded: () => void;
   onToggleMaximized: () => void;
   onClose?: () => void;
@@ -27,6 +28,7 @@ export function WidgetHeader({
   isExpanded,
   isMaximized,
   appearance,
+  companyLogo,
   onToggleExpanded,
   onToggleMaximized,
   onClose
@@ -36,11 +38,20 @@ export function WidgetHeader({
       className="p-4 border-b border-border flex items-center justify-between"
       style={{ backgroundColor: appearance.primaryColor, color: appearance.textColor }}
     >
-      <div className="flex-1">
-        <h3 className="font-semibold text-sm">{title}</h3>
-        {subtitle && (
-          <p className="text-xs opacity-90 mt-0.5">{subtitle}</p>
+      <div className="flex items-center gap-3 flex-1">
+        {companyLogo && (
+          <img 
+            src={companyLogo} 
+            alt="Company Logo" 
+            className="h-8 w-8 rounded object-contain bg-white/10 p-1"
+          />
         )}
+        <div>
+          <h3 className="font-semibold text-sm">{title}</h3>
+          {subtitle && (
+            <p className="text-xs opacity-90 mt-0.5">{subtitle}</p>
+          )}
+        </div>
       </div>
       
       <div className="flex items-center gap-1">

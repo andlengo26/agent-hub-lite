@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
 import { DataTable, Column } from "@/components/ui/data-table";
 import { SearchInput } from "@/components/common/SearchInput";
 import { FileText, Video, Link, File, Plus, Edit, Trash2, Download, Archive } from "lucide-react";
@@ -20,38 +21,6 @@ const getTypeIcon = (type: string) => {
   }
 };
 
-const resourceColumns: Column<Resource>[] = [
-  { 
-    key: "title", 
-    label: "Resource",
-    sortable: true,
-    render: (value, row) => (
-      <div className="flex items-center gap-2">
-        {getTypeIcon(row.type)}
-        <span>{value}</span>
-      </div>
-    )
-  },
-  { 
-    key: "type", 
-    label: "Type",
-    sortable: true,
-    render: (value) => <Badge variant="outline">{value}</Badge>
-  },
-  { 
-    key: "tags", 
-    label: "Tags",
-    render: (value) => (
-      <div className="flex gap-1">
-        {value.slice(0, 2).map((tag: string) => (
-          <Badge key={tag} variant="secondary" className="text-xs">{tag}</Badge>
-        ))}
-      </div>
-    )
-  },
-  { key: "updatedAt", label: "Updated", sortable: true },
-];
-
 export default function Resources() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingResource, setEditingResource] = useState<Resource | null>(null);
@@ -60,6 +29,54 @@ export default function Resources() {
   const { toast } = useToast();
 
   const resources = resourcesResponse?.data || [];
+
+  const resourceColumns: Column<Resource>[] = [
+    { 
+      key: "title", 
+      label: "Resource",
+      sortable: true,
+      render: (value, row) => (
+        <div className="flex items-center gap-2">
+          {getTypeIcon(row.type)}
+          <span>{value}</span>
+        </div>
+      )
+    },
+    { 
+      key: "type", 
+      label: "Type",
+      sortable: true,
+      render: (value) => <Badge variant="outline">{value}</Badge>
+    },
+    { 
+      key: "tags", 
+      label: "Tags",
+      render: (value) => (
+        <div className="flex gap-1">
+          {value.slice(0, 2).map((tag: string) => (
+            <Badge key={tag} variant="secondary" className="text-xs">{tag}</Badge>
+          ))}
+        </div>
+      )
+    },
+    { 
+      key: "displayInChat", 
+      label: "InChat",
+      render: (value, row) => (
+        <Switch 
+          checked={value} 
+          onCheckedChange={(checked) => {
+            toast({
+              title: "Setting Updated",
+              description: `${row.title} chat display ${checked ? 'enabled' : 'disabled'}`,
+            });
+            // In real implementation, this would call an API to update the resource
+          }} 
+        />
+      )
+    },
+    { key: "updatedAt", label: "Updated", sortable: true },
+  ];
 
   const handleEdit = (resource: Resource) => {
     setEditingResource(resource);

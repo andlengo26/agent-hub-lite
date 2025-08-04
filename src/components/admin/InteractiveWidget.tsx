@@ -18,6 +18,7 @@ import { QuotaBadge } from "@/components/widget/QuotaBadge";
 import { QuotaWarningBanner } from "@/components/widget/QuotaWarningBanner";
 import { MessageRenderer } from "@/components/widget/messages/MessageRenderer";
 import { FAQBrowser } from "@/components/widget/FAQBrowser";
+import { ResourceBrowser } from "@/components/widget/ResourceBrowser";
 import { ChatClosedState } from "@/components/widget/ChatClosedState";
 import { PostChatFeedback } from "@/components/widget/PostChatFeedback";
 import { MoodleReLoginPrompt } from "@/components/widget/MoodleReLoginPrompt";
@@ -39,6 +40,7 @@ export function InteractiveWidget() {
   const [isRecording, setIsRecording] = useState(false);
   const [showQuotaWarning, setShowQuotaWarning] = useState(false);
   const [showFAQBrowser, setShowFAQBrowser] = useState(false);
+  const [showResourceBrowser, setShowResourceBrowser] = useState(false);
   const [showPostChatFeedback, setShowPostChatFeedback] = useState(false);
   const [showMoodleReLoginPrompt, setShowMoodleReLoginPrompt] = useState(false);
   const [isConversationClosed, setIsConversationClosed] = useState(false);
@@ -604,6 +606,19 @@ export function InteractiveWidget() {
     setActiveTab('home');
   };
 
+  const handleResourceSelect = (title: string, content: string) => {
+    const resourceMessage: Message = {
+      id: `resource_${Date.now()}`,
+      type: 'ai',
+      content: `**${title}**\n\n${content}`,
+      timestamp: new Date()
+    };
+    setMessages(prev => [...prev, resourceMessage]);
+    sessionPersistence.addMessage(resourceMessage, isExpanded);
+    setShowResourceBrowser(false);
+    setActiveTab('home');
+  };
+
   // Handle post-chat feedback submission
   const handlePostChatFeedbackSubmit = async (feedback: { rating: number; comment: string }) => {
     try {
@@ -843,7 +858,7 @@ export function InteractiveWidget() {
                     Loading chat history...
                   </div>
                 ) : chats.length > 0 ? (
-                  <div className="space-y-3 max-h-80 overflow-y-auto">
+                  <div className="space-y-3">
                     {chats.map((chat) => (
                       <div
                         key={chat.id}
@@ -913,6 +928,14 @@ export function InteractiveWidget() {
           <div className="space-y-4">
             <div className="flex justify-between items-center">
               <h2 className="text-lg font-semibold text-foreground">Resources</h2>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowResourceBrowser(true)}
+                className="text-primary"
+              >
+                Browse All
+              </Button>
             </div>
             
             <div className="relative">
@@ -930,7 +953,7 @@ export function InteractiveWidget() {
                 Loading resources...
               </div>
             ) : (
-              <div className="space-y-3 max-h-80 overflow-y-auto">
+              <div className="space-y-3">
                 {searchResources(searchQuery).map((resource) => (
                   <div
                     key={resource.id}
@@ -951,13 +974,6 @@ export function InteractiveWidget() {
                         <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
                           {resource.aiInstructions}
                         </p>
-                        <div className="flex gap-1 mt-2">
-                          {resource.tags.slice(0, 3).map((tag) => (
-                            <span key={tag} className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded">
-                              {tag}
-                            </span>
-                          ))}
-                        </div>
                       </div>
                     </div>
                   </div>
@@ -987,7 +1003,7 @@ export function InteractiveWidget() {
         {/* Chat Header with Back Button */}
         <div className="flex items-center gap-2 p-4 border-b">
           <Button variant="ghost" size="sm" onClick={handleBackToMain}>
-            <X className="h-4 w-4" />
+            ← Back
           </Button>
           <h3 className="font-medium text-sm">{hasActiveChat ? "Continue Conversation" : "Start New Chat"}</h3>
         </div>
@@ -1119,7 +1135,7 @@ export function InteractiveWidget() {
       <div className="h-full flex flex-col">
         <div className="flex items-center gap-2 p-4 border-b">
           <Button variant="ghost" size="sm" onClick={handleBackToMain}>
-            <X className="h-4 w-4" />
+            ← Back
           </Button>
           <h3 className="font-medium text-sm">FAQ Details</h3>
         </div>
@@ -1163,7 +1179,7 @@ export function InteractiveWidget() {
       <div className="h-full flex flex-col">
         <div className="flex items-center gap-2 p-4 border-b">
           <Button variant="ghost" size="sm" onClick={handleBackToMain}>
-            <X className="h-4 w-4" />
+            ← Back
           </Button>
           <h3 className="font-medium text-sm">Resource Details</h3>
         </div>
@@ -1172,13 +1188,6 @@ export function InteractiveWidget() {
           <Card>
             <CardHeader>
               <CardTitle className="text-sm">{selectedResource.title}</CardTitle>
-              <div className="flex gap-1 flex-wrap">
-                {selectedResource.tags.map((tag, index) => (
-                  <span key={index} className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded">
-                    {tag}
-                  </span>
-                ))}
-              </div>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
@@ -1395,6 +1404,15 @@ export function InteractiveWidget() {
           <FAQBrowser
             onClose={() => setShowFAQBrowser(false)}
             onSelectFAQ={handleFAQSelect}
+          />
+        </div>
+      )}
+
+      {showResourceBrowser && (
+        <div className="absolute inset-0 bg-background z-10">
+          <ResourceBrowser
+            onClose={() => setShowResourceBrowser(false)}
+            onSelectResource={handleResourceSelect}
           />
         </div>
       )}
