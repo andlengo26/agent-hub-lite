@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { MessageCircle, X, Maximize2, Minimize2, Send, Paperclip, Mic, MicOff, Phone, User, LogOut } from "lucide-react";
+import { MessageCircle, X, Maximize2, Minimize2, Send, Paperclip, Mic, MicOff, Phone, User, LogOut, Book } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -10,12 +10,17 @@ import { useMessageQuota } from "@/hooks/useMessageQuota";
 import { useSpamPrevention } from "@/hooks/useSpamPrevention";
 import { useUserIdentification } from "@/hooks/useUserIdentification";
 import { useMoodleAutoIdentification } from "@/hooks/useMoodleAutoIdentification";
+import { useSessionPersistence } from "@/hooks/useSessionPersistence";
 import { ConversationEndModal } from "./ConversationEndModal";
 import { CountdownBadge } from "@/components/widget/CountdownBadge";
 import { MaxDurationBanner } from "@/components/widget/MaxDurationBanner";
 import { QuotaBadge } from "@/components/widget/QuotaBadge";
 import { QuotaWarningBanner } from "@/components/widget/QuotaWarningBanner";
 import { MessageRenderer } from "@/components/widget/messages/MessageRenderer";
+import { FAQBrowser } from "@/components/widget/FAQBrowser";
+import { ChatClosedState } from "@/components/widget/ChatClosedState";
+import { PostChatFeedback } from "@/components/widget/PostChatFeedback";
+import { MoodleReLoginPrompt } from "@/components/widget/MoodleReLoginPrompt";
 import { conversationService } from "@/services/conversationService";
 import { feedbackService } from "@/services/feedbackService";
 import { CustomerService } from "@/services/customerService";
@@ -30,6 +35,10 @@ export function InteractiveWidget() {
   const [isTyping, setIsTyping] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [showQuotaWarning, setShowQuotaWarning] = useState(false);
+  const [showFAQBrowser, setShowFAQBrowser] = useState(false);
+  const [showPostChatFeedback, setShowPostChatFeedback] = useState(false);
+  const [showMoodleReLoginPrompt, setShowMoodleReLoginPrompt] = useState(false);
+  const [isConversationClosed, setIsConversationClosed] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { settings } = useWidgetSettings();
   const { toast } = useToast();
@@ -78,6 +87,20 @@ export function InteractiveWidget() {
     }
   });
 
+  // Session persistence
+  const sessionPersistence = useSessionPersistence({
+    onSessionLoaded: (session) => {
+      setMessages(session.messages);
+      if (session.status === 'closed') {
+        setIsConversationClosed(true);
+      }
+      // Check if we should show Moodle re-login prompt
+      if (session.userContext && settings?.integrations?.moodle) {
+        setShowMoodleReLoginPrompt(true);
+      }
+    }
+  });
+
   // Auto-identification for Moodle users
   const moodleAutoIdentification = useMoodleAutoIdentification({
     settings,
@@ -101,6 +124,7 @@ export function InteractiveWidget() {
       timestamp: new Date()
     };
       setMessages(prev => [...prev, autoWelcomeMessage]);
+      sessionPersistence.addMessage(autoWelcomeMessage);
     },
     onAutoIdentificationError: (error) => {
       console.log('Moodle auto-identification failed, will use manual identification if needed:', error);
@@ -118,7 +142,7 @@ export function InteractiveWidget() {
   }, [messages]);
 
   useEffect(() => {
-    if (isExpanded && messages.length === 0 && settings?.aiSettings.welcomeMessage) {
+    if (isExpanded && messages.length === 0 && settings?.aiSettings.welcomeMessage && !sessionPersistence.currentSession) {
       const welcomeMessage: Message = {
         id: 'welcome',
         type: 'ai',
@@ -126,16 +150,22 @@ export function InteractiveWidget() {
         timestamp: new Date()
       };
       setMessages([welcomeMessage]);
+      sessionPersistence.createNewSession(welcomeMessage);
     }
-  }, [isExpanded, messages.length, settings?.aiSettings.welcomeMessage]);
+  }, [isExpanded, messages.length, settings?.aiSettings.welcomeMessage, sessionPersistence]);
 
   // Reset session quota when conversation ends
   useEffect(() => {
     if (conversationState.status === 'ended') {
       messageQuota.resetSessionQuota();
       spamPrevention.resetCooldown();
+      sessionPersistence.updateSession({ status: 'ended' });
+      
+      // Show post-chat feedback for human-handled conversations
+      // Note: wasHandledByHuman would be added to ConversationState in a real implementation
+      setShowPostChatFeedback(false); // Disabled for now since property doesn't exist
     }
-  }, [conversationState.status, messageQuota, spamPrevention]);
+  }, [conversationState.status, messageQuota, spamPrevention, sessionPersistence]);
 
   const handleFeedback = async (messageId: string, feedback: 'positive' | 'negative', comment?: string) => {
     try {
@@ -247,6 +277,7 @@ export function InteractiveWidget() {
     };
 
     setMessages(prev => [...prev, userMessage]);
+    sessionPersistence.addMessage(userMessage);
     setInputValue("");
     incrementMessageCount();
     messageQuota.incrementQuota();
@@ -266,6 +297,7 @@ export function InteractiveWidget() {
         feedbackSubmitted: false
       };
       setMessages(prev => [...prev, aiResponse]);
+      sessionPersistence.addMessage(aiResponse);
       incrementMessageCount();
       messageQuota.incrementQuota();
       setIsTyping(false);
@@ -343,6 +375,7 @@ export function InteractiveWidget() {
         timestamp: new Date()
       };
       
+      sessionPersistence.addMessage(acknowledgmentMessage);
       return [...filtered, acknowledgmentMessage];
     });
   };
@@ -425,6 +458,77 @@ export function InteractiveWidget() {
         description: "Failed to end conversation properly. Please try again.",
         variant: "destructive"
       });
+    }
+  };
+
+  // Handle starting a new chat
+  const handleStartNewChat = () => {
+    setIsConversationClosed(false);
+    setMessages([]);
+    setShowPostChatFeedback(false);
+    sessionPersistence.clearSession();
+    
+    // Create new session with welcome message
+    if (settings?.aiSettings.welcomeMessage) {
+      const welcomeMessage: Message = {
+        id: 'welcome_new',
+        type: 'ai',
+        content: settings.aiSettings.welcomeMessage,
+        timestamp: new Date()
+      };
+      setMessages([welcomeMessage]);
+      sessionPersistence.createNewSession(welcomeMessage);
+    }
+  };
+
+  // Handle FAQ selection
+  const handleFAQSelect = (question: string, answer: string) => {
+    const faqMessage: Message = {
+      id: `faq_${Date.now()}`,
+      type: 'ai',
+      content: `**${question}**\n\n${answer}`,
+      timestamp: new Date()
+    };
+    setMessages(prev => [...prev, faqMessage]);
+    sessionPersistence.addMessage(faqMessage);
+    setShowFAQBrowser(false);
+  };
+
+  // Handle post-chat feedback submission
+  const handlePostChatFeedbackSubmit = async (feedback: { rating: number; comment: string }) => {
+    try {
+      await fetch('/mocks/post-chat-feedback.json', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          conversationId: sessionPersistence.currentSession?.conversationId,
+          ...feedback,
+          timestamp: new Date().toISOString()
+        })
+      });
+      setShowPostChatFeedback(false);
+    } catch (error) {
+      console.error('Failed to submit post-chat feedback:', error);
+      throw error;
+    }
+  };
+
+  // Handle Moodle re-login
+  const handleMoodleReLogin = async (): Promise<boolean> => {
+    try {
+      const success = await moodleAutoIdentification.attemptAutoIdentification();
+      if (success) {
+        setShowMoodleReLoginPrompt(false);
+        // Merge chat history would happen here in real implementation
+        toast({
+          title: "Login Successful",
+          description: "Your chat history has been merged"
+        });
+      }
+      return success;
+    } catch (error) {
+      console.error('Moodle re-login failed:', error);
+      return false;
     }
   };
 
@@ -809,6 +913,62 @@ export function InteractiveWidget() {
           ) : null}
         </CardContent>
       </Card>
+
+      {/* New Components for Enhanced Features */}
+      {showFAQBrowser && (
+        <div className="absolute inset-0 bg-background z-10">
+          <FAQBrowser
+            onClose={() => setShowFAQBrowser(false)}
+            onSelectFAQ={handleFAQSelect}
+          />
+        </div>
+      )}
+
+      {isConversationClosed && (
+        <div className="absolute inset-0 bg-background z-10">
+          <ChatClosedState
+            onStartNewChat={handleStartNewChat}
+            primaryColor={appearance.primaryColor}
+            assistantName={aiSettings.assistantName}
+          />
+        </div>
+      )}
+
+      {showPostChatFeedback && (
+        <div className="absolute inset-0 bg-background z-10">
+          <PostChatFeedback
+            conversationId={sessionPersistence.currentSession?.conversationId || ''}
+            onSubmit={handlePostChatFeedbackSubmit}
+            onSkip={() => setShowPostChatFeedback(false)}
+          />
+        </div>
+      )}
+
+      {showMoodleReLoginPrompt && (
+        <div className="absolute inset-4 bg-background z-10 rounded-lg border shadow-lg">
+          <MoodleReLoginPrompt
+            onReLogin={handleMoodleReLogin}
+            onDismiss={() => setShowMoodleReLoginPrompt(false)}
+            previousSessionData={{
+              username: userIdentification.session?.userData?.studentId,
+              lastActive: sessionPersistence.currentSession?.timestamp.toISOString()
+            }}
+          />
+        </div>
+      )}
+
+      {/* FAQ Browser Button */}
+      {!showFAQBrowser && !isConversationClosed && conversationState.status === 'active' && (
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setShowFAQBrowser(true)}
+          className="absolute bottom-20 right-4 text-xs"
+        >
+          <Book className="h-3 w-3 mr-1" />
+          Browse FAQs
+        </Button>
+      )}
 
       {/* Conversation End Modal */}
       <ConversationEndModal

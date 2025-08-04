@@ -1,0 +1,70 @@
+{
+  "sessions": [
+    {
+      "id": "session_moodle_001",
+      "userId": "student_123",
+      "username": "john.doe",
+      "timestamp": "2025-08-03T10:30:00Z",
+      "status": "ended",
+      "messages": [
+        {
+          "id": "msg_001",
+          "type": "ai",
+          "content": "Welcome back, John! I can see you're logged into Moodle. How can I assist you today?",
+          "timestamp": "2025-08-03T10:30:00Z"
+        },
+        {
+          "id": "msg_002", 
+          "type": "user",
+          "content": "I need help with my assignment submission",
+          "timestamp": "2025-08-03T10:31:00Z"
+        },
+        {
+          "id": "msg_003",
+          "type": "ai",
+          "content": "I'd be happy to help you with your assignment submission. Which course is this for?",
+          "timestamp": "2025-08-03T10:31:30Z"
+        },
+        {
+          "id": "msg_004",
+          "type": "user", 
+          "content": "CS101 - Introduction to Programming",
+          "timestamp": "2025-08-03T10:32:00Z"
+        },
+        {
+          "id": "msg_005",
+          "type": "ai",
+          "content": "Great! For CS101 assignment submissions, you can upload your files through the course page. Make sure your code files are properly formatted and include comments. Is there a specific issue you're encountering?",
+          "timestamp": "2025-08-03T10:32:30Z"
+        }
+      ]
+    },
+    {
+      "id": "session_moodle_002",
+      "userId": "student_456", 
+      "username": "jane.smith",
+      "timestamp": "2025-08-03T14:15:00Z",
+      "status": "ended",
+      "messages": [
+        {
+          "id": "msg_006",
+          "type": "ai",
+          "content": "Hello Jane! I see you're back. How can I help you today?",
+          "timestamp": "2025-08-03T14:15:00Z"
+        },
+        {
+          "id": "msg_007",
+          "type": "user",
+          "content": "I forgot my password for the course materials",
+          "timestamp": "2025-08-03T14:15:30Z"
+        },
+        {
+          "id": "msg_008",
+          "type": "ai", 
+          "content": "I can help you with password recovery. You can reset your password by clicking the 'Forgot Password' link on the login page, or I can connect you with technical support.",
+          "timestamp": "2025-08-03T14:16:00Z"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,43 @@
+{
+  "feedback": [
+    {
+      "id": "feedback_001",
+      "conversationId": "conv_12345",
+      "agentId": "agent_001",
+      "agentName": "Sarah Wilson",
+      "rating": 5,
+      "comment": "Very helpful and resolved my issue quickly",
+      "timestamp": "2025-08-03T16:30:00Z",
+      "customerData": {
+        "name": "John Doe",
+        "email": "john.doe@example.com"
+      }
+    },
+    {
+      "id": "feedback_002", 
+      "conversationId": "conv_12346",
+      "agentId": "agent_002",
+      "agentName": "Mike Johnson",
+      "rating": 4,
+      "comment": "Good support, though it took a bit longer than expected",
+      "timestamp": "2025-08-03T17:45:00Z",
+      "customerData": {
+        "name": "Jane Smith", 
+        "email": "jane.smith@example.com"
+      }
+    },
+    {
+      "id": "feedback_003",
+      "conversationId": "conv_12347", 
+      "agentId": "agent_001",
+      "agentName": "Sarah Wilson",
+      "rating": 5,
+      "comment": "",
+      "timestamp": "2025-08-04T09:15:00Z",
+      "customerData": {
+        "name": "Bob Wilson",
+        "email": "bob.wilson@example.com"
+      }
+    }
+  ]
+}

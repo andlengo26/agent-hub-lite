@@ -35,7 +35,7 @@ export function useIdentificationSession({ onSessionLoaded }: UseIdentificationS
         localStorage.removeItem(IDENTIFICATION_STORAGE_KEY);
       }
     }
-  }, [onSessionLoaded]);
+  }, []); // Remove onSessionLoaded from dependencies to prevent infinite loop
 
   const saveSession = useCallback((newSession: IdentificationSession) => {
     localStorage.setItem(IDENTIFICATION_STORAGE_KEY, JSON.stringify(newSession));
