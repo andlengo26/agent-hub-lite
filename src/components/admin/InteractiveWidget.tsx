@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { MessageCircle, X, Maximize2, Minimize2, Send, Paperclip, Mic, MicOff, Phone, User, LogOut, Book } from "lucide-react";
+import { MessageCircle, X, Maximize2, Minimize2, Send, Paperclip, Mic, MicOff, Phone, User, LogOut, Book, Home, MessageSquare, FileText, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -21,6 +21,9 @@ import { FAQBrowser } from "@/components/widget/FAQBrowser";
 import { ChatClosedState } from "@/components/widget/ChatClosedState";
 import { PostChatFeedback } from "@/components/widget/PostChatFeedback";
 import { MoodleReLoginPrompt } from "@/components/widget/MoodleReLoginPrompt";
+import { useResources } from "@/hooks/useResources";
+import { useChats } from "@/hooks/useChats";
+import { useFAQSearch } from "@/hooks/useFAQSearch";
 import { conversationService } from "@/services/conversationService";
 import { feedbackService } from "@/services/feedbackService";
 import { CustomerService } from "@/services/customerService";
@@ -39,9 +42,14 @@ export function InteractiveWidget() {
   const [showPostChatFeedback, setShowPostChatFeedback] = useState(false);
   const [showMoodleReLoginPrompt, setShowMoodleReLoginPrompt] = useState(false);
   const [isConversationClosed, setIsConversationClosed] = useState(false);
+  const [activeTab, setActiveTab] = useState<'home' | 'messages' | 'resources'>('home');
+  const [searchQuery, setSearchQuery] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { settings } = useWidgetSettings();
   const { toast } = useToast();
+  const { resources, loading: resourcesLoading, searchResources } = useResources();
+  const { chats, loading: chatsLoading } = useChats();
+  const { faqs, searchQuery: faqQuery, handleSearch, isLoading: faqLoading } = useFAQSearch();
   
   const {
     conversationState,
@@ -582,6 +590,8 @@ export function InteractiveWidget() {
     setMessages(prev => [...prev, faqMessage]);
     sessionPersistence.addMessage(faqMessage, isExpanded);
     setShowFAQBrowser(false);
+    // When FAQ is selected, we want to enable messaging mode as well
+    setActiveTab('home');
   };
 
   // Handle post-chat feedback submission
@@ -677,6 +687,227 @@ export function InteractiveWidget() {
     );
   }
 
+  const renderTabContent = () => {
+    switch (activeTab) {
+      case 'home':
+        return (
+          <div className="space-y-4">
+            {/* Welcome Greeting */}
+            <div className="text-center py-4">
+              <h2 className="text-lg font-semibold text-foreground">
+                {aiSettings.welcomeMessage || "How can we help you today?"}
+              </h2>
+            </div>
+
+            {/* FAQ Search */}
+            <div className="space-y-3">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  value={faqQuery}
+                  onChange={(e) => handleSearch(e.target.value)}
+                  placeholder="Search frequently asked questions..."
+                  className="pl-10"
+                />
+              </div>
+              
+              {faqLoading ? (
+                <div className="text-center py-4 text-muted-foreground text-sm">
+                  Loading FAQs...
+                </div>
+              ) : faqs.length > 0 ? (
+                <div className="space-y-2 max-h-64 overflow-y-auto">
+                  {faqs.slice(0, 5).map((faq) => (
+                    <div
+                      key={faq.id}
+                      className="p-3 bg-muted/50 rounded-lg cursor-pointer hover:bg-muted transition-colors"
+                      onClick={() => handleFAQSelect(faq.question, faq.answer)}
+                    >
+                      <h3 className="font-medium text-sm text-foreground">{faq.question}</h3>
+                      <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                        {faq.answer}
+                      </p>
+                      <div className="flex gap-1 mt-2">
+                        {faq.tags.slice(0, 3).map((tag) => (
+                          <span key={tag} className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded">
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : faqQuery ? (
+                <div className="text-center py-4 text-muted-foreground text-sm">
+                  No FAQs found matching "{faqQuery}"
+                </div>
+              ) : (
+                <div className="text-center py-4 text-muted-foreground text-sm">
+                  Type above to search FAQs
+                </div>
+              )}
+            </div>
+          </div>
+        );
+
+      case 'messages':
+        return (
+          <div className="space-y-4">
+            {/* Check if user is authenticated - replace with actual auth check */}
+            {userIdentification.session ? (
+              <div>
+                <h2 className="text-lg font-semibold text-foreground mb-4">Message History</h2>
+                {chatsLoading ? (
+                  <div className="text-center py-4 text-muted-foreground text-sm">
+                    Loading chat history...
+                  </div>
+                ) : chats.length > 0 ? (
+                  <div className="space-y-3 max-h-80 overflow-y-auto">
+                    {chats.map((chat) => (
+                      <div
+                        key={chat.id}
+                        className="p-3 bg-muted/50 rounded-lg cursor-pointer hover:bg-muted transition-colors"
+                        onClick={() => {
+                          // Load this chat session
+                          setMessages(chat.messages.map(msg => ({
+                            ...msg,
+                            timestamp: new Date(msg.timestamp)
+                          })));
+                          setActiveTab('home');
+                        }}
+                      >
+                        <div className="flex justify-between items-start">
+                          <h3 className="font-medium text-sm text-foreground">
+                            {new Date(chat.timestamp).toLocaleDateString()}
+                          </h3>
+                          <span className={`text-xs px-2 py-0.5 rounded ${
+                            chat.status === 'active' ? 'bg-green-100 text-green-800' :
+                            chat.status === 'ended' ? 'bg-gray-100 text-gray-800' :
+                            'bg-orange-100 text-orange-800'
+                          }`}>
+                            {chat.status}
+                          </span>
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {chat.messages.length} messages
+                        </p>
+                        {chat.messages.length > 0 && (
+                          <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                            Last: {chat.messages[chat.messages.length - 1]?.content}
+                          </p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <MessageSquare className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                    <p className="text-sm">No previous conversations</p>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <User className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                <h2 className="text-lg font-semibold text-foreground mb-2">Sign in to view messages</h2>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Sign in to access your chat history and previous conversations.
+                </p>
+                <Button
+                  onClick={() => {
+                    // Trigger identification flow
+                    const identificationMessage: Message = {
+                      id: `identification_${Date.now()}`,
+                      type: 'identification',
+                      timestamp: new Date(),
+                      isCompleted: false
+                    };
+                    setMessages(prev => [...prev, identificationMessage]);
+                    setActiveTab('home');
+                  }}
+                  style={{ backgroundColor: appearance.primaryColor }}
+                  className="text-white"
+                >
+                  Sign In
+                </Button>
+              </div>
+            )}
+          </div>
+        );
+
+      case 'resources':
+        return (
+          <div className="space-y-4">
+            <div className="flex justify-between items-center">
+              <h2 className="text-lg font-semibold text-foreground">Resources</h2>
+            </div>
+            
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search resources..."
+                className="pl-10"
+              />
+            </div>
+
+            {resourcesLoading ? (
+              <div className="text-center py-4 text-muted-foreground text-sm">
+                Loading resources...
+              </div>
+            ) : (
+              <div className="space-y-3 max-h-80 overflow-y-auto">
+                {searchResources(searchQuery).map((resource) => (
+                  <div
+                    key={resource.id}
+                    className="p-3 bg-muted/50 rounded-lg cursor-pointer hover:bg-muted transition-colors"
+                    onClick={() => window.open(resource.url, '_blank')}
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className="flex-shrink-0">
+                        {resource.type === 'document' && <FileText className="h-5 w-5 text-blue-500" />}
+                        {resource.type === 'video' && <FileText className="h-5 w-5 text-red-500" />}
+                        {resource.type === 'link' && <FileText className="h-5 w-5 text-green-500" />}
+                        {resource.type === 'template' && <FileText className="h-5 w-5 text-purple-500" />}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-medium text-sm text-foreground truncate">
+                          {resource.title}
+                        </h3>
+                        <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                          {resource.aiInstructions}
+                        </p>
+                        <div className="flex gap-1 mt-2">
+                          {resource.tags.slice(0, 3).map((tag) => (
+                            <span key={tag} className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded">
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                
+                {searchResources(searchQuery).length === 0 && (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <FileText className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                    <p className="text-sm">
+                      {searchQuery ? `No resources found for "${searchQuery}"` : 'No resources available'}
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        );
+
+      default:
+        return null;
+    }
+  };
+
   return (
     <div 
       className="fixed z-50 bg-background border rounded-lg shadow-xl max-w-sm sm:max-w-md lg:max-w-lg" 
@@ -703,27 +934,6 @@ export function InteractiveWidget() {
               />
             )}
             
-            {/* Quota Badges */}
-            {aiSettings.enableDailyQuota && messageQuota.quotaState.remainingDaily <= (aiSettings.quotaWarningThreshold || 5) && (
-              <QuotaBadge
-                remaining={messageQuota.quotaState.remainingDaily}
-                total={aiSettings.maxDailyMessages || 50}
-                type="daily"
-                showBadge={true}
-                variant={messageQuota.quotaState.remainingDaily <= 2 ? 'danger' : 'warning'}
-              />
-            )}
-            
-            {aiSettings.enableHourlyQuota && messageQuota.quotaState.remainingHourly <= (aiSettings.quotaWarningThreshold || 5) && (
-              <QuotaBadge
-                remaining={messageQuota.quotaState.remainingHourly}
-                total={aiSettings.maxHourlyMessages || 10}
-                type="hourly"
-                showBadge={true}
-                variant={messageQuota.quotaState.remainingHourly <= 2 ? 'danger' : 'warning'}
-              />
-            )}
-            
             {voice.enableVoiceCalls && (
               <Button
                 variant="ghost"
@@ -732,19 +942,6 @@ export function InteractiveWidget() {
                 onClick={handleVoiceCall}
               >
                 <Phone className="h-4 w-4" />
-              </Button>
-            )}
-            
-            {/* Demo: Test Auto-identification Button (only show on widget settings page) */}
-            {window.location.pathname.includes('/settings/widget') && (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-7 w-7 text-white hover:bg-white/20"
-                onClick={handleTestAutoIdentification}
-                title="Test Moodle Auto-identification (Demo)"
-              >
-                <User className="h-4 w-4" />
               </Button>
             )}
             
@@ -776,239 +973,43 @@ export function InteractiveWidget() {
         </CardHeader>
 
         <CardContent className="flex-1 flex flex-col p-0 overflow-hidden">
-          {/* Session Warning Banner */}
-          {sessionTimer.timerState.showMaxDurationBanner && (
-            <MaxDurationBanner
-              remainingMinutes={sessionTimer.getRemainingMinutes()}
-              onTalkToHuman={handleTalkToHuman}
-              onExtendSession={sessionTimer.extendSession}
-              onDismiss={() => sessionTimer.extendSession()}
-              showTalkToHumanButton={aiSettings.showTalkToHumanButton}
-            />
-          )}
-
-          {/* Quota Warning Banner */}
-          {showQuotaWarning && (
-            <QuotaWarningBanner
-              quotaState={messageQuota.quotaState}
-              onTalkToHuman={handleTalkToHuman}
-              onDismiss={() => setShowQuotaWarning(false)}
-              showTalkToHumanButton={aiSettings.showTalkToHumanButton || false}
-              quotaWarningThreshold={aiSettings.quotaWarningThreshold || 5}
-            />
-          )}
-
-
-          {/* Messages */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-3">
-            {messages.map((message) => (
-              <MessageRenderer
-                key={message.id}
-                message={message}
-                appearance={appearance}
-                aiSettings={aiSettings}
-                conversationStatus={conversationState.status}
-                onFeedback={handleFeedback}
-                settings={settings}
-                formData={userIdentification.formData}
-                validationResult={userIdentification.validationResult}
-                onUpdateFormData={userIdentification.updateFormData}
-                onSubmitIdentification={async () => {
-                  const success = await userIdentification.submitManualIdentification();
-                  if (success && userIdentification.session) {
-                    handleIdentificationComplete(userIdentification.session);
-                  }
-                  return success;
-                }}
-                onMoodleAuth={(session) => {
-                  userIdentification.setIdentificationSession(session);
-                  handleIdentificationComplete(session);
-                }}
-                isSubmittingIdentification={false}
-                getIdentificationMethodPriority={() => {
-                  const priority = userIdentification.getIdentificationMethodPriority();
-                  if (priority.prioritizeMoodle) return 'moodle';
-                  return priority.methods.includes('manual_form_submission') ? 'manual' : 'moodle';
-                }}
-              />
-            ))}
-            
-            {isTyping && (
-              <div className="flex justify-start">
-                <div className="flex items-center space-x-2">
-                  <div 
-                    className="w-6 h-6 rounded-full flex items-center justify-center text-white text-xs"
-                    style={{ backgroundColor: appearance.secondaryColor }}
-                  >
-                    AI
-                  </div>
-                  <div className="bg-muted rounded-lg px-3 py-2">
-                    <div className="flex space-x-1">
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-            <div ref={messagesEndRef} />
+          {/* Main Content Area */}
+          <div className="flex-1 overflow-y-auto p-4">
+            {renderTabContent()}
           </div>
 
-          {/* Action Buttons Area */}
-          {conversationState.status === 'active' && messages.length > 1 && (
-            <div className="border-t px-4 py-2 bg-muted/30 space-y-2">
-              {/* Talk to Human Button */}
-              {aiSettings.showTalkToHumanButton && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleTalkToHuman}
-                  className="w-full text-xs"
-                >
-                  <User className="h-3 w-3 mr-1" />
-                  {aiSettings.talkToHumanButtonText || 'Talk to Human Agent'}
-                </Button>
-              )}
-              
-              {/* End Conversation Button */}
-              {aiSettings.showEndConversationButton && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={confirmEndConversation}
-                  className="w-full text-xs"
-                >
-                  <LogOut className="h-3 w-3 mr-1" />
-                  {aiSettings.endConversationButtonText || 'End Conversation'}
-                </Button>
-              )}
+          {/* Bottom Navigation */}
+          <div className="border-t bg-background p-2 shrink-0">
+            <div className="flex justify-around">
+              <Button
+                variant={activeTab === 'home' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setActiveTab('home')}
+                className="flex-1 flex-col h-auto py-2 space-y-1"
+              >
+                <Home className="h-4 w-4" />
+                <span className="text-xs">Home</span>
+              </Button>
+              <Button
+                variant={activeTab === 'messages' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setActiveTab('messages')}
+                className="flex-1 flex-col h-auto py-2 space-y-1"
+              >
+                <MessageSquare className="h-4 w-4" />
+                <span className="text-xs">Messages</span>
+              </Button>
+              <Button
+                variant={activeTab === 'resources' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setActiveTab('resources')}
+                className="flex-1 flex-col h-auto py-2 space-y-1"
+              >
+                <FileText className="h-4 w-4" />
+                <span className="text-xs">Resources</span>
+              </Button>
             </div>
-          )}
-
-          {/* Conversation Status Indicators */}
-          {conversationState.status === 'waiting_human' && (
-            <div className="border-t px-4 py-3 bg-yellow-50 border-yellow-200">
-              <div className="flex items-center justify-center text-sm text-yellow-800">
-                <div className="animate-spin mr-2 h-4 w-4 border-2 border-yellow-600 border-t-transparent rounded-full"></div>
-                Waiting for human agent...
-              </div>
-            </div>
-          )}
-
-          {conversationState.status === 'idle_timeout' && (
-            <div className="border-t px-4 py-3 bg-orange-50 border-orange-200">
-              <div className="text-center text-sm text-orange-800">
-                Session ended due to inactivity
-              </div>
-            </div>
-          )}
-
-          {conversationState.status === 'max_session' && (
-            <div className="border-t px-4 py-3 bg-red-50 border-red-200">
-              <div className="text-center text-sm text-red-800 space-y-2">
-                <div>Session limit reached</div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleTalkToHuman}
-                  className="text-xs"
-                >
-                  <User className="h-3 w-3 mr-1" />
-                  Talk to Human Agent
-                </Button>
-              </div>
-            </div>
-          )}
-
-          {conversationState.status === 'quota_exceeded' && (
-            <div className="border-t px-4 py-3 bg-red-50 border-red-200">
-              <div className="text-center text-sm text-red-800 space-y-2">
-                <div>Message limit reached</div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleTalkToHuman}
-                  className="text-xs"
-                >
-                  <User className="h-3 w-3 mr-1" />
-                  Talk to Human Agent
-                </Button>
-              </div>
-            </div>
-          )}
-
-          {conversationState.status === 'ended' && (
-            <div className="border-t px-4 py-3 bg-gray-50 border-gray-200">
-              <div className="text-center text-sm text-gray-800">
-                Conversation ended
-              </div>
-            </div>
-          )}
-
-          {/* Input Area */}
-          {conversationState.status === 'active' || conversationState.status === 'waiting_human' ? (
-            <div className="border-t p-4 shrink-0">
-              <div className="flex items-center space-x-2">
-                <div className="flex items-center space-x-1">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8"
-                    onClick={handleFileUpload}
-                    disabled={conversationState.status !== 'active'}
-                  >
-                    <Paperclip className="h-4 w-4" />
-                  </Button>
-                  
-                  {voice.enableVoiceCalls && (
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className={`h-8 w-8 ${isRecording ? 'text-red-500' : ''}`}
-                      onClick={handleVoiceRecording}
-                      disabled={conversationState.status !== 'active'}
-                    >
-                      {isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
-                    </Button>
-                  )}
-                </div>
-                
-                <Input
-                  value={inputValue}
-                  onChange={(e) => setInputValue(e.target.value)}
-                  placeholder={
-                    conversationState.status === 'waiting_human' 
-                      ? "Waiting for human agent..." 
-                      : "Type your message..."
-                  }
-                  className="flex-1"
-                  onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-                  disabled={conversationState.status !== 'active'}
-                />
-                
-                <Button
-                  onClick={handleSendMessage}
-                  size="icon"
-                  className="h-8 w-8 text-white relative"
-                  style={{ backgroundColor: appearance.highlightColor }}
-                  disabled={
-                    !inputValue.trim() || 
-                    conversationState.status !== 'active' || 
-                    !messageQuota.canSendMessage ||
-                    !spamPrevention.canSendMessage
-                  }
-                >
-                  <Send className="h-4 w-4" />
-                  {spamPrevention.spamState.isInCooldown && (
-                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
-                      {spamPrevention.formatCooldownTime()}
-                    </span>
-                  )}
-                </Button>
-              </div>
-            </div>
-          ) : null}
+          </div>
         </CardContent>
       </Card>
 

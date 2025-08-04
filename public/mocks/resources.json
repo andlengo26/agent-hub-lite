@@ -12,7 +12,8 @@
       "contentPreview": "Customer Service Guidelines\n\n1. Always greet customers warmly\n2. Listen actively to their concerns\n3. Provide clear and helpful solutions...",
       "uploadedById": "user_001",
       "uploadedAt": "2025-01-15T11:00:00Z",
-      "updatedAt": "2025-01-25T14:30:00Z"
+      "updatedAt": "2025-01-25T14:30:00Z",
+      "displayInChat": true
     },
     {
       "id": "resource_002",
@@ -23,7 +24,8 @@
       "aiInstructions": "Reference this video when customers need product demonstrations or onboarding assistance.",
       "uploadedById": "user_002",
       "uploadedAt": "2025-01-20T13:15:00Z",
-      "updatedAt": "2025-01-20T13:15:00Z"
+      "updatedAt": "2025-01-20T13:15:00Z",
+      "displayInChat": true
     },
     {
       "id": "resource_003",
@@ -34,7 +36,8 @@
       "aiInstructions": "Direct customers to this knowledge base for technical issues and self-service support.",
       "uploadedById": "user_003",
       "uploadedAt": "2025-01-22T15:00:00Z",
-      "updatedAt": "2025-01-26T10:45:00Z"
+      "updatedAt": "2025-01-26T10:45:00Z",
+      "displayInChat": true
     },
     {
       "id": "resource_004",
@@ -45,7 +48,8 @@
       "aiInstructions": "Use this template structure for formal email responses to customer inquiries.",
       "uploadedById": "user_004",
       "uploadedAt": "2025-01-18T10:30:00Z",
-      "updatedAt": "2025-01-24T16:20:00Z"
+      "updatedAt": "2025-01-24T16:20:00Z",
+      "displayInChat": false
     },
     {
       "id": "resource_005",
@@ -56,7 +60,8 @@
       "aiInstructions": "Reference this documentation when helping customers with API integration questions.",
       "uploadedById": "user_005",
       "uploadedAt": "2025-01-10T17:00:00Z",
-      "updatedAt": "2025-01-27T09:15:00Z"
+      "updatedAt": "2025-01-27T09:15:00Z",
+      "displayInChat": false
     }
   ],
   "pagination": {
