@@ -9,6 +9,7 @@ import { useConversationLifecycle } from "@/hooks/useConversationLifecycle";
 import { useMessageQuota } from "@/hooks/useMessageQuota";
 import { useSpamPrevention } from "@/hooks/useSpamPrevention";
 import { useUserIdentification } from "@/hooks/useUserIdentification";
+import { useMoodleAutoIdentification } from "@/hooks/useMoodleAutoIdentification";
 import { ConversationEndModal } from "./ConversationEndModal";
 import { CountdownBadge } from "@/components/widget/CountdownBadge";
 import { MaxDurationBanner } from "@/components/widget/MaxDurationBanner";
@@ -81,6 +82,35 @@ export function InteractiveWidget() {
       } catch (error) {
         console.error('Failed to create customer from identification:', error);
       }
+    }
+  });
+
+  // Auto-identification for Moodle users
+  const moodleAutoIdentification = useMoodleAutoIdentification({
+    settings,
+    onAutoIdentificationSuccess: async (session) => {
+      // Update user identification state with auto-identified session
+      userIdentification.setIdentificationSession(session);
+      
+      // Create customer record
+      try {
+        await CustomerService.createCustomerFromIdentification(session);
+        console.log('Customer auto-created from Moodle identification:', session.id);
+      } catch (error) {
+        console.error('Failed to create customer from auto-identification:', error);
+      }
+      
+      // Show auto-identification success message
+      const autoWelcomeMessage: Message = {
+        id: `auto_welcome_${Date.now()}`,
+        type: 'ai',
+        content: `Welcome back, ${session.userData.name || 'Student'}! I can see you're logged into Moodle. How can I assist you today?`,
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, autoWelcomeMessage]);
+    },
+    onAutoIdentificationError: (error) => {
+      console.log('Moodle auto-identification failed, will use manual identification if needed:', error);
     }
   });
 
@@ -396,6 +426,28 @@ export function InteractiveWidget() {
     }
   };
 
+  // Test function for manual auto-identification trigger (demo purposes)
+  const handleTestAutoIdentification = async () => {
+    try {
+      // Clear existing identification
+      userIdentification.clearIdentification();
+      moodleAutoIdentification.resetAutoIdentification();
+      
+      // Attempt auto-identification
+      const success = await moodleAutoIdentification.attemptAutoIdentification();
+      
+      if (!success) {
+        toast({
+          title: "Auto-identification Test",
+          description: "Auto-identification failed - would show manual form",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error('Auto-identification test failed:', error);
+    }
+  };
+
   if (!isExpanded) {
     return (
       <div 
@@ -482,6 +534,20 @@ export function InteractiveWidget() {
                 <Phone className="h-4 w-4" />
               </Button>
             )}
+            
+            {/* Demo: Test Auto-identification Button (only show on widget settings page) */}
+            {window.location.pathname.includes('/settings/widget') && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7 text-white hover:bg-white/20"
+                onClick={handleTestAutoIdentification}
+                title="Test Moodle Auto-identification (Demo)"
+              >
+                <User className="h-4 w-4" />
+              </Button>
+            )}
+            
             <Button
               variant="ghost"
               size="icon"

@@ -3,9 +3,9 @@
     "apiKey": "",
     "aiModel": "gpt-4",
     "moodle": {
-      "moodleUrl": "",
-      "apiToken": "",
-      "enabled": false,
+      "moodleUrl": "https://demo.moodle.net",
+      "apiToken": "demo_api_token_12345",
+      "enabled": true,
       "autoLogin": true,
       "requiredFields": {
         "studentId": true,
@@ -67,13 +67,13 @@
     },
     "enableUserIdentification": true,
     "identificationMethod": "both",
-    "enableMoodleAuth": false,
+    "enableMoodleAuth": true,
     "enableManualForm": true,
     "customWelcomeMessage": "Welcome! Please identify yourself to continue."
   },
   "embed": {
     "script": "<script>\n(function() {\n  var widget = document.createElement('div');\n  widget.id = 'support-widget';\n  widget.innerHTML = '<iframe src=\"https://your-domain.com/widget\" frameborder=\"0\"></iframe>';\n  document.body.appendChild(widget);\n})();\n</script>",
-    "moodleChatPluginIntegration": false
+    "moodleChatPluginIntegration": true
   },
   "voice": {
     "enableVoiceCalls": false,

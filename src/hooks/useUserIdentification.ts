@@ -327,6 +327,15 @@ export function useUserIdentification({ settings, onIdentificationComplete }: Us
     }));
   }, []);
 
+  // Set identification session (for auto-identification)
+  const setIdentificationSession = useCallback((session: IdentificationSession) => {
+    setState(prev => ({
+      ...prev,
+      isCompleted: true,
+      session
+    }));
+  }, []);
+
   // Get user context for AI prompts
   const getUserContext = useCallback((): string => {
     if (!state.session?.userData) return '';
@@ -365,6 +374,7 @@ export function useUserIdentification({ settings, onIdentificationComplete }: Us
     submitManualIdentification,
     submitMoodleAuthentication,
     clearIdentification,
+    setIdentificationSession,
     
     // Utils
     getUserContext,
