@@ -11,6 +11,7 @@ import { useSpamPrevention } from "@/hooks/useSpamPrevention";
 import { useUserIdentification } from "@/hooks/useUserIdentification";
 import { useMoodleAutoIdentification } from "@/hooks/useMoodleAutoIdentification";
 import { useSessionPersistence } from "@/hooks/useSessionPersistence";
+import { useTenant } from "@/contexts/TenantContext";
 import { ConversationEndModal } from "./ConversationEndModal";
 import { CountdownBadge } from "@/components/widget/CountdownBadge";
 import { MaxDurationBanner } from "@/components/widget/MaxDurationBanner";
@@ -55,6 +56,7 @@ export function InteractiveWidget() {
   const [lastDetailPanel, setLastDetailPanel] = useState<'faq-detail' | 'resource-detail' | 'message-detail' | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { settings } = useWidgetSettings();
+  const { currentOrg } = useTenant();
   const { toast } = useToast();
   const { resources, loading: resourcesLoading, searchResources } = useResources();
   const { chats, loading: chatsLoading } = useChats();
@@ -1118,18 +1120,9 @@ export function InteractiveWidget() {
               </div>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-muted-foreground mb-4">
+              <p className="text-sm text-muted-foreground">
                 {selectedFAQ.answer}
               </p>
-              <Button 
-                size="sm" 
-                onClick={() => handleUseFAQInChat(selectedFAQ)}
-                className="w-full"
-                style={{ backgroundColor: appearance.primaryColor }}
-              >
-                Use This FAQ in Chat
-                <MessageCircle className="h-3 w-3 ml-1" />
-              </Button>
             </CardContent>
           </Card>
         </div>
@@ -1199,6 +1192,34 @@ export function InteractiveWidget() {
     
     return (
       <div className="space-y-4">
+        {/* Header with date and AI summary */}
+        <div className="bg-muted/30 p-3 rounded-lg border">
+          <div className="flex justify-between items-start mb-2">
+            <span className="text-sm font-medium text-foreground">
+              {new Date(selectedChat.timestamp).toLocaleDateString('en-US', { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+              })}
+            </span>
+            <span className={`text-xs px-2 py-0.5 rounded ${
+              selectedChat.status === 'active' ? 'bg-green-100 text-green-800' :
+              selectedChat.status === 'ended' ? 'bg-gray-100 text-gray-800' :
+              'bg-orange-100 text-orange-800'
+            }`}>
+              {selectedChat.status}
+            </span>
+          </div>
+          <div className="bg-primary/5 p-2 rounded border-l-2 border-primary/20">
+            <p className="text-xs font-medium text-primary mb-1">AI Summary</p>
+            <p className="text-xs text-muted-foreground">
+              {selectedChat.summary || `Conversation with ${selectedChat.messages.length} messages. Topics discussed include customer support inquiries and general assistance.`}
+            </p>
+          </div>
+        </div>
+        
+        {/* Messages */}
         {selectedChat.messages.map((message, index) => (
           <div
             key={index}
@@ -1235,11 +1256,20 @@ export function InteractiveWidget() {
           <div className="flex items-center gap-2 flex-1">
             {/* Conditional content based on current panel */}
             {currentPanel === 'main' && activeTab === 'home' && (
-              <div>
-                <CardTitle className="text-sm font-medium">{appearance.headerText}</CardTitle>
-                {appearance.subheaderText && (
-                  <p className="text-xs opacity-90 mt-1">{appearance.subheaderText}</p>
+              <div className="flex items-center gap-3">
+                {currentOrg?.logoUrl && (
+                  <img 
+                    src={currentOrg.logoUrl} 
+                    alt="Organization Logo" 
+                    className="h-8 w-8 rounded object-contain bg-white/10 p-1"
+                  />
                 )}
+                <div>
+                  <CardTitle className="text-sm font-medium">{appearance.headerText}</CardTitle>
+                  {appearance.subheaderText && (
+                    <p className="text-xs opacity-90 mt-1">{appearance.subheaderText}</p>
+                  )}
+                </div>
               </div>
             )}
             {currentPanel === 'main' && activeTab === 'messages' && (
@@ -1350,8 +1380,8 @@ export function InteractiveWidget() {
             </div>
           </div>
 
-          {/* Bottom Navigation - Fixed at bottom, show on main panel and message detail */}
-          {(currentPanel === 'main' || currentPanel === 'message-detail') && (
+          {/* Bottom Navigation - Fixed at bottom, show on main panel, message detail, and resource detail */}
+          {(currentPanel === 'main' || currentPanel === 'message-detail' || currentPanel === 'resource-detail') && (
             <div className="border-t bg-background p-1 shrink-0">
               <div className="flex justify-around">
                 <Button
