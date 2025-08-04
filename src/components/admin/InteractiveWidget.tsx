@@ -792,7 +792,7 @@ export function InteractiveWidget() {
                 style={{ backgroundColor: appearance.primaryColor }}
               >
                 <MessageCircle className="h-5 w-5 mr-2" />
-                {hasActiveChat ? "Continue Chatting" : "Chat with Us"}
+                Chat With Us
               </Button>
             </div>
 
@@ -824,13 +824,6 @@ export function InteractiveWidget() {
                       <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
                         {faq.answer}
                       </p>
-                      <div className="flex gap-1 mt-2">
-                        {faq.tags.slice(0, 3).map((tag) => (
-                          <span key={tag} className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded">
-                            {tag}
-                          </span>
-                        ))}
-                      </div>
                     </div>
                   ))}
                 </div>
@@ -1000,16 +993,9 @@ export function InteractiveWidget() {
   const renderChatPanel = () => {
     return (
       <div className="h-full flex flex-col">
-        {/* Chat Header with Back Button */}
-        <div className="flex items-center gap-2 p-4 border-b">
-          <Button variant="ghost" size="sm" onClick={handleBackToMain}>
-            ← Back
-          </Button>
-          <h3 className="font-medium text-sm">{hasActiveChat ? "Continue Conversation" : "Start New Chat"}</h3>
-        </div>
         
         {/* Chat Messages */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        <div className="flex-1 p-4 space-y-4">
           {messages.map((message) => (
             <MessageRenderer
               key={message.id}
@@ -1137,10 +1123,9 @@ export function InteractiveWidget() {
           <Button variant="ghost" size="sm" onClick={handleBackToMain}>
             ← Back
           </Button>
-          <h3 className="font-medium text-sm">FAQ Details</h3>
         </div>
         
-        <div className="flex-1 overflow-y-auto p-4">
+        <div className="flex-1 p-4">
           <Card>
             <CardHeader>
               <CardTitle className="text-sm">{selectedFAQ.question}</CardTitle>
@@ -1181,10 +1166,9 @@ export function InteractiveWidget() {
           <Button variant="ghost" size="sm" onClick={handleBackToMain}>
             ← Back
           </Button>
-          <h3 className="font-medium text-sm">Resource Details</h3>
         </div>
         
-        <div className="flex-1 overflow-y-auto p-4">
+        <div className="flex-1 p-4">
           <Card>
             <CardHeader>
               <CardTitle className="text-sm">{selectedResource.title}</CardTitle>
@@ -1243,12 +1227,11 @@ export function InteractiveWidget() {
       <div className="h-full flex flex-col">
         <div className="flex items-center gap-2 p-4 border-b">
           <Button variant="ghost" size="sm" onClick={handleBackToMain}>
-            <X className="h-4 w-4" />
+            ← Back
           </Button>
-          <h3 className="font-medium text-sm">Chat History</h3>
         </div>
         
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        <div className="flex-1 p-4 space-y-4">
           <div className="bg-muted/30 p-3 rounded-lg">
             <div className="flex justify-between items-center mb-2">
               <span className="text-sm font-medium">
