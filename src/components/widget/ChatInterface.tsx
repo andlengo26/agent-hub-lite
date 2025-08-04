@@ -24,6 +24,7 @@ interface ChatInterfaceProps {
   onSendMessage: (message: string) => void;
   onInputChange: (value: string) => void;
   onFeedback?: (messageId: string, feedback: 'positive' | 'negative', comment?: string) => void;
+  onTalkToHuman?: () => void;
 }
 
 export function ChatInterface({
@@ -34,7 +35,8 @@ export function ChatInterface({
   appearance,
   onSendMessage,
   onInputChange,
-  onFeedback
+  onFeedback,
+  onTalkToHuman
 }: ChatInterfaceProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -118,8 +120,8 @@ export function ChatInterface({
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input Area */}
-      <div className="border-t border-border p-4">
+      {/* Fixed Input Area */}
+      <div className="border-t border-border p-4 bg-background">
         <form onSubmit={handleSubmit} className="space-y-3">
           <div className="flex gap-2">
             <div className="flex-1 relative">
@@ -173,6 +175,15 @@ export function ChatInterface({
             >
               <Phone className="h-4 w-4 mr-2" />
               Voice Call
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={!canSendMessage}
+              onClick={onTalkToHuman}
+            >
+              Talk to Human
             </Button>
           </div>
         </form>

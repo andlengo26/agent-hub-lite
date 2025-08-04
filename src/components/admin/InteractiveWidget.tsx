@@ -244,23 +244,6 @@ export function InteractiveWidget() {
     }
   }, [isExpanded, messages.length, settings?.aiSettings?.welcomeMessage, sessionPersistence.currentSession]);
 
-  // Initialize welcome message when settings are loaded for the first time
-  useEffect(() => {
-    if (settings?.aiSettings?.welcomeMessage && 
-        !isExpanded && 
-        messages.length === 0 && 
-        !sessionPersistence.currentSession) {
-      console.log('📝 Initializing welcome message when settings loaded');
-      const welcomeMessage: Message = {
-        id: 'welcome_init',
-        type: 'ai',
-        content: settings.aiSettings.welcomeMessage,
-        timestamp: new Date()
-      };
-      setMessages([welcomeMessage]);
-    }
-  }, [settings?.aiSettings?.welcomeMessage]);
-
   // Track if there's an active chat session
   useEffect(() => {
     setHasActiveChat(messages.length > 0 && conversationState.status === 'active');
@@ -802,7 +785,6 @@ export function InteractiveWidget() {
                 className="w-full text-white py-3 text-base font-medium"
                 style={{ backgroundColor: appearance.primaryColor }}
               >
-                <MessageCircle className="h-5 w-5 mr-2" />
                 Chat With Us
               </Button>
             </div>
@@ -824,7 +806,7 @@ export function InteractiveWidget() {
                   Loading FAQs...
                 </div>
               ) : faqs.length > 0 ? (
-                <div className="space-y-2 max-h-64 overflow-y-auto">
+                <div className="space-y-2">
                   {faqs.slice(0, 5).map((faq) => (
                     <div
                       key={faq.id}
@@ -1380,8 +1362,8 @@ export function InteractiveWidget() {
             </div>
           </div>
 
-          {/* Bottom Navigation - Fixed at bottom, show on main panel, message detail, and resource detail */}
-          {(currentPanel === 'main' || currentPanel === 'message-detail' || currentPanel === 'resource-detail') && (
+          {/* Bottom Navigation - Fixed at bottom, only show on main panel */}
+          {currentPanel === 'main' && (
             <div className="border-t bg-background p-1 shrink-0">
               <div className="flex justify-around">
                 <Button
