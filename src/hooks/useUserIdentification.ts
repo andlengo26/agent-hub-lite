@@ -1,6 +1,6 @@
 /**
- * Hook for managing user identification in the chat widget
- * Handles manual form submission and future Moodle authentication
+ * Main hook for managing user identification in the chat widget
+ * Refactored to use modular sub-hooks for better maintainability
  */
 
 import { useState, useCallback, useEffect } from 'react';
@@ -13,146 +13,53 @@ import {
   IdentificationSession,
   IdentificationFormData,
   IdentificationValidationResult,
-  UserIdentificationState,
-  MoodleConfig
+  UserIdentificationState
 } from '@/types/user-identification';
+import { MoodleConfig } from '@/types/moodle';
+import { useIdentificationSession } from './user-identification/useIdentificationSession';
+import { useIdentificationValidation } from './user-identification/useIdentificationValidation';
+import { useIdentificationRequirements } from './user-identification/useIdentificationRequirements';
 
 interface UseUserIdentificationProps {
   settings: WidgetSettings | null;
   onIdentificationComplete?: (session: IdentificationSession) => void;
 }
 
-const IDENTIFICATION_STORAGE_KEY = 'widget_user_identification';
-
 export function useUserIdentification({ settings, onIdentificationComplete }: UseUserIdentificationProps) {
   const { toast } = useToast();
   
+  // Use modular sub-hooks
+  const { isRequired, getIdentificationMethodPriority } = useIdentificationRequirements({ settings });
+  const { validateForm } = useIdentificationValidation({ settings });
+  const { session, saveSession, clearSession } = useIdentificationSession({
+    onSessionLoaded: (loadedSession) => {
+      setState(prev => ({
+        ...prev,
+        isCompleted: true,
+        session: loadedSession
+      }));
+    }
+  });
+  
   const [state, setState] = useState<UserIdentificationState>({
-    isRequired: false,
-    isCompleted: false,
+    isRequired,
+    isCompleted: !!session,
     showForm: false,
     formData: { name: '', email: '', mobile: '' },
-    session: null,
+    session,
     validationResult: null
   });
-
-  // Get the identification method priority based on settings
-  const getIdentificationMethodPriority = useCallback(() => {
-    if (!settings?.userInfo) return { methods: [], prioritizeMoodle: false };
-    
-    const { enableMoodleAuth, enableManualForm } = settings.userInfo;
-    const moodleChatPluginEnabled = settings.embed?.moodleChatPluginIntegration;
-    
-    const methods = [];
-    
-    if (enableMoodleAuth) methods.push('moodle_authentication');
-    if (enableManualForm) methods.push('manual_form_submission');
-    
-    // If Moodle Chat Plugin integration is enabled, prioritize Moodle authentication
-    const prioritizeMoodle = moodleChatPluginEnabled && enableMoodleAuth;
-    
-    return { methods, prioritizeMoodle };
-  }, [settings]);
-
-  // Check if identification is required based on settings
-  const checkIdentificationRequired = useCallback(() => {
-    if (!settings?.userInfo) return false;
-    
-    const { anonymousChat, enableUserIdentification } = settings.userInfo;
-    
-    // If anonymous chat is enabled, no identification required
-    if (anonymousChat) return false;
-    
-    // If user identification is disabled, no identification required
-    if (enableUserIdentification === false) return false;
-    
-    // If Moodle Chat Plugin integration is enabled, always require identification
-    if (settings.embed?.moodleChatPluginIntegration) return true;
-    
-    // Otherwise, check if any identification method is enabled
-    const { enableMoodleAuth, enableManualForm } = settings.userInfo;
-    return enableMoodleAuth || enableManualForm;
-  }, [settings]);
-
-  // Load existing session from storage
-  useEffect(() => {
-    const savedSession = localStorage.getItem(IDENTIFICATION_STORAGE_KEY);
-    if (savedSession) {
-      try {
-        const session: IdentificationSession = JSON.parse(savedSession);
-        // Validate session is still fresh (24 hours)
-        const isSessionValid = session.isValid && 
-          (new Date().getTime() - new Date(session.timestamp).getTime()) < 24 * 60 * 60 * 1000;
-        
-        if (isSessionValid) {
-          setState(prev => ({
-            ...prev,
-            isCompleted: true,
-            session,
-            isRequired: checkIdentificationRequired()
-          }));
-        } else {
-          localStorage.removeItem(IDENTIFICATION_STORAGE_KEY);
-        }
-      } catch (error) {
-        console.error('Failed to load identification session:', error);
-        localStorage.removeItem(IDENTIFICATION_STORAGE_KEY);
-      }
-    }
-  }, [checkIdentificationRequired]);
 
   // Update required status when settings change
   useEffect(() => {
     setState(prev => ({
       ...prev,
-      isRequired: checkIdentificationRequired()
+      isRequired,
+      session,
+      isCompleted: !!session
     }));
-  }, [checkIdentificationRequired]);
+  }, [isRequired, session]);
 
-  // Validate form data
-  const validateForm = useCallback((formData: IdentificationFormData): IdentificationValidationResult => {
-    const errors: Record<string, string> = {};
-    const requiredFields: string[] = [];
-
-    if (!settings?.userInfo) {
-      return { isValid: false, errors, requiredFields };
-    }
-
-    const { requiredFields: fields } = settings.userInfo;
-
-    if (fields.name) {
-      requiredFields.push('name');
-      if (!formData.name.trim()) {
-        errors.name = 'Name is required';
-      } else if (formData.name.trim().length < 2) {
-        errors.name = 'Name must be at least 2 characters';
-      }
-    }
-
-    if (fields.email) {
-      requiredFields.push('email');
-      if (!formData.email.trim()) {
-        errors.email = 'Email is required';
-      } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-        errors.email = 'Please enter a valid email address';
-      }
-    }
-
-    if (fields.mobile) {
-      requiredFields.push('mobile');
-      if (!formData.mobile.trim()) {
-        errors.mobile = 'Phone number is required';
-      } else if (!/^[\+]?[1-9][\d]{0,15}$/.test(formData.mobile.replace(/[\s\-\(\)]/g, ''))) {
-        errors.mobile = 'Please enter a valid phone number';
-      }
-    }
-
-    return {
-      isValid: Object.keys(errors).length === 0,
-      errors,
-      requiredFields
-    };
-  }, [settings]);
 
   // Show identification form
   const showIdentificationForm = useCallback(() => {
@@ -213,14 +120,13 @@ export function useUserIdentification({ settings, onIdentificationComplete }: Us
       };
 
       // Save to storage
-      localStorage.setItem(IDENTIFICATION_STORAGE_KEY, JSON.stringify(session));
+      saveSession(session);
 
       // Update state
       setState(prev => ({
         ...prev,
         isCompleted: true,
         showForm: false,
-        session,
         validationResult: null
       }));
 
@@ -285,13 +191,12 @@ export function useUserIdentification({ settings, onIdentificationComplete }: Us
       );
 
       // Save to storage
-      localStorage.setItem(IDENTIFICATION_STORAGE_KEY, JSON.stringify(session));
+      saveSession(session);
 
       // Update state
       setState(prev => ({
         ...prev,
         isCompleted: true,
-        session,
         validationResult: null
       }));
 
@@ -317,24 +222,23 @@ export function useUserIdentification({ settings, onIdentificationComplete }: Us
 
   // Clear identification session
   const clearIdentification = useCallback(() => {
-    localStorage.removeItem(IDENTIFICATION_STORAGE_KEY);
+    clearSession();
     setState(prev => ({
       ...prev,
       isCompleted: false,
-      session: null,
       formData: { name: '', email: '', mobile: '' },
       validationResult: null
     }));
-  }, []);
+  }, [clearSession]);
 
   // Set identification session (for auto-identification)
   const setIdentificationSession = useCallback((session: IdentificationSession) => {
+    saveSession(session);
     setState(prev => ({
       ...prev,
-      isCompleted: true,
-      session
+      isCompleted: true
     }));
-  }, []);
+  }, [saveSession]);
 
   // Get user context for AI prompts
   const getUserContext = useCallback((): string => {

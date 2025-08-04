@@ -13,16 +13,7 @@ export interface UserIdentificationData {
   customFields?: Record<string, string>;
 }
 
-export interface MoodleConfig {
-  moodleUrl: string;
-  apiToken: string;
-  enabled: boolean;
-  autoLogin: boolean;
-  requiredFields: {
-    studentId: boolean;
-    department: boolean;
-  };
-}
+// MoodleConfig moved to @/types/moodle to avoid duplication
 
 export interface IdentificationSession {
   id: string;
