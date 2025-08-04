@@ -12,9 +12,11 @@ interface ChatSession {
   id: string;
   messages: Message[];
   timestamp: Date;
-  status: 'active' | 'waiting_human' | 'ended' | 'closed';
+  status: 'active' | 'waiting_human' | 'ended' | 'closed' | 'idle_timeout';
   conversationId?: string;
   userContext?: string;
+  isExpanded?: boolean;
+  lastInteractionTime?: Date;
 }
 
 interface UseSessionPersistenceProps {
@@ -30,12 +32,27 @@ export function useSessionPersistence({ onSessionLoaded }: UseSessionPersistence
     if (savedSession) {
       try {
         const parsedSession: ChatSession = JSON.parse(savedSession);
-        // Check if session is still valid
-        const isSessionValid = (new Date().getTime() - new Date(parsedSession.timestamp).getTime()) < SESSION_TIMEOUT;
+        const now = new Date().getTime();
+        const sessionAge = now - new Date(parsedSession.timestamp).getTime();
+        const lastInteractionAge = parsedSession.lastInteractionTime 
+          ? now - new Date(parsedSession.lastInteractionTime).getTime()
+          : sessionAge;
+        
+        // Check if session is still valid (24 hours) and not idle (30 minutes)
+        const isSessionValid = sessionAge < SESSION_TIMEOUT;
+        const isIdleTimeout = lastInteractionAge > (30 * 60 * 1000); // 30 minutes
         
         if (isSessionValid && parsedSession.status !== 'ended') {
-          setCurrentSession(parsedSession);
-          onSessionLoaded?.(parsedSession);
+          // Mark as idle_timeout if user has been inactive too long
+          if (isIdleTimeout && parsedSession.status === 'active') {
+            const updatedSession = { ...parsedSession, status: 'idle_timeout' as const, isExpanded: false };
+            localStorage.setItem(CHAT_SESSION_STORAGE_KEY, JSON.stringify(updatedSession));
+            setCurrentSession(updatedSession);
+            onSessionLoaded?.(updatedSession);
+          } else {
+            setCurrentSession(parsedSession);
+            onSessionLoaded?.(parsedSession);
+          }
         } else {
           localStorage.removeItem(CHAT_SESSION_STORAGE_KEY);
         }
@@ -58,12 +75,15 @@ export function useSessionPersistence({ onSessionLoaded }: UseSessionPersistence
     }
   }, [currentSession, saveSession]);
 
-  const createNewSession = useCallback((initialMessage?: Message) => {
+  const createNewSession = useCallback((initialMessage?: Message, isExpanded = false) => {
+    const now = new Date();
     const newSession: ChatSession = {
       id: `session_${Date.now()}`,
       messages: initialMessage ? [initialMessage] : [],
-      timestamp: new Date(),
-      status: 'active'
+      timestamp: now,
+      status: 'active',
+      isExpanded,
+      lastInteractionTime: now
     };
     saveSession(newSession);
     return newSession;
@@ -87,6 +107,22 @@ export function useSessionPersistence({ onSessionLoaded }: UseSessionPersistence
     }
   }, [currentSession, updateSession]);
 
+  const updateWidgetState = useCallback((isExpanded: boolean) => {
+    if (currentSession) {
+      updateSession({ 
+        isExpanded, 
+        lastInteractionTime: new Date(),
+        status: currentSession.status === 'idle_timeout' ? 'active' : currentSession.status
+      });
+    }
+  }, [currentSession, updateSession]);
+
+  const updateLastInteraction = useCallback(() => {
+    if (currentSession) {
+      updateSession({ lastInteractionTime: new Date() });
+    }
+  }, [currentSession, updateSession]);
+
   return {
     currentSession,
     saveSession,
@@ -94,6 +130,8 @@ export function useSessionPersistence({ onSessionLoaded }: UseSessionPersistence
     createNewSession,
     clearSession,
     addMessage,
-    updateMessages
+    updateMessages,
+    updateWidgetState,
+    updateLastInteraction
   };
 }

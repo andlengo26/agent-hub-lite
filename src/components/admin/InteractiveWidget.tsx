@@ -87,13 +87,18 @@ export function InteractiveWidget() {
     }
   });
 
-  // Session persistence
+  // Session persistence with widget state restoration
   const sessionPersistence = useSessionPersistence({
     onSessionLoaded: (session) => {
       setMessages(session.messages);
       if (session.status === 'closed') {
         setIsConversationClosed(true);
       }
+      
+      // Restore widget expanded state based on session and settings
+      const shouldExpand = determineWidgetExpandState(session, settings);
+      setIsExpanded(shouldExpand);
+      
       // Check if we should show Moodle re-login prompt
       if (session.userContext && settings?.integrations?.moodle) {
         setShowMoodleReLoginPrompt(true);
@@ -131,11 +136,32 @@ export function InteractiveWidget() {
     }
   });
 
-  useEffect(() => {
-    if (settings?.appearance.autoOpenWidget && !isExpanded && messages.length === 0) {
-      setTimeout(() => setIsExpanded(true), 2000);
+  // Determine widget expand state based on session and settings
+  const determineWidgetExpandState = (session: any, settings: any): boolean => {
+    if (!session || !settings) return false;
+    
+    // Never auto-expand if session is idle timeout or ended
+    if (session.status === 'idle_timeout' || session.status === 'ended' || session.status === 'closed') {
+      return false;
     }
-  }, [settings, isExpanded, messages.length]);
+    
+    // If session has explicit isExpanded state, use it
+    if (typeof session.isExpanded === 'boolean') {
+      return session.isExpanded;
+    }
+    
+    // Fall back to autoOpenWidget setting for active sessions with messages
+    return settings.appearance?.autoOpenWidget && session.messages?.length > 0;
+  };
+
+  useEffect(() => {
+    if (settings?.appearance.autoOpenWidget && !isExpanded && messages.length === 0 && !sessionPersistence.currentSession) {
+      setTimeout(() => {
+        setIsExpanded(true);
+        sessionPersistence.updateWidgetState?.(true);
+      }, 2000);
+    }
+  }, [settings, isExpanded, messages.length, sessionPersistence]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -150,7 +176,7 @@ export function InteractiveWidget() {
         timestamp: new Date()
       };
       setMessages([welcomeMessage]);
-      sessionPersistence.createNewSession(welcomeMessage);
+      sessionPersistence.createNewSession(welcomeMessage, true);
     }
   }, [isExpanded, messages.length, settings?.aiSettings.welcomeMessage, sessionPersistence]);
 
@@ -282,6 +308,7 @@ export function InteractiveWidget() {
     incrementMessageCount();
     messageQuota.incrementQuota();
     spamPrevention.recordMessage();
+    sessionPersistence.updateLastInteraction?.();
     setIsTyping(true);
 
     // Simulate AI response with user context
@@ -300,6 +327,7 @@ export function InteractiveWidget() {
       sessionPersistence.addMessage(aiResponse);
       incrementMessageCount();
       messageQuota.incrementQuota();
+      sessionPersistence.updateLastInteraction?.();
       setIsTyping(false);
       
       // Start the AI session timer on first AI response
@@ -477,7 +505,7 @@ export function InteractiveWidget() {
         timestamp: new Date()
       };
       setMessages([welcomeMessage]);
-      sessionPersistence.createNewSession(welcomeMessage);
+      sessionPersistence.createNewSession(welcomeMessage, isExpanded);
     }
   };
 
@@ -561,7 +589,10 @@ export function InteractiveWidget() {
         style={getPositionClasses()}
       >
         <Button
-          onClick={() => setIsExpanded(true)}
+          onClick={() => {
+            setIsExpanded(true);
+            sessionPersistence.updateWidgetState?.(true);
+          }}
           className="h-14 w-14 rounded-full shadow-lg text-white hover:scale-105 transition-transform"
           style={{ backgroundColor: appearance.primaryColor }}
           size="icon"
@@ -670,7 +701,10 @@ export function InteractiveWidget() {
               variant="ghost"
               size="icon"
               className="h-7 w-7 text-white hover:bg-white/20"
-              onClick={() => setIsExpanded(false)}
+              onClick={() => {
+                setIsExpanded(false);
+                sessionPersistence.updateWidgetState?.(false);
+              }}
             >
               <X className="h-3 w-3" />
             </Button>
