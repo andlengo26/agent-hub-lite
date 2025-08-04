@@ -90,19 +90,24 @@ export function InteractiveWidget() {
   // Session persistence with widget state restoration
   const sessionPersistence = useSessionPersistence({
     onSessionLoaded: (session) => {
+      console.log('📱 Session loaded:', { 
+        sessionId: session.id, 
+        status: session.status, 
+        isExpanded: session.isExpanded, 
+        messagesCount: session.messages.length 
+      });
+      
       setMessages(session.messages);
       if (session.status === 'closed') {
         setIsConversationClosed(true);
       }
       
-      // Restore widget expanded state based on session and settings
-      const shouldExpand = determineWidgetExpandState(session, settings);
-      setIsExpanded(shouldExpand);
-      
       // Check if we should show Moodle re-login prompt
       if (session.userContext && settings?.integrations?.moodle) {
         setShowMoodleReLoginPrompt(true);
       }
+      
+      // Widget state will be restored in the dedicated useEffect below
     }
   });
 
@@ -140,12 +145,24 @@ export function InteractiveWidget() {
   const determineWidgetExpandState = (session: any, settings: any): boolean => {
     if (!session || !settings) return false;
     
-    // Never auto-expand if session is idle timeout or ended
-    if (session.status === 'idle_timeout' || session.status === 'ended' || session.status === 'closed') {
+    console.log('🎯 Determining widget state:', { 
+      sessionStatus: session.status, 
+      sessionExpanded: session.isExpanded, 
+      autoOpen: settings.appearance?.autoOpenWidget 
+    });
+    
+    // For idle_timeout sessions, preserve the session's expand state (don't force collapse)
+    // This allows users to continue where they left off after being idle
+    if (session.status === 'idle_timeout') {
+      return session.isExpanded;
+    }
+    
+    // Never auto-expand if session is ended or closed
+    if (session.status === 'ended' || session.status === 'closed') {
       return false;
     }
     
-    // If session has explicit isExpanded state, use it
+    // If session has explicit isExpanded state, use it (highest priority)
     if (typeof session.isExpanded === 'boolean') {
       return session.isExpanded;
     }
@@ -154,21 +171,49 @@ export function InteractiveWidget() {
     return settings.appearance?.autoOpenWidget && session.messages?.length > 0;
   };
 
+  // Restore widget state after both session and settings are loaded
+  const restoreWidgetState = () => {
+    if (!sessionPersistence.currentSession || !settings) return;
+    
+    const shouldExpand = determineWidgetExpandState(sessionPersistence.currentSession, settings);
+    console.log('🔄 Restoring widget state:', { shouldExpand, currentExpanded: isExpanded });
+    
+    if (shouldExpand !== isExpanded) {
+      setIsExpanded(shouldExpand);
+      // Don't call updateWidgetState here to avoid circular updates during restoration
+    }
+  };
+
+  // Restore widget state when session and settings are both available
   useEffect(() => {
-    if (settings?.appearance.autoOpenWidget && !isExpanded && messages.length === 0 && !sessionPersistence.currentSession) {
+    restoreWidgetState();
+  }, [sessionPersistence.currentSession, settings]); // Only trigger when these core dependencies change
+
+  // Auto-open widget for new sessions (only when no existing session)
+  useEffect(() => {
+    if (settings?.appearance.autoOpenWidget && 
+        !isExpanded && 
+        messages.length === 0 && 
+        !sessionPersistence.currentSession) {
+      console.log('🚀 Auto-opening widget for new session');
       setTimeout(() => {
         setIsExpanded(true);
-        sessionPersistence.updateWidgetState?.(true);
+        sessionPersistence.updateWidgetState(true);
       }, 2000);
     }
-  }, [settings, isExpanded, messages.length, sessionPersistence]);
+  }, [settings?.appearance.autoOpenWidget, isExpanded, messages.length, sessionPersistence.currentSession]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  // Create welcome message for new expanded sessions
   useEffect(() => {
-    if (isExpanded && messages.length === 0 && settings?.aiSettings.welcomeMessage && !sessionPersistence.currentSession) {
+    if (isExpanded && 
+        messages.length === 0 && 
+        settings?.aiSettings.welcomeMessage && 
+        !sessionPersistence.currentSession) {
+      console.log('📝 Creating welcome message for new session');
       const welcomeMessage: Message = {
         id: 'welcome',
         type: 'ai',
@@ -178,7 +223,7 @@ export function InteractiveWidget() {
       setMessages([welcomeMessage]);
       sessionPersistence.createNewSession(welcomeMessage, true);
     }
-  }, [isExpanded, messages.length, settings?.aiSettings.welcomeMessage, sessionPersistence]);
+  }, [isExpanded, messages.length, settings?.aiSettings.welcomeMessage, sessionPersistence.currentSession]);
 
   // Reset session quota when conversation ends
   useEffect(() => {
@@ -590,8 +635,9 @@ export function InteractiveWidget() {
       >
         <Button
           onClick={() => {
+            console.log('🔵 User clicked to expand widget');
             setIsExpanded(true);
-            sessionPersistence.updateWidgetState?.(true);
+            sessionPersistence.updateWidgetState(true);
           }}
           className="h-14 w-14 rounded-full shadow-lg text-white hover:scale-105 transition-transform"
           style={{ backgroundColor: appearance.primaryColor }}
@@ -702,8 +748,9 @@ export function InteractiveWidget() {
               size="icon"
               className="h-7 w-7 text-white hover:bg-white/20"
               onClick={() => {
+                console.log('❌ User clicked to minimize widget');
                 setIsExpanded(false);
-                sessionPersistence.updateWidgetState?.(false);
+                sessionPersistence.updateWidgetState(false);
               }}
             >
               <X className="h-3 w-3" />
