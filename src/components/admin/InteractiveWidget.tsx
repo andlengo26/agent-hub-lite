@@ -679,7 +679,7 @@ export function InteractiveWidget() {
 
   return (
     <div 
-      className="fixed z-50 bg-background border rounded-lg shadow-xl" 
+      className="fixed z-50 bg-background border rounded-lg shadow-xl max-w-sm sm:max-w-md lg:max-w-lg" 
       style={getExpandedPositionClasses()}
     >
       <Card className="h-full flex flex-col">

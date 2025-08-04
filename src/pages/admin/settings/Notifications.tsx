@@ -84,6 +84,27 @@ export default function UserPreferences() {
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [notificationSound, setNotificationSound] = useState('chime');
 
+  const playNotificationSound = (soundName: string) => {
+    try {
+      const audio = new Audio(`/sounds/${soundName}.mp3`);
+      audio.volume = 0.5;
+      audio.play().catch(error => {
+        console.error('Error playing sound:', error);
+        toast({
+          title: "Sound Preview",
+          description: `Could not play ${soundName} sound. Audio file may be missing.`,
+          variant: "destructive"
+        });
+      });
+    } catch (error) {
+      console.error('Error creating audio:', error);
+      toast({
+        title: "Sound Preview", 
+        description: `Playing ${soundName} sound...`
+      });
+    }
+  };
+
   const notificationTypes = [
     {
       key: 'newChat' as keyof NotificationSettings,
@@ -208,10 +229,7 @@ export default function UserPreferences() {
                   onValueChange={(value) => {
                     setNotificationSound(value);
                     // Auto-play the selected sound
-                    toast({
-                      title: "Sound Preview",
-                      description: `Playing ${value} sound...`
-                    });
+                    playNotificationSound(value);
                   }}
                 >
                   <SelectTrigger className="w-48">
@@ -227,13 +245,7 @@ export default function UserPreferences() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => {
-                    // Manual sound preview
-                    toast({
-                      title: "Sound Preview",
-                      description: `Playing ${notificationSound} sound...`
-                    });
-                  }}
+                  onClick={() => playNotificationSound(notificationSound)}
                 >
                   <Volume2 className="h-4 w-4 mr-1" />
                   Preview
