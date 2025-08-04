@@ -380,10 +380,13 @@ export function InteractiveWidget() {
     sessionPersistence.updateLastInteraction?.();
     setIsTyping(true);
 
-    // Simulate AI response with user context
+    // Simulate AI response with user context (only for non-welcome messages)
     setTimeout(() => {
+      const isWelcomeMessage = messages.length === 0 || 
+        (messages.length === 1 && messages[0].type === 'ai' && messages[0].content.includes(settings?.aiSettings?.welcomeMessage || ''));
+      
       const userContext = userIdentification.getUserContext();
-      const contextSuffix = userContext ? ` (${userContext})` : '';
+      const contextSuffix = !isWelcomeMessage && userContext ? ` (${userContext})` : '';
       
       const aiResponse: Message = {
         id: (Date.now() + 1).toString(),
@@ -964,8 +967,8 @@ export function InteractiveWidget() {
   const renderChatPanel = () => {
     return (
       <div className="h-full flex flex-col">
-        {/* Chat Messages */}
-        <div className="flex-1 space-y-4 p-4">
+        {/* Chat Messages - Scrollable area */}
+        <div className="flex-1 overflow-y-auto p-4 space-y-4">
           {messages.map((message) => (
             <MessageRenderer
               key={message.id}
@@ -1011,8 +1014,8 @@ export function InteractiveWidget() {
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Input Area */}
-        <div className="border-t border-border pt-4 px-4 pb-4">
+        {/* Fixed Input Area */}
+        <div className="border-t border-border bg-background pt-4 px-4 pb-4 shrink-0">
           <form onSubmit={(e) => { e.preventDefault(); handleSendMessage(); }} className="space-y-3">
             <div className="flex gap-2">
               <div className="flex-1 relative">
