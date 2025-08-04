@@ -19,7 +19,7 @@ import EngagementHistory from "./pages/admin/EngagementHistory";
 import CustomerEngagementDetail from "./pages/admin/CustomerEngagementDetail";
 import Organizations from "./pages/admin/settings/Organizations";
 import Users from "./pages/admin/settings/Users";
-import AIResponse from "./pages/admin/settings/AIResponse";
+
 import Notifications from "./pages/admin/settings/Notifications";
 import WidgetManagement from "./pages/admin/settings/WidgetManagement";
 import Security from "./pages/admin/settings/Security";
@@ -99,13 +99,6 @@ const App = () => (
               <AuthGuard>
                 <AdminLayout>
                   <Users />
-                </AdminLayout>
-              </AuthGuard>
-            } />
-            <Route path="/settings/ai-response" element={
-              <AuthGuard>
-                <AdminLayout>
-                  <AIResponse />
                 </AdminLayout>
               </AuthGuard>
             } />
