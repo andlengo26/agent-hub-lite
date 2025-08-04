@@ -323,7 +323,7 @@ export function InteractiveWidget() {
     const paddingX = `${appearance.paddingX || 24}px`;
     const paddingY = `${appearance.paddingY || 24}px`;
     
-    const baseStyle = { width: '384px', height: '500px' };
+    const baseStyle = { width: '384px', height: '625px' };
     
     switch (appearance.buttonPosition) {
       case 'bottom-left':
@@ -846,7 +846,7 @@ export function InteractiveWidget() {
           <div className="space-y-4">
             {userIdentification.session ? (
               <div>
-                <h2 className="text-lg font-semibold text-foreground mb-4">Message History</h2>
+                <h2 className="text-lg font-semibold text-foreground mb-4">Messages</h2>
                 {chatsLoading ? (
                   <div className="text-center py-4 text-muted-foreground text-sm">
                     Loading chat history...
@@ -1192,12 +1192,6 @@ export function InteractiveWidget() {
     
     return (
       <div className="h-full flex flex-col">
-        <div className="flex items-center gap-2 pb-4">
-          <Button variant="ghost" size="sm" onClick={handleBackToMain}>
-            ← Back
-          </Button>
-        </div>
-        
         <div className="flex-1 space-y-4">
           <div className="bg-muted/30 p-3 rounded-lg">
             <div className="flex justify-between items-center mb-2">
@@ -1217,25 +1211,27 @@ export function InteractiveWidget() {
             </p>
           </div>
 
-          {selectedChat.messages.map((message, index) => (
-            <div
-              key={index}
-              className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
-            >
+          <div className="space-y-4 max-h-96 overflow-y-auto">
+            {selectedChat.messages.map((message, index) => (
               <div
-                className={`max-w-[80%] p-3 rounded-lg ${
-                  message.type === 'user'
-                    ? 'bg-primary text-primary-foreground'
-                    : 'bg-muted text-muted-foreground'
-                }`}
+                key={index}
+                className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
               >
-                <p className="text-sm">{message.content}</p>
-                <span className="text-xs opacity-70 mt-1 block">
-                  {new Date(message.timestamp).toLocaleTimeString()}
-                </span>
+                <div
+                  className={`max-w-[80%] p-3 rounded-lg ${
+                    message.type === 'user'
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-muted text-muted-foreground'
+                  }`}
+                >
+                  <p className="text-sm">{message.content}</p>
+                  <span className="text-xs opacity-70 mt-1 block">
+                    {new Date(message.timestamp).toLocaleTimeString()}
+                  </span>
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </div>
     );
@@ -1293,12 +1289,12 @@ export function InteractiveWidget() {
                 <CardTitle className="text-sm font-medium">FAQ</CardTitle>
               </div>
             )}
-            {currentPanel === 'message-detail' && selectedMessage && (
+            {currentPanel === 'message-detail' && selectedChat && (
               <div className="flex items-center gap-2">
                 <Button variant="ghost" size="sm" onClick={handleBackToMain} className="p-0 h-auto text-white hover:bg-white/20">
                   <ArrowLeft className="h-4 w-4" />
                 </Button>
-                <CardTitle className="text-sm font-medium">Message Details</CardTitle>
+                <CardTitle className="text-sm font-medium">Messages</CardTitle>
               </div>
             )}
             {currentPanel === 'chat' && (
@@ -1366,33 +1362,39 @@ export function InteractiveWidget() {
             </div>
           </div>
 
-          {/* Bottom Navigation - Fixed at bottom, only show on main panel */}
-          {currentPanel === 'main' && (
+          {/* Bottom Navigation - Fixed at bottom, show on main panel and message detail */}
+          {(currentPanel === 'main' || currentPanel === 'message-detail') && (
             <div className="border-t bg-background p-1 shrink-0">
               <div className="flex justify-around">
                 <Button
-                  variant={activeTab === 'home' ? 'default' : 'ghost'}
+                  variant="ghost"
                   size="sm"
                   onClick={() => setActiveTab('home')}
-                  className="flex-1 flex-col h-auto py-1 space-y-0.5 text-xs"
+                  className={`flex-1 flex-col h-auto py-1 space-y-0.5 text-xs ${
+                    activeTab === 'home' ? 'text-primary' : 'text-muted-foreground'
+                  }`}
                 >
                   <Home className="h-3 w-3" />
                   <span>Home</span>
                 </Button>
                 <Button
-                  variant={activeTab === 'messages' ? 'default' : 'ghost'}
+                  variant="ghost"
                   size="sm"
                   onClick={() => setActiveTab('messages')}
-                  className="flex-1 flex-col h-auto py-1 space-y-0.5 text-xs"
+                  className={`flex-1 flex-col h-auto py-1 space-y-0.5 text-xs ${
+                    activeTab === 'messages' ? 'text-primary' : 'text-muted-foreground'
+                  }`}
                 >
                   <MessageSquare className="h-3 w-3" />
                   <span>Messages</span>
                 </Button>
                 <Button
-                  variant={activeTab === 'resources' ? 'default' : 'ghost'}
+                  variant="ghost"
                   size="sm"
                   onClick={() => setActiveTab('resources')}
-                  className="flex-1 flex-col h-auto py-1 space-y-0.5 text-xs"
+                  className={`flex-1 flex-col h-auto py-1 space-y-0.5 text-xs ${
+                    activeTab === 'resources' ? 'text-primary' : 'text-muted-foreground'
+                  }`}
                 >
                   <FileText className="h-3 w-3" />
                   <span>Resources</span>

@@ -36,6 +36,30 @@
           "type": "ai",
           "content": "Great! For CS101 assignment submissions, you can upload your files through the course page. Make sure your code files are properly formatted and include comments. Is there a specific issue you're encountering?",
           "timestamp": "2025-08-03T10:32:30Z"
+        },
+        {
+          "id": "msg_006",
+          "type": "user",
+          "content": "The upload button doesn't seem to work for me",
+          "timestamp": "2025-08-03T10:33:00Z"
+        },
+        {
+          "id": "msg_007",
+          "type": "ai",
+          "content": "That sounds frustrating. Let's troubleshoot this step by step. First, can you tell me what browser you're using?",
+          "timestamp": "2025-08-03T10:33:30Z"
+        },
+        {
+          "id": "msg_008",
+          "type": "user",
+          "content": "I'm using Chrome on Windows",
+          "timestamp": "2025-08-03T10:34:00Z"
+        },
+        {
+          "id": "msg_009",
+          "type": "ai",
+          "content": "Chrome should work fine. Try clearing your browser cache or trying an incognito window. Also, make sure your file isn't too large - the limit is usually 25MB.",
+          "timestamp": "2025-08-03T10:34:30Z"
         }
       ]
     },
@@ -47,22 +71,187 @@
       "status": "ended",
       "messages": [
         {
-          "id": "msg_006",
+          "id": "msg_010",
           "type": "ai",
           "content": "Hello Jane! I see you're back. How can I help you today?",
           "timestamp": "2025-08-03T14:15:00Z"
         },
         {
-          "id": "msg_007",
+          "id": "msg_011",
           "type": "user",
           "content": "I forgot my password for the course materials",
           "timestamp": "2025-08-03T14:15:30Z"
         },
         {
-          "id": "msg_008",
+          "id": "msg_012",
           "type": "ai", 
           "content": "I can help you with password recovery. You can reset your password by clicking the 'Forgot Password' link on the login page, or I can connect you with technical support.",
           "timestamp": "2025-08-03T14:16:00Z"
+        },
+        {
+          "id": "msg_013",
+          "type": "user",
+          "content": "I tried the forgot password link but didn't receive an email",
+          "timestamp": "2025-08-03T14:16:30Z"
+        },
+        {
+          "id": "msg_014",
+          "type": "ai",
+          "content": "Sometimes emails can take a few minutes to arrive, or they might end up in your spam folder. Can you check your spam/junk folder first?",
+          "timestamp": "2025-08-03T14:17:00Z"
+        },
+        {
+          "id": "msg_015",
+          "type": "user",
+          "content": "Found it in spam! Thank you so much.",
+          "timestamp": "2025-08-03T14:17:30Z"
+        },
+        {
+          "id": "msg_016",
+          "type": "ai",
+          "content": "Perfect! That's a common issue. You might want to add our email domain to your safe senders list to avoid this in the future.",
+          "timestamp": "2025-08-03T14:18:00Z"
+        }
+      ]
+    },
+    {
+      "id": "session_moodle_003",
+      "userId": "student_789",
+      "username": "alex.johnson",
+      "timestamp": "2025-08-03T16:45:00Z",
+      "status": "active",
+      "messages": [
+        {
+          "id": "msg_017",
+          "type": "ai",
+          "content": "Hi Alex! Welcome to the support chat. What can I help you with today?",
+          "timestamp": "2025-08-03T16:45:00Z"
+        },
+        {
+          "id": "msg_018",
+          "type": "user",
+          "content": "I'm having trouble accessing the quiz for MATH202",
+          "timestamp": "2025-08-03T16:45:30Z"
+        },
+        {
+          "id": "msg_019",
+          "type": "ai",
+          "content": "I can help you with quiz access issues. Are you getting an error message, or is the quiz not appearing in your course?",
+          "timestamp": "2025-08-03T16:46:00Z"
+        },
+        {
+          "id": "msg_020",
+          "type": "user",
+          "content": "It says the quiz is not available yet, but my classmates can access it",
+          "timestamp": "2025-08-03T16:46:30Z"
+        },
+        {
+          "id": "msg_021",
+          "type": "ai",
+          "content": "This might be a time zone issue or a enrollment problem. Let me check a few things. Can you confirm what time zone you're in?",
+          "timestamp": "2025-08-03T16:47:00Z"
+        }
+      ]
+    },
+    {
+      "id": "session_moodle_004",
+      "userId": "student_321",
+      "username": "maria.garcia",
+      "timestamp": "2025-08-02T09:20:00Z",
+      "status": "ended",
+      "messages": [
+        {
+          "id": "msg_022",
+          "type": "ai",
+          "content": "Good morning Maria! How can I assist you today?",
+          "timestamp": "2025-08-02T09:20:00Z"
+        },
+        {
+          "id": "msg_023",
+          "type": "user",
+          "content": "I need help understanding the grading criteria for my essay",
+          "timestamp": "2025-08-02T09:20:30Z"
+        },
+        {
+          "id": "msg_024",
+          "type": "ai",
+          "content": "I'd be happy to help clarify the grading criteria. Which course and assignment are you referring to?",
+          "timestamp": "2025-08-02T09:21:00Z"
+        },
+        {
+          "id": "msg_025",
+          "type": "user",
+          "content": "ENG105 - Critical Analysis Essay",
+          "timestamp": "2025-08-02T09:21:30Z"
+        },
+        {
+          "id": "msg_026",
+          "type": "ai",
+          "content": "For the Critical Analysis Essay in ENG105, you're typically evaluated on thesis strength, evidence quality, analysis depth, organization, and writing mechanics. Would you like me to break down any specific area?",
+          "timestamp": "2025-08-02T09:22:00Z"
+        },
+        {
+          "id": "msg_027",
+          "type": "user",
+          "content": "Yes, what exactly do they mean by 'analysis depth'?",
+          "timestamp": "2025-08-02T09:22:30Z"
+        },
+        {
+          "id": "msg_028",
+          "type": "ai",
+          "content": "Analysis depth refers to how thoroughly you examine and interpret the text. It's not just summarizing what happens, but explaining why it's significant, how literary devices create meaning, and connecting ideas to broader themes.",
+          "timestamp": "2025-08-02T09:23:00Z"
+        }
+      ]
+    },
+    {
+      "id": "session_moodle_005",
+      "userId": "student_654",
+      "username": "david.lee",
+      "timestamp": "2025-08-01T13:10:00Z",
+      "status": "ended",
+      "messages": [
+        {
+          "id": "msg_029",
+          "type": "ai",
+          "content": "Hello David! I'm here to help. What do you need assistance with?",
+          "timestamp": "2025-08-01T13:10:00Z"
+        },
+        {
+          "id": "msg_030",
+          "type": "user",
+          "content": "My course grade seems incorrect on the gradebook",
+          "timestamp": "2025-08-01T13:10:30Z"
+        },
+        {
+          "id": "msg_031",
+          "type": "ai",
+          "content": "Grade discrepancies can be concerning. Which course are you looking at, and what specifically seems incorrect?",
+          "timestamp": "2025-08-01T13:11:00Z"
+        },
+        {
+          "id": "msg_032",
+          "type": "user",
+          "content": "PHYS301 - It shows I got a 0 on the midterm, but I submitted it on time",
+          "timestamp": "2025-08-01T13:11:30Z"
+        },
+        {
+          "id": "msg_033",
+          "type": "ai",
+          "content": "That definitely needs to be resolved. Do you have confirmation that your submission went through? Sometimes technical issues can cause submissions to fail.",
+          "timestamp": "2025-08-01T13:12:00Z"
+        },
+        {
+          "id": "msg_034",
+          "type": "user",
+          "content": "I have a screenshot of the confirmation page",
+          "timestamp": "2025-08-01T13:12:30Z"
+        },
+        {
+          "id": "msg_035",
+          "type": "ai",
+          "content": "Perfect! That's excellent evidence. I recommend contacting your instructor directly with that screenshot. You can also reach out to the course coordinator if needed.",
+          "timestamp": "2025-08-01T13:13:00Z"
         }
       ]
     }
