@@ -32,10 +32,23 @@ export function useSessionPersistence({ onSessionLoaded }: UseSessionPersistence
     if (savedSession) {
       try {
         const parsedSession: ChatSession = JSON.parse(savedSession);
+        
+        // Convert string timestamps back to Date objects
+        parsedSession.timestamp = new Date(parsedSession.timestamp);
+        if (parsedSession.lastInteractionTime) {
+          parsedSession.lastInteractionTime = new Date(parsedSession.lastInteractionTime);
+        }
+        
+        // Convert message timestamps back to Date objects
+        parsedSession.messages = parsedSession.messages.map(msg => ({
+          ...msg,
+          timestamp: new Date(msg.timestamp)
+        }));
+        
         const now = new Date().getTime();
-        const sessionAge = now - new Date(parsedSession.timestamp).getTime();
+        const sessionAge = now - parsedSession.timestamp.getTime();
         const lastInteractionAge = parsedSession.lastInteractionTime 
-          ? now - new Date(parsedSession.lastInteractionTime).getTime()
+          ? now - parsedSession.lastInteractionTime.getTime()
           : sessionAge;
         
         // Check if session is still valid (24 hours) and not idle (30 minutes)
