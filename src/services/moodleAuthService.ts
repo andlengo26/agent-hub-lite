@@ -4,37 +4,7 @@
  */
 
 import { UserIdentificationData, IdentificationSession } from '@/types/user-identification';
-
-export interface MoodleConfig {
-  moodleUrl: string;
-  apiToken: string;
-  enabled: boolean;
-  autoLogin: boolean;
-  requiredFields: {
-    studentId: boolean;
-    department: boolean;
-  };
-}
-
-export interface MoodleUserInfo {
-  id: number;
-  username: string;
-  firstname: string;
-  lastname: string;
-  email: string;
-  department?: string;
-  customfields?: Array<{
-    shortname: string;
-    value: string;
-  }>;
-}
-
-export interface MoodleAuthResponse {
-  success: boolean;
-  user?: MoodleUserInfo;
-  token?: string;
-  error?: string;
-}
+import { MoodleConfig, MoodleUserInfo, MoodleAuthResponse, MoodleValidationError } from '@/types/moodle';
 
 export class MoodleAuthService {
   /**

@@ -26,7 +26,7 @@ export function MoodleConfiguration() {
     return <div>Loading...</div>;
   }
 
-  const moodleConfig = settings.userInfo.moodleConfig || {
+  const moodleConfig = settings.integrations.moodle || {
     moodleUrl: '',
     apiToken: '',
     enabled: false,
@@ -38,9 +38,9 @@ export function MoodleConfiguration() {
   };
 
   const handleMoodleConfigChange = (field: string, value: any) => {
-    updateSettings('userInfo', {
-      ...settings.userInfo,
-      moodleConfig: {
+    updateSettings('integrations', {
+      ...settings.integrations,
+      moodle: {
         ...moodleConfig,
         [field]: value
       }
@@ -48,9 +48,9 @@ export function MoodleConfiguration() {
   };
 
   const handleRequiredFieldChange = (field: string, value: boolean) => {
-    updateSettings('userInfo', {
-      ...settings.userInfo,
-      moodleConfig: {
+    updateSettings('integrations', {
+      ...settings.integrations,
+      moodle: {
         ...moodleConfig,
         requiredFields: {
           ...moodleConfig.requiredFields,

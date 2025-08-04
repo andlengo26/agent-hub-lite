@@ -4,13 +4,13 @@
 
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { MoodleConfig } from '@/types/moodle';
 
 export interface WidgetSettings {
   integrations: {
     apiKey: string;
     aiModel: string;
-    moodleUrl: string;
-    moodleToken: string;
+    moodle: MoodleConfig;
   };
   aiSettings: {
     assistantName: string;
@@ -74,16 +74,6 @@ export interface WidgetSettings {
     enableManualForm?: boolean;
     sessionDurationHours?: number;
     customWelcomeMessage?: string;
-    moodleConfig?: {
-      moodleUrl: string;
-      apiToken: string;
-      enabled: boolean;
-      autoLogin: boolean;
-      requiredFields: {
-        studentId: boolean;
-        department: boolean;
-      };
-    };
   };
   embed: {
     script: string;

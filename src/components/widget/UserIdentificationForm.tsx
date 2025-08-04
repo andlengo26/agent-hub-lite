@@ -61,7 +61,7 @@ export function UserIdentificationForm({
   const { methods, prioritizeMoodle } = getIdentificationMethodPriority();
   
   const showMoodleAuth = settings.userInfo?.enableMoodleAuth && 
-    settings.userInfo?.moodleConfig?.enabled && 
+    settings.integrations?.moodle?.enabled && 
     methods.includes('moodle_authentication');
 
   const showManualForm = settings.userInfo?.enableManualForm !== false && 
@@ -85,14 +85,14 @@ export function UserIdentificationForm({
         </div>
 
         {/* Moodle Authentication */}
-        {showMoodleAuth && settings.userInfo.moodleConfig && (
+        {showMoodleAuth && settings.integrations.moodle && (
           <div className="space-y-3">
             <div className="flex items-center gap-2">
               <Users className="w-4 h-4 text-blue-600" />
               <span className="text-sm font-medium text-gray-700">Moodle Login</span>
             </div>
             <MoodleLoginButton
-              config={settings.userInfo.moodleConfig}
+              config={settings.integrations.moodle}
               onAuthSuccess={onMoodleAuth || (() => {})}
               onAuthError={(error) => console.error('Moodle auth error:', error)}
               appearance={appearance}

@@ -151,8 +151,10 @@ export default function WidgetManagement() {
                   <Input
                     id="moodleUrl"
                     type="url"
-                    value={settings.integrations.moodleUrl}
-                    onChange={(e) => updateSettings('integrations', { moodleUrl: e.target.value })}
+                    value={settings.integrations.moodle?.moodleUrl || ''}
+                    onChange={(e) => updateSettings('integrations', { 
+                      moodle: { ...settings.integrations.moodle, moodleUrl: e.target.value }
+                    })}
                     placeholder="https://your-moodle.com"
                   />
                 </div>
@@ -161,8 +163,10 @@ export default function WidgetManagement() {
                   <Label htmlFor="moodleToken">Moodle Token (Optional)</Label>
                   <Input
                     id="moodleToken"
-                    value={settings.integrations.moodleToken}
-                    onChange={(e) => updateSettings('integrations', { moodleToken: e.target.value })}
+                    value={settings.integrations.moodle?.apiToken || ''}
+                    onChange={(e) => updateSettings('integrations', { 
+                      moodle: { ...settings.integrations.moodle, apiToken: e.target.value }
+                    })}
                     placeholder="Enter Moodle integration token"
                   />
                 </div>

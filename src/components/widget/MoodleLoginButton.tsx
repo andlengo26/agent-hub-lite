@@ -7,7 +7,8 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { LogIn, Loader2, AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { MoodleAuthService, MoodleConfig } from '@/services/moodleAuthService';
+import { MoodleAuthService } from '@/services/moodleAuthService';
+import { MoodleConfig } from '@/types/moodle';
 import { IdentificationSession } from '@/types/user-identification';
 
 interface MoodleLoginButtonProps {
