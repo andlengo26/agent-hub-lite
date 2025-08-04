@@ -13,21 +13,14 @@ import { useMoodleAutoIdentification } from "@/hooks/useMoodleAutoIdentification
 import { ConversationEndModal } from "./ConversationEndModal";
 import { CountdownBadge } from "@/components/widget/CountdownBadge";
 import { MaxDurationBanner } from "@/components/widget/MaxDurationBanner";
-import { MessageFeedback } from "@/components/widget/MessageFeedback";
 import { QuotaBadge } from "@/components/widget/QuotaBadge";
 import { QuotaWarningBanner } from "@/components/widget/QuotaWarningBanner";
-import { UserIdentificationForm } from "@/components/widget/UserIdentificationForm";
+import { MessageRenderer } from "@/components/widget/messages/MessageRenderer";
 import { conversationService } from "@/services/conversationService";
 import { feedbackService } from "@/services/feedbackService";
 import { CustomerService } from "@/services/customerService";
-
-interface Message {
-  id: string;
-  type: 'user' | 'ai';
-  content: string;
-  timestamp: Date;
-  feedbackSubmitted?: boolean;
-}
+import { Message } from "@/types/message";
+import { IdentificationSession } from "@/types/user-identification";
 
 export function InteractiveWidget() {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -100,13 +93,13 @@ export function InteractiveWidget() {
         console.error('Failed to create customer from auto-identification:', error);
       }
       
-      // Show auto-identification success message
-      const autoWelcomeMessage: Message = {
-        id: `auto_welcome_${Date.now()}`,
-        type: 'ai',
-        content: `Welcome back, ${session.userData.name || 'Student'}! I can see you're logged into Moodle. How can I assist you today?`,
-        timestamp: new Date()
-      };
+    // Show auto-identification success message
+    const autoWelcomeMessage: Message = {
+      id: `auto_welcome_${Date.now()}`,
+      type: 'ai',
+      content: `Welcome back, ${session.userData.name || 'Student'}! I can see you're logged into Moodle. How can I assist you today?`,
+      timestamp: new Date()
+    };
       setMessages(prev => [...prev, autoWelcomeMessage]);
     },
     onAutoIdentificationError: (error) => {
@@ -235,7 +228,14 @@ export function InteractiveWidget() {
 
     // Check if user identification is required
     if (!userIdentification.canSendMessage()) {
-      userIdentification.showIdentificationForm();
+      // Add identification message to the conversation
+      const identificationMessage: Message = {
+        id: `identification_${Date.now()}`,
+        type: 'identification',
+        timestamp: new Date(),
+        isCompleted: false
+      };
+      setMessages(prev => [...prev, identificationMessage]);
       return;
     }
 
@@ -325,10 +325,12 @@ export function InteractiveWidget() {
     });
   };
 
-  // Handle identification completion - AI acknowledges user
-  const handleIdentificationComplete = () => {
-    if (userIdentification.session) {
-      const { userData } = userIdentification.session;
+  // Handle identification completion - AI acknowledges user and removes identification form
+  const handleIdentificationComplete = (session: IdentificationSession) => {
+    // Remove identification message and add acknowledgment
+    setMessages(prev => {
+      const filtered = prev.filter(msg => msg.type !== 'identification');
+      const { userData } = session;
       const welcomeFields = [];
       if (userData.name) welcomeFields.push(`name: ${userData.name}`);
       if (userData.email) welcomeFields.push(`email: ${userData.email}`);
@@ -341,8 +343,8 @@ export function InteractiveWidget() {
         timestamp: new Date()
       };
       
-      setMessages(prev => [...prev, acknowledgmentMessage]);
-    }
+      return [...filtered, acknowledgmentMessage];
+    });
   };
 
   const handleTalkToHuman = async () => {
@@ -594,76 +596,39 @@ export function InteractiveWidget() {
             />
           )}
 
-          {/* User Identification Form */}
-          {userIdentification.showForm && (
-            <UserIdentificationForm
-              settings={settings}
-              formData={userIdentification.formData}
-              validationResult={userIdentification.validationResult}
-              onUpdateFormData={userIdentification.updateFormData}
-              onSubmit={async () => {
-                const success = await userIdentification.submitManualIdentification();
-                if (success) {
-                  handleIdentificationComplete();
-                }
-                return success;
-              }}
-              onMoodleAuth={(session) => {
-                // Handle successful Moodle authentication
-                userIdentification.hideIdentificationForm();
-                handleIdentificationComplete();
-              }}
-              onCancel={userIdentification.hideIdentificationForm}
-              isSubmitting={false}
-              appearance={{
-                primaryColor: appearance.primaryColor,
-                textColor: '#FFFFFF'
-              }}
-              getIdentificationMethodPriority={userIdentification.getIdentificationMethodPriority}
-            />
-          )}
 
           {/* Messages */}
           <div className="flex-1 overflow-y-auto p-4 space-y-3">
             {messages.map((message) => (
-              <div key={message.id} className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}>
-                <div className={`max-w-[80%] ${message.type === 'user' ? 'order-1' : 'order-2'}`}>
-                  {message.type === 'ai' && (
-                    <div className="flex items-center space-x-2 mb-1">
-                      <div 
-                        className="w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-medium"
-                        style={{ backgroundColor: appearance.secondaryColor }}
-                      >
-                        AI
-                      </div>
-                      <span className="text-xs text-muted-foreground">{aiSettings.assistantName}</span>
-                    </div>
-                  )}
-                  <div 
-                    className={`rounded-lg px-3 py-2 text-sm ${
-                      message.type === 'user' 
-                        ? 'text-white ml-auto' 
-                        : 'bg-muted'
-                    }`}
-                    style={message.type === 'user' ? { backgroundColor: appearance.primaryColor } : {}}
-                  >
-                    {message.content}
-                  </div>
-                  <div className="text-xs text-muted-foreground mt-1">
-                    {message.timestamp.toLocaleTimeString()}
-                  </div>
-                  
-                  {/* Feedback buttons for AI messages */}
-                  {message.type === 'ai' && message.id !== 'welcome' && aiSettings.enableFeedback && !message.feedbackSubmitted && (
-                    <MessageFeedback
-                      messageId={message.id}
-                      onFeedback={handleFeedback}
-                      appearance={appearance}
-                      disabled={conversationState.status !== 'active'}
-                    />
-                  )}
-                </div>
-              </div>
+              <MessageRenderer
+                key={message.id}
+                message={message}
+                appearance={appearance}
+                aiSettings={aiSettings}
+                conversationStatus={conversationState.status}
+                onFeedback={handleFeedback}
+                settings={settings}
+                formData={userIdentification.formData}
+                validationResult={userIdentification.validationResult}
+                onUpdateFormData={userIdentification.updateFormData}
+                onSubmitIdentification={async () => {
+                  const success = await userIdentification.submitManualIdentification();
+                  if (success && userIdentification.session) {
+                    handleIdentificationComplete(userIdentification.session);
+                  }
+                  return success;
+                }}
+                onMoodleAuth={(session) => {
+                  userIdentification.setIdentificationSession(session);
+                  handleIdentificationComplete(session);
+                }}
+                isSubmittingIdentification={false}
+                getIdentificationMethodPriority={() => {
+                  const priority = userIdentification.getIdentificationMethodPriority();
+                  if (priority.prioritizeMoodle) return 'moodle';
+                  return priority.methods.includes('manual_form_submission') ? 'manual' : 'moodle';
+                }}
+              />
             ))}
             
             {isTyping && (
