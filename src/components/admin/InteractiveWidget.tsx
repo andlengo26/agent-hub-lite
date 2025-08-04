@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { MessageCircle, X, Maximize2, Minimize2, Send, Paperclip, Mic, MicOff, Phone, User, LogOut, Book, Home, MessageSquare, FileText, Search } from "lucide-react";
+import { MessageCircle, X, Maximize2, Minimize2, Send, Paperclip, Mic, MicOff, Phone, User, LogOut, Book, Home, MessageSquare, FileText, Search, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -50,6 +50,7 @@ export function InteractiveWidget() {
   const [selectedFAQ, setSelectedFAQ] = useState<any>(null);
   const [selectedResource, setSelectedResource] = useState<any>(null);
   const [selectedChat, setSelectedChat] = useState<any>(null);
+  const [selectedMessage, setSelectedMessage] = useState<any>(null);
   const [hasActiveChat, setHasActiveChat] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { settings } = useWidgetSettings();
@@ -919,27 +920,6 @@ export function InteractiveWidget() {
       case 'resources':
         return (
           <div className="space-y-4">
-            <div className="flex justify-between items-center">
-              <h2 className="text-lg font-semibold text-foreground">Resources</h2>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowResourceBrowser(true)}
-                className="text-primary"
-              >
-                Browse All
-              </Button>
-            </div>
-            
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search resources..."
-                className="pl-10"
-              />
-            </div>
 
             {resourcesLoading ? (
               <div className="text-center py-4 text-muted-foreground text-sm">
@@ -993,15 +973,8 @@ export function InteractiveWidget() {
   const renderChatPanel = () => {
     return (
       <div className="h-full flex flex-col">
-        {/* Back Button */}
-        <div className="flex items-center gap-2 pb-4">
-          <Button variant="ghost" size="sm" onClick={handleBackToMain}>
-            ← Back
-          </Button>
-        </div>
-        
         {/* Chat Messages */}
-        <div className="flex-1 space-y-4">
+        <div className="flex-1 space-y-4 p-4">
           {messages.map((message) => (
             <MessageRenderer
               key={message.id}
@@ -1048,7 +1021,7 @@ export function InteractiveWidget() {
         </div>
 
         {/* Input Area */}
-        <div className="border-t border-border pt-4">
+        <div className="border-t border-border pt-4 px-4 pb-4">
           <form onSubmit={(e) => { e.preventDefault(); handleSendMessage(); }} className="space-y-3">
             <div className="flex gap-2">
               <div className="flex-1 relative">
@@ -1124,13 +1097,7 @@ export function InteractiveWidget() {
     if (!selectedFAQ) return null;
     
     return (
-      <div className="h-full flex flex-col">
-        <div className="flex items-center gap-2 pb-4">
-          <Button variant="ghost" size="sm" onClick={handleBackToMain}>
-            ← Back
-          </Button>
-        </div>
-        
+      <div className="h-full flex flex-col p-4">
         <div className="flex-1">
           <Card>
             <CardHeader>
@@ -1167,13 +1134,7 @@ export function InteractiveWidget() {
     if (!selectedResource) return null;
     
     return (
-      <div className="h-full flex flex-col">
-        <div className="flex items-center gap-2 pb-4">
-          <Button variant="ghost" size="sm" onClick={handleBackToMain}>
-            ← Back
-          </Button>
-        </div>
-        
+      <div className="h-full flex flex-col p-4">
         <div className="flex-1">
           <Card>
             <CardHeader>
@@ -1290,10 +1251,63 @@ export function InteractiveWidget() {
           className="flex flex-row items-center justify-between py-3 text-white rounded-t-lg shrink-0"
           style={{ backgroundColor: appearance.primaryColor }}
         >
-          <div>
-            <CardTitle className="text-sm font-medium">{appearance.headerText}</CardTitle>
-            {appearance.subheaderText && (
-              <p className="text-xs opacity-90 mt-1">{appearance.subheaderText}</p>
+          <div className="flex items-center gap-2 flex-1">
+            {/* Conditional content based on current panel */}
+            {currentPanel === 'main' && activeTab === 'home' && (
+              <div>
+                <CardTitle className="text-sm font-medium">{appearance.headerText}</CardTitle>
+                {appearance.subheaderText && (
+                  <p className="text-xs opacity-90 mt-1">{appearance.subheaderText}</p>
+                )}
+              </div>
+            )}
+            {currentPanel === 'main' && activeTab === 'resources' && (
+              <div className="flex items-center gap-3 flex-1">
+                <CardTitle className="text-sm font-medium">Resources</CardTitle>
+                <div className="flex-1 max-w-sm">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-3 w-3 text-white/70" />
+                    <Input
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      placeholder="Search resources..."
+                      className="pl-9 h-7 text-xs bg-white/20 border-white/30 text-white placeholder:text-white/70 focus:bg-white/30"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+            {currentPanel === 'resource-detail' && selectedResource && (
+              <div className="flex items-center gap-2">
+                <Button variant="ghost" size="sm" onClick={handleBackToMain} className="p-0 h-auto text-white hover:bg-white/20">
+                  <ArrowLeft className="h-4 w-4" />
+                </Button>
+                <CardTitle className="text-sm font-medium">{selectedResource.title}</CardTitle>
+              </div>
+            )}
+            {currentPanel === 'faq-detail' && selectedFAQ && (
+              <div className="flex items-center gap-2">
+                <Button variant="ghost" size="sm" onClick={handleBackToMain} className="p-0 h-auto text-white hover:bg-white/20">
+                  <ArrowLeft className="h-4 w-4" />
+                </Button>
+                <CardTitle className="text-sm font-medium">FAQ</CardTitle>
+              </div>
+            )}
+            {currentPanel === 'message-detail' && selectedMessage && (
+              <div className="flex items-center gap-2">
+                <Button variant="ghost" size="sm" onClick={handleBackToMain} className="p-0 h-auto text-white hover:bg-white/20">
+                  <ArrowLeft className="h-4 w-4" />
+                </Button>
+                <CardTitle className="text-sm font-medium">Message Details</CardTitle>
+              </div>
+            )}
+            {currentPanel === 'chat' && (
+              <div className="flex items-center gap-2">
+                <Button variant="ghost" size="sm" onClick={handleBackToMain} className="p-0 h-auto text-white hover:bg-white/20">
+                  <ArrowLeft className="h-4 w-4" />
+                </Button>
+                <CardTitle className="text-sm font-medium">Chat</CardTitle>
+              </div>
             )}
           </div>
           <div className="flex items-center gap-1">
@@ -1344,42 +1358,44 @@ export function InteractiveWidget() {
           </div>
         </CardHeader>
 
-        <CardContent className="flex-1 flex flex-col p-0 overflow-y-auto">
+        <CardContent className="flex-1 flex flex-col p-0 overflow-hidden">
           {/* Main Content Area */}
-          <div className="flex-1 p-4">
-            {renderPanelContent()}
+          <div className="flex-1 overflow-y-auto">
+            <div className="p-4">
+              {renderPanelContent()}
+            </div>
           </div>
 
-          {/* Bottom Navigation - Only show on main panel */}
+          {/* Bottom Navigation - Fixed at bottom, only show on main panel */}
           {currentPanel === 'main' && (
-            <div className="border-t bg-background p-2 shrink-0">
+            <div className="border-t bg-background p-1 shrink-0">
               <div className="flex justify-around">
                 <Button
                   variant={activeTab === 'home' ? 'default' : 'ghost'}
                   size="sm"
                   onClick={() => setActiveTab('home')}
-                  className="flex-1 flex-col h-auto py-2 space-y-1"
+                  className="flex-1 flex-col h-auto py-1 space-y-0.5 text-xs"
                 >
-                  <Home className="h-4 w-4" />
-                  <span className="text-xs">Home</span>
+                  <Home className="h-3 w-3" />
+                  <span>Home</span>
                 </Button>
                 <Button
                   variant={activeTab === 'messages' ? 'default' : 'ghost'}
                   size="sm"
                   onClick={() => setActiveTab('messages')}
-                  className="flex-1 flex-col h-auto py-2 space-y-1"
+                  className="flex-1 flex-col h-auto py-1 space-y-0.5 text-xs"
                 >
-                  <MessageSquare className="h-4 w-4" />
-                  <span className="text-xs">Messages</span>
+                  <MessageSquare className="h-3 w-3" />
+                  <span>Messages</span>
                 </Button>
                 <Button
                   variant={activeTab === 'resources' ? 'default' : 'ghost'}
                   size="sm"
                   onClick={() => setActiveTab('resources')}
-                  className="flex-1 flex-col h-auto py-2 space-y-1"
+                  className="flex-1 flex-col h-auto py-1 space-y-0.5 text-xs"
                 >
-                  <FileText className="h-4 w-4" />
-                  <span className="text-xs">Resources</span>
+                  <FileText className="h-3 w-3" />
+                  <span>Resources</span>
                 </Button>
               </div>
             </div>
