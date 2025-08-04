@@ -1,0 +1,74 @@
+{
+  "success": true,
+  "data": [
+    {
+      "id": "notif_001",
+      "type": "new_chat",
+      "title": "New Chat Assignment",
+      "message": "You have been assigned a new chat from customer Sarah Johnson",
+      "chatId": "chat_001",
+      "customerId": "customer_001",
+      "priority": "normal",
+      "read": false,
+      "createdAt": "2025-01-08T14:30:00Z",
+      "actions": [
+        { "type": "accept", "label": "Accept Chat" },
+        { "type": "reject", "label": "Decline" }
+      ]
+    },
+    {
+      "id": "notif_002",
+      "type": "chat_message",
+      "title": "New Message",
+      "message": "Customer has sent a new message in active chat",
+      "chatId": "chat_002",
+      "customerId": "customer_002",
+      "priority": "high",
+      "read": true,
+      "createdAt": "2025-01-08T14:25:00Z",
+      "actions": [
+        { "type": "reply", "label": "Reply Now" }
+      ]
+    },
+    {
+      "id": "notif_003",
+      "type": "escalation",
+      "title": "Chat Escalated",
+      "message": "Chat has been escalated to manager review",
+      "chatId": "chat_003",
+      "customerId": "customer_003",
+      "priority": "urgent",
+      "read": true,
+      "createdAt": "2025-01-08T14:20:00Z",
+      "actions": [
+        { "type": "review", "label": "Review Chat" }
+      ]
+    },
+    {
+      "id": "notif_004",
+      "type": "quota_alert",
+      "title": "Daily Quota Alert",
+      "message": "You have reached 80% of your daily chat quota",
+      "priority": "normal",
+      "read": false,
+      "createdAt": "2025-01-08T14:15:00Z",
+      "actions": []
+    },
+    {
+      "id": "notif_005",
+      "type": "system_alert",
+      "title": "System Maintenance",
+      "message": "Scheduled maintenance will begin at 2:00 AM UTC",
+      "priority": "low",
+      "read": true,
+      "createdAt": "2025-01-08T14:10:00Z",
+      "actions": []
+    }
+  ],
+  "meta": {
+    "total": 5,
+    "unread": 2,
+    "page": 1,
+    "limit": 20
+  }
+}

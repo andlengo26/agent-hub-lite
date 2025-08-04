@@ -1,0 +1,80 @@
+{
+  "success": true,
+  "data": {
+    "id": "agent_001",
+    "userId": "user_001",
+    "availability": {
+      "status": "available",
+      "maxConcurrentChats": 3,
+      "workingHours": {
+        "enabled": true,
+        "timezone": "UTC",
+        "schedule": {
+          "monday": { "start": "09:00", "end": "17:00", "enabled": true },
+          "tuesday": { "start": "09:00", "end": "17:00", "enabled": true },
+          "wednesday": { "start": "09:00", "end": "17:00", "enabled": true },
+          "thursday": { "start": "09:00", "end": "17:00", "enabled": true },
+          "friday": { "start": "09:00", "end": "17:00", "enabled": true },
+          "saturday": { "start": "10:00", "end": "14:00", "enabled": false },
+          "sunday": { "start": "10:00", "end": "14:00", "enabled": false }
+        }
+      },
+      "autoAway": {
+        "enabled": true,
+        "idleTimeMinutes": 10,
+        "awayMessage": "I'm currently away from my desk. I'll respond as soon as I'm back."
+      }
+    },
+    "notifications": {
+      "newChat": {
+        "enabled": true,
+        "sound": true,
+        "desktop": true,
+        "email": false
+      },
+      "chatMessage": {
+        "enabled": true,
+        "sound": true,
+        "desktop": true,
+        "email": false
+      },
+      "chatAssignment": {
+        "enabled": true,
+        "sound": true,
+        "desktop": true,
+        "email": true
+      },
+      "escalation": {
+        "enabled": true,
+        "sound": true,
+        "desktop": true,
+        "email": true
+      },
+      "quotaAlert": {
+        "enabled": true,
+        "sound": false,
+        "desktop": true,
+        "email": true
+      },
+      "systemAlert": {
+        "enabled": true,
+        "sound": true,
+        "desktop": true,
+        "email": true
+      }
+    },
+    "preferences": {
+      "notificationSound": "chime",
+      "muteHours": {
+        "enabled": false,
+        "start": "22:00",
+        "end": "08:00"
+      },
+      "emailDigest": {
+        "enabled": true,
+        "frequency": "daily",
+        "time": "09:00"
+      }
+    }
+  }
+}

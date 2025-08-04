@@ -21,6 +21,7 @@ import Organizations from "./pages/admin/settings/Organizations";
 import Users from "./pages/admin/settings/Users";
 
 import Notifications from "./pages/admin/settings/Notifications";
+import AgentManagement from "./pages/admin/settings/AgentManagement";
 import WidgetManagement from "./pages/admin/settings/WidgetManagement";
 import Security from "./pages/admin/settings/Security";
 import Preview from "./pages/admin/settings/Preview";
@@ -106,6 +107,13 @@ const App = () => (
               <AuthGuard>
                 <AdminLayout>
                   <Notifications />
+                </AdminLayout>
+              </AuthGuard>
+            } />
+            <Route path="/settings/agents" element={
+              <AuthGuard>
+                <AdminLayout>
+                  <AgentManagement />
                 </AdminLayout>
               </AuthGuard>
             } />

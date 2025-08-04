@@ -1,6 +1,8 @@
 import { ChevronDown, User, LogOut, Settings } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useTenant } from "@/contexts/TenantContext";
+import { AvailabilityToggle } from "./AvailabilityToggle";
+import { NotificationCenter } from "./NotificationCenter";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -79,6 +81,12 @@ export function AdminHeader() {
             ))}
           </SelectContent>
         </Select>
+
+        {/* Availability Toggle */}
+        <AvailabilityToggle />
+
+        {/* Notification Center */}
+        <NotificationCenter />
 
         {/* User Menu */}
         <DropdownMenu>
