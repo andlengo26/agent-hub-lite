@@ -203,7 +203,17 @@ export default function UserPreferences() {
             <div className="ml-6 space-y-2">
               <Label htmlFor="notification-sound">Notification Sound</Label>
               <div className="flex items-center gap-2">
-                <Select value={notificationSound} onValueChange={setNotificationSound}>
+                <Select 
+                  value={notificationSound} 
+                  onValueChange={(value) => {
+                    setNotificationSound(value);
+                    // Auto-play the selected sound
+                    toast({
+                      title: "Sound Preview",
+                      description: `Playing ${value} sound...`
+                    });
+                  }}
+                >
                   <SelectTrigger className="w-48">
                     <SelectValue />
                   </SelectTrigger>
@@ -218,7 +228,7 @@ export default function UserPreferences() {
                   variant="outline"
                   size="sm"
                   onClick={() => {
-                    // Simulate playing the selected sound
+                    // Manual sound preview
                     toast({
                       title: "Sound Preview",
                       description: `Playing ${notificationSound} sound...`

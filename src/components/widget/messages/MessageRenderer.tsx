@@ -113,7 +113,7 @@ export function MessageRenderer({
         </div>
         
         {/* Feedback buttons for AI messages */}
-        {message.type === 'ai' && message.id !== 'welcome' && aiSettings.enableFeedback && !message.feedbackSubmitted && (
+        {message.type === 'ai' && !message.id.includes('welcome') && aiSettings.enableFeedback && !message.feedbackSubmitted && (
           <MessageFeedback
             messageId={message.id}
             onFeedback={onFeedback}

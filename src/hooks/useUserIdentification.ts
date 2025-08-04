@@ -133,11 +133,6 @@ export function useUserIdentification({ settings, onIdentificationComplete }: Us
       // Notify completion
       onIdentificationComplete?.(session);
 
-      toast({
-        title: "Identification Complete",
-        description: "Thank you for providing your information.",
-      });
-
       return true;
     } catch (error) {
       console.error('Failed to submit identification:', error);
@@ -202,11 +197,6 @@ export function useUserIdentification({ settings, onIdentificationComplete }: Us
 
       // Notify completion
       onIdentificationComplete?.(session);
-
-      toast({
-        title: "Authentication Successful",
-        description: `Welcome ${authResult.user.firstname} ${authResult.user.lastname}!`,
-      });
 
       return true;
     } catch (error) {

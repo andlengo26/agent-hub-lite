@@ -50,11 +50,8 @@ export function UserIdentificationForm({
     setIsSubmittingLocal(true);
     try {
       const success = await onSubmit();
-      // Only reset if submission failed, success will be handled by parent
-      if (!success) {
-        setIsSubmittingLocal(false);
-      }
-      // If success, parent component should handle the state change
+      // Always reset the local submitting state
+      setIsSubmittingLocal(false);
     } catch (error) {
       console.error('Form submission error:', error);
       setIsSubmittingLocal(false);
