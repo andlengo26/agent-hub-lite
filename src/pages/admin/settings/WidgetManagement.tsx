@@ -16,7 +16,13 @@ import { InteractiveWidget } from '@/components/admin/InteractiveWidget';
 import { useWidgetSettings } from '@/hooks/useWidgetSettings';
 import { useToast } from '@/hooks/use-toast';
 import { Copy, Check, Loader2 } from 'lucide-react';
-import { IntegrationsTab, AISettingsTab, AppearanceTab, UserInfoTab } from '@/components/admin/settings';
+import {
+  SetupIntegrationTab,
+  UserAccessAuthTab,
+  AIBehaviorRoutingTab,
+  AppearancePlacementTab,
+  AdvancedFeaturesTab,
+} from '@/components/admin/settings';
 
 export default function WidgetManagement() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -24,11 +30,11 @@ export default function WidgetManagement() {
   
   const { settings, loading, saving, saveSettings, updateSettings } = useWidgetSettings();
   const [copied, setCopied] = useState(false);
-  const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'integrations');
+  const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'setup');
 
   useEffect(() => {
     const tab = searchParams.get('tab');
-    if (tab && ['integrations', 'ai', 'appearance', 'userinfo', 'embed', 'voice'].includes(tab)) {
+    if (tab && ['setup', 'access', 'ai', 'appearance', 'advanced'].includes(tab)) {
       setActiveTab(tab);
     }
   }, [searchParams]);
@@ -89,114 +95,32 @@ export default function WidgetManagement() {
         </CardHeader>
         <CardContent>
           <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6">
-            <TabsList className="grid w-full grid-cols-6">
-              <TabsTrigger value="integrations">Integrations</TabsTrigger>
-              <TabsTrigger value="ai">AI Settings</TabsTrigger>
-              <TabsTrigger value="appearance">Appearance</TabsTrigger>
-              <TabsTrigger value="userinfo">User Info</TabsTrigger>
-              <TabsTrigger value="embed">Embed</TabsTrigger>
-              <TabsTrigger value="voice">Voice</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-5">
+              <TabsTrigger value="setup">Setup & Integration</TabsTrigger>
+              <TabsTrigger value="access">User Access & Auth</TabsTrigger>
+              <TabsTrigger value="ai">AI Behavior & Routing</TabsTrigger>
+              <TabsTrigger value="appearance">Appearance & Placement</TabsTrigger>
+              <TabsTrigger value="advanced">Advanced Features</TabsTrigger>
             </TabsList>
 
-            <TabsContent value="integrations" className="space-y-4">
-              <IntegrationsTab settings={settings} updateSettings={updateSettings} />
+            <TabsContent value="setup" className="space-y-4">
+              <SetupIntegrationTab settings={settings} updateSettings={updateSettings} />
+            </TabsContent>
+
+            <TabsContent value="access" className="space-y-4">
+              <UserAccessAuthTab settings={settings} updateSettings={updateSettings} />
             </TabsContent>
 
             <TabsContent value="ai" className="space-y-4">
-              <AISettingsTab settings={settings} updateSettings={updateSettings} />
+              <AIBehaviorRoutingTab settings={settings} updateSettings={updateSettings} />
             </TabsContent>
 
             <TabsContent value="appearance" className="space-y-4">
-              <AppearanceTab settings={settings} updateSettings={updateSettings} />
+              <AppearancePlacementTab settings={settings} updateSettings={updateSettings} />
             </TabsContent>
 
-            <TabsContent value="userinfo" className="space-y-4">
-              <UserInfoTab settings={settings} updateSettings={updateSettings} />
-            </TabsContent>
-
-            <TabsContent value="embed" className="space-y-4">
-              <div className="space-y-4">
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    id="moodleChatPluginIntegration"
-                    checked={settings.embed.moodleChatPluginIntegration || false}
-                    onCheckedChange={(checked) => updateSettings('embed', { moodleChatPluginIntegration: checked })}
-                  />
-                  <Label htmlFor="moodleChatPluginIntegration">Integrate with Moodle Chat Plugin</Label>
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  When enabled, the widget will prioritize Moodle authentication and seamlessly integrate with the Moodle chat plugin workflow.
-                </p>
-                
-                <div>
-                  <Label htmlFor="embedScript">Embed Code</Label>
-                  <div className="relative">
-                    <Textarea
-                      id="embedScript"
-                      value={settings.embed.script}
-                      readOnly
-                      rows={8}
-                      className="font-mono text-sm bg-muted"
-                    />
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={handleCopyEmbed}
-                      className="absolute top-2 right-2"
-                    >
-                      {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </TabsContent>
-
-            <TabsContent value="voice" className="space-y-4">
-              <div className="space-y-4">
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    id="enableVoiceCalls"
-                    checked={settings.voice.enableVoiceCalls}
-                    onCheckedChange={(checked) => updateSettings('voice', { enableVoiceCalls: checked })}
-                  />
-                  <Label htmlFor="enableVoiceCalls">Enable voice calls</Label>
-                </div>
-                
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    id="enableVoicemails"
-                    checked={settings.voice.enableVoicemails}
-                    onCheckedChange={(checked) => updateSettings('voice', { enableVoicemails: checked })}
-                  />
-                  <Label htmlFor="enableVoicemails">Enable voicemails</Label>
-                </div>
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="startTime">Business Hours Start</Label>
-                    <Input
-                      id="startTime"
-                      type="time"
-                      value={settings.voice.businessHours.start}
-                      onChange={(e) => updateSettings('voice', { 
-                        businessHours: { ...settings.voice.businessHours, start: e.target.value }
-                      })}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="endTime">Business Hours End</Label>
-                    <Input
-                      id="endTime"
-                      type="time"
-                      value={settings.voice.businessHours.end}
-                      onChange={(e) => updateSettings('voice', { 
-                        businessHours: { ...settings.voice.businessHours, end: e.target.value }
-                      })}
-                    />
-                  </div>
-                </div>
-              </div>
+            <TabsContent value="advanced" className="space-y-4">
+              <AdvancedFeaturesTab settings={settings} updateSettings={updateSettings} />
             </TabsContent>
           </Tabs>
           
