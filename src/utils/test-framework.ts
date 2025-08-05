@@ -250,11 +250,10 @@ export const IntegrationTestUtils = {
     );
   },
 
-  // Mock failed API responses
   mockApiError: (error: string, status = 500) => {
-    return jest.fn().mockRejectedValue({
-      response: { status, data: { message: error } }
-    });
+    const mockError = new Error(error);
+    (mockError as any).status = status;
+    return jest.fn().mockImplementation(() => Promise.reject(mockError));
   },
 
   // Test real-time updates

@@ -173,31 +173,9 @@ export function useLazyComponent<T extends ComponentType<any>>(
   return { Component, loading, error };
 }
 
-// Simplified lazy imports - avoid complex default export detection
+// Simplified lazy imports - removed for now to avoid complex type issues
 export const LazyImports = {
-  // Admin components - use named imports
-  ChatPanel: () => import('@/components/admin/ChatPanel'),
-  EngagementAccordion: () => import('@/components/admin/EngagementAccordion'), 
-  AgentConsoleLayout: () => import('@/components/admin/agent-console/AgentConsoleLayout'),
-  
-  // Settings components
-  WidgetSettings: () => import('@/pages/admin/settings/WidgetManagement'),
-  MoodleConfiguration: () => import('@/pages/admin/settings/MoodleConfiguration'),
-  
-  // Content components 
-  DocumentUploadModal: () => import('@/components/modals/DocumentUploadModal'),
-  FAQModal: () => import('@/components/modals/FAQModal'),
-  ResourceModal: () => import('@/components/modals/ResourceModal'),
-  
-  // Widget components
-  InteractiveWidget: () => import('@/components/admin/InteractiveWidget'),
-  WidgetPreview: () => import('@/components/widget/WidgetPreview'),
-  
-  // Chart components (heavy dependencies)
-  ChartComponents: () => import('@/components/ui/chart'),
-  
-  // Moodle module
-  MoodleComponents: () => import('@/modules/moodle'),
+  // These will be implemented as direct React.lazy calls in components that need them
 };
 
 // Pre-built lazy components - simplified approach

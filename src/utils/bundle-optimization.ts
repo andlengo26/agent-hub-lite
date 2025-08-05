@@ -1,227 +1,173 @@
 /**
- * Bundle Optimization and Code Splitting Configuration
- * Dynamic imports for performance optimization
+ * Bundle Optimization Utilities
+ * Code splitting and lazy loading configuration
  */
 
-import { lazy } from 'react';
+import { lazy, ComponentType } from 'react';
+import React from 'react';
 
-// ============= Lazy Loaded Components =============
+// Simple lazy loading utility that doesn't require complex default export handling
+export const createSimpleLazyComponent = (importPath: string) => {
+  return lazy(() => 
+    // Use dynamic import with a fallback component
+    import(/* @vite-ignore */ importPath).then(module => ({
+      default: module.default || module[Object.keys(module)[0]] || (() => React.createElement('div', null, 'Loading...'))
+    })).catch(() => ({
+      default: () => React.createElement('div', null, 'Failed to load component')
+    }))
+  );
+};
 
-// Admin Components (Heavy)
-export const LazyAllChats = lazy(() => import('@/pages/admin/AllChats'));
-export const LazyEngagementHistory = lazy(() => import('@/pages/admin/EngagementHistory'));
-export const LazyCustomerEngagementDetail = lazy(() => import('@/pages/admin/CustomerEngagementDetail'));
+// Preloading strategies for different user interactions
+export const PreloadStrategies = {
+  // Preload on hover for quick access
+  onHover: (importPath: string) => {
+    return () => {
+      // Pre-import the component module for faster loading
+      import(/* @vite-ignore */ importPath).catch(() => {
+        // Silently fail preloading
+      });
+    };
+  },
 
-// Settings Components (Medium)
-export const LazyWidgetManagement = lazy(() => import('@/pages/admin/settings/WidgetManagement'));
-export const LazyMoodleConfiguration = lazy(() => import('@/pages/admin/settings/MoodleConfiguration'));
-export const LazyUsers = lazy(() => import('@/pages/admin/settings/Users'));
-export const LazyOrganizations = lazy(() => import('@/pages/admin/settings/Organizations'));
+  // Preload critical components after initial page load
+  critical: () => {
+    setTimeout(() => {
+      Promise.all([
+        import('@/components/admin/ChatPanel').catch(() => {}),
+        import('@/components/admin/OptimizedChatList').catch(() => {}),
+      ]);
+    }, 2000);
+  },
 
-// Content Management (Medium)
-export const LazyDocuments = lazy(() => import('@/pages/admin/content/Documents'));
-export const LazyFAQs = lazy(() => import('@/pages/admin/content/FAQs'));
-export const LazyResources = lazy(() => import('@/pages/admin/content/Resources'));
-export const LazyURLScraper = lazy(() => import('@/pages/admin/content/URLScraper'));
+  // Preload route-specific components
+  route: (route: string) => {
+    switch (route) {
+      case '/settings':
+        import('@/pages/admin/settings/WidgetManagement').catch(() => {});
+        break;
+      case '/agent':
+        import('@/components/admin/agent-console/AgentConsoleLayout').catch(() => {});
+        break;
+      default:
+        break;
+    }
+  }
+};
 
-// Agent Console (Heavy)
-export const LazyAgentConsoleLayout = lazy(() => import('@/components/admin/agent-console/AgentConsoleLayout'));
-export const LazyActiveChat = lazy(() => import('@/components/admin/agent-console/ActiveChat'));
-export const LazyEmailComposer = lazy(() => import('@/components/admin/agent-console/EmailComposer'));
-
-// Widget Components (Light but frequently used)
-export const LazyInteractiveWidget = lazy(() => import('@/components/admin/InteractiveWidget'));
-export const LazyWidgetPreview = lazy(() => import('@/components/widget/WidgetPreview'));
-
-// Modal Components (Light)
-export const LazyDocumentUploadModal = lazy(() => import('@/components/modals/DocumentUploadModal'));
-export const LazyFAQModal = lazy(() => import('@/components/modals/FAQModal'));
-export const LazyResourceModal = lazy(() => import('@/components/modals/ResourceModal'));
-export const LazyScrapedDataModal = lazy(() => import('@/components/modals/ScrapedDataModal'));
-
-// Chart Components (Heavy dependencies)
-export const LazyChartComponents = lazy(() => import('@/components/ui/chart'));
-
-// ============= Preloading Strategies =============
-
-export const preloadStrategies = {
-  // Critical components - preload immediately
-  critical: [
-    () => import('@/components/admin/AdminLayout'),
-    () => import('@/components/admin/AdminHeader'),
-    () => import('@/components/admin/AdminSidebar'),
+// Bundle analysis configuration
+export const BundleConfig = {
+  // Routes that should be code-split
+  splitRoutes: [
+    '/settings/moodle',
+    '/agent/console',
+    '/content/upload',
+    '/analytics/detailed'
   ],
 
-  // High priority - preload on mouseover
-  highPriority: [
-    () => import('@/pages/admin/AllChats'),
-    () => import('@/pages/admin/Dashboard'),
-    () => import('@/components/admin/InteractiveWidget'),
+  // Components that should always be lazy-loaded
+  heavyComponents: [
+    'ChartComponents',
+    'MoodleConfiguration', 
+    'AgentConsoleMainView'
   ],
 
-  // Medium priority - preload on focus or after delay
-  mediumPriority: [
-    () => import('@/pages/admin/settings/WidgetManagement'),
-    () => import('@/pages/admin/EngagementHistory'),
-    () => import('@/components/admin/agent-console/AgentConsoleLayout'),
-  ],
-
-  // Low priority - preload on idle
-  lowPriority: [
-    () => import('@/pages/admin/content/Documents'),
-    () => import('@/pages/admin/content/FAQs'),
-    () => import('@/pages/admin/content/Resources'),
-    () => import('@/pages/admin/settings/Users'),
-    () => import('@/pages/admin/settings/Organizations'),
-  ],
-
-  // Heavy components - only load when needed
-  onDemand: [
-    () => import('@/components/ui/chart'),
-    () => import('@/pages/admin/content/URLScraper'),
-    () => import('@/components/admin/agent-console/EmailComposer'),
+  // Critical components that should be preloaded
+  criticalComponents: [
+    'ChatPanel',
+    'OptimizedChatList',
+    'NotificationCenter'
   ]
 };
 
-// ============= Bundle Analysis Utilities =============
-
-export const bundleAnalysis = {
-  // Log bundle sizes in development
-  logBundleSizes: () => {
-    if (process.env.NODE_ENV === 'development') {
-      const navigationEntries = performance.getEntriesByType('navigation') as PerformanceNavigationTiming[];
-      const resourceEntries = performance.getEntriesByType('resource') as PerformanceResourceTiming[];
-      
-      console.group('Bundle Analysis');
-      console.log('Navigation timing:', navigationEntries[0]);
-      console.log('Resource count:', resourceEntries.length);
-      console.log('JS resources:', resourceEntries.filter(entry => entry.name.includes('.js')).length);
-      console.log('CSS resources:', resourceEntries.filter(entry => entry.name.includes('.css')).length);
-      console.groupEnd();
+// Performance monitoring for lazy loading
+export const LazyLoadingMetrics = {
+  trackComponentLoad: (componentName: string, loadTime: number) => {
+    if (typeof window !== 'undefined' && window.performance) {
+      performance.mark(`lazy-${componentName}-loaded`);
+      console.debug(`Lazy component ${componentName} loaded in ${loadTime}ms`);
     }
   },
 
-  // Measure chunk loading performance
-  measureChunkLoading: (chunkName: string) => {
-    const start = performance.now();
-    return () => {
-      const end = performance.now();
-      console.log(`[Bundle] ${chunkName} loaded in ${end - start}ms`);
-    };
-  }
-};
-
-// ============= Dynamic Import Helpers =============
-
-export const dynamicImport = {
-  // Import with fallback
-  withFallback: async <T>(
-    importFn: () => Promise<T>,
-    fallback: T
-  ): Promise<T> => {
-    try {
-      return await importFn();
-    } catch (error) {
-      console.warn('Dynamic import failed, using fallback:', error);
-      return fallback;
-    }
-  },
-
-  // Import with timeout
-  withTimeout: async <T>(
-    importFn: () => Promise<T>,
-    timeout: number = 5000
-  ): Promise<T> => {
-    return Promise.race([
-      importFn(),
-      new Promise<T>((_, reject) =>
-        setTimeout(() => reject(new Error('Import timeout')), timeout)
-      )
-    ]);
-  },
-
-  // Preload with priority
-  preload: (importFn: () => Promise<any>, priority: 'high' | 'low' = 'low') => {
-    if ('scheduler' in window && 'postTask' in (window as any).scheduler) {
-      (window as any).scheduler.postTask(
-        () => importFn().catch(() => {}),
-        { priority: priority === 'high' ? 'user-blocking' : 'background' }
-      );
-    } else {
-      // Fallback for browsers without scheduler API
-      const delay = priority === 'high' ? 0 : 2000;
-      setTimeout(() => importFn().catch(() => {}), delay);
+  trackBundleSize: (bundleName: string, size: number) => {
+    if (typeof window !== 'undefined') {
+      console.debug(`Bundle ${bundleName} size: ${(size / 1024).toFixed(2)}KB`);
     }
   }
 };
 
-// ============= Auto Preloading =============
-
-// Automatically preload critical components after initial load
-export const initializePreloading = () => {
-  // Preload critical components immediately
-  setTimeout(() => {
-    preloadStrategies.critical.forEach(importFn => {
-      dynamicImport.preload(importFn, 'high');
-    });
-  }, 100);
-
-  // Preload high priority components after a short delay
-  setTimeout(() => {
-    preloadStrategies.highPriority.forEach(importFn => {
-      dynamicImport.preload(importFn, 'high');
-    });
-  }, 1000);
-
-  // Preload medium priority components when idle
-  if ('requestIdleCallback' in window) {
-    requestIdleCallback(() => {
-      preloadStrategies.mediumPriority.forEach(importFn => {
-        dynamicImport.preload(importFn, 'low');
-      });
-    });
-  } else {
-    setTimeout(() => {
-      preloadStrategies.mediumPriority.forEach(importFn => {
-        dynamicImport.preload(importFn, 'low');
-      });
-    }, 3000);
-  }
-
-  // Preload low priority components when really idle
-  setTimeout(() => {
-    preloadStrategies.lowPriority.forEach(importFn => {
-      dynamicImport.preload(importFn, 'low');
-    });
-  }, 5000);
-};
-
-// ============= Performance Monitoring =============
-
-export const performanceMonitoring = {
-  // Monitor lazy loading performance
-  trackLazyLoading: (componentName: string) => {
-    const start = performance.now();
-    return () => {
-      const end = performance.now();
-      if (process.env.NODE_ENV === 'development') {
-        console.log(`[Lazy Loading] ${componentName} loaded in ${end - start}ms`);
-      }
-    };
+// Bundle splitting utilities
+export const BundleSplitter = {
+  // Split by route
+  splitByRoute: (routes: string[]) => {
+    return routes.reduce((acc, route) => {
+      const componentName = route.split('/').pop() || 'Unknown';
+      acc[componentName] = createSimpleLazyComponent(`@/pages${route}`);
+      return acc;
+    }, {} as Record<string, ReturnType<typeof createSimpleLazyComponent>>);
   },
 
-  // Monitor bundle impact
-  trackBundleImpact: () => {
-    if (process.env.NODE_ENV === 'development') {
-      const observer = new PerformanceObserver((list) => {
-        for (const entry of list.getEntries()) {
-          if (entry.entryType === 'resource' && entry.name.includes('chunk')) {
-            console.log(`[Bundle] Chunk loaded: ${entry.name} (${entry.duration}ms)`);
-          }
-        }
-      });
-      
-      observer.observe({ entryTypes: ['resource'] });
-    }
+  // Split by feature
+  splitByFeature: (features: Record<string, string>) => {
+    return Object.entries(features).reduce((acc, [name, path]) => {
+      acc[name] = createSimpleLazyComponent(path);
+      return acc;
+    }, {} as Record<string, ReturnType<typeof createSimpleLazyComponent>>);
+  }
+};
+
+// Chunk optimization utilities
+export const ChunkOptimizer = {
+  // Calculate optimal chunk size
+  calculateOptimalChunkSize: (totalSize: number, targetChunks: number = 5) => {
+    return Math.ceil(totalSize / targetChunks);
+  },
+
+  // Analyze bundle composition
+  analyzeBundleComposition: () => {
+    if (typeof window === 'undefined') return {};
+
+    // Simple bundle analysis using performance entries
+    const resources = performance.getEntriesByType('resource') as PerformanceResourceTiming[];
+    
+    return resources
+      .filter(entry => entry.name.includes('.js'))
+      .reduce((acc, entry) => {
+        const name = entry.name.split('/').pop() || 'unknown';
+        acc[name] = {
+          size: entry.transferSize || 0,
+          loadTime: entry.responseEnd - entry.fetchStart,
+          cached: entry.transferSize === 0
+        };
+        return acc;
+      }, {} as Record<string, any>);
+  }
+};
+
+// Resource optimization
+export const ResourceOptimizer = {
+  // Preload critical resources
+  preloadCriticalResources: (resources: string[]) => {
+    if (typeof document === 'undefined') return;
+
+    resources.forEach(resource => {
+      const link = document.createElement('link');
+      link.rel = 'preload';
+      link.href = resource;
+      link.as = resource.endsWith('.js') ? 'script' : 'style';
+      document.head.appendChild(link);
+    });
+  },
+
+  // Prefetch non-critical resources
+  prefetchResources: (resources: string[]) => {
+    if (typeof document === 'undefined') return;
+
+    resources.forEach(resource => {
+      const link = document.createElement('link');
+      link.rel = 'prefetch';
+      link.href = resource;
+      document.head.appendChild(link);
+    });
   }
 };

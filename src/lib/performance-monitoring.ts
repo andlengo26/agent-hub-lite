@@ -134,7 +134,8 @@ class PerformanceMonitor {
       const fidObserver = new PerformanceObserver((list) => {
         const entries = list.getEntries();
         entries.forEach(entry => {
-          this.recordMetric('web-vitals.fid', entry.processingStart - entry.startTime);
+          const fidEntry = entry as any; // Cast to access FID-specific properties
+          this.recordMetric('web-vitals.fid', fidEntry.processingStart - fidEntry.startTime);
         });
       });
       fidObserver.observe({ entryTypes: ['first-input'] });
