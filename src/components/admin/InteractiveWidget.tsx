@@ -943,22 +943,9 @@ export function InteractiveWidget() {
                 <p className="text-sm text-muted-foreground mb-4">
                   Sign in to access your chat history and previous conversations.
                 </p>
-                <Button
-                  onClick={() => {
-                    const identificationMessage: Message = {
-                      id: `identification_${Date.now()}`,
-                      type: 'identification',
-                      timestamp: new Date(),
-                      isCompleted: false
-                    };
-                    setMessages(prev => [...prev, identificationMessage]);
-                    setCurrentPanel('chat');
-                  }}
-                  style={{ backgroundColor: appearance.primaryColor }}
-                  className="text-white"
-                >
-                  Sign In
-                </Button>
+                <p className="text-sm text-muted-foreground">
+                  Start a chat to complete your identification and access message history.
+                </p>
               </div>
             )}
           </div>
@@ -1502,11 +1489,17 @@ export function InteractiveWidget() {
 
         <CardContent className="flex-1 flex flex-col p-0 overflow-hidden">
           {/* Main Content Area */}
-          <div className="flex-1 overflow-y-auto">
-            <div className="p-4">
-              {renderPanelContent()}
+          {currentPanel === 'chat' ? (
+            // For chat panel, render directly without extra padding/scrolling
+            renderPanelContent()
+          ) : (
+            // For other panels, use scrollable container with padding
+            <div className="flex-1 overflow-y-auto">
+              <div className="p-4">
+                {renderPanelContent()}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Bottom Navigation - Fixed at bottom, only show on main panel */}
           {currentPanel === 'main' && (
