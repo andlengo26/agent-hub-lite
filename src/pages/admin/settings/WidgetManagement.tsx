@@ -1,21 +1,15 @@
 /**
  * Refactored Widget Management Settings Page
- * Split into modular components for better maintainability
+ * Now uses unified SettingsProvider for better architecture
  */
 
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
-import { InteractiveWidget } from '@/components/admin/InteractiveWidget';
-import { useWidgetSettings } from '@/hooks/useWidgetSettings';
-import { useToast } from '@/hooks/use-toast';
-import { Copy, Check, Loader2 } from 'lucide-react';
+import { SettingsProvider, useSettings } from '@/contexts/SettingsContext';
+import { Loader2, Check } from 'lucide-react';
 import {
   SetupIntegrationTab,
   UserAccessAuthTab,
@@ -24,13 +18,12 @@ import {
   AdvancedFeaturesTab,
 } from '@/components/admin/settings';
 
-export default function WidgetManagement() {
+// Internal component that uses the settings context
+function WidgetManagementContent() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const { toast } = useToast();
-  
-  const { settings, loading, saving, saveSettings, updateSettings } = useWidgetSettings();
-  const [copied, setCopied] = useState(false);
+  const { settings, loading, saving, saveSettings, error } = useSettings();
   const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'setup');
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
   useEffect(() => {
     const tab = searchParams.get('tab');
@@ -44,22 +37,21 @@ export default function WidgetManagement() {
     setSearchParams({ tab });
   };
 
-  const handleCopyEmbed = () => {
-    if (settings?.embed?.script) {
-      navigator.clipboard.writeText(settings.embed.script);
-      setCopied(true);
-      toast({
-        title: "Success",
-        description: "Embed code copied to clipboard",
-      });
-      setTimeout(() => setCopied(false), 2000);
+  const handleSaveAllSettings = async () => {
+    if (!settings) return;
+    
+    try {
+      await saveSettings(settings);
+      setHasUnsavedChanges(false);
+    } catch (error) {
+      console.error('Failed to save settings:', error);
     }
   };
 
-  const handleSaveAllSettings = async () => {
-    if (!settings) return;
-    await saveSettings(settings);
-  };
+  // Track changes to mark unsaved state
+  useEffect(() => {
+    setHasUnsavedChanges(true);
+  }, [settings]);
 
   if (loading) {
     return (
@@ -73,6 +65,7 @@ export default function WidgetManagement() {
     return (
       <div className="text-center py-8">
         <p className="text-muted-foreground">Failed to load widget settings</p>
+        {error && <p className="text-destructive text-sm mt-2">{error}</p>}
       </div>
     );
   }
@@ -88,9 +81,14 @@ export default function WidgetManagement() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Widget Configuration</CardTitle>
+          <CardTitle className="flex items-center justify-between">
+            Widget Configuration
+            {hasUnsavedChanges && (
+              <span className="text-sm text-muted-foreground">• Unsaved changes</span>
+            )}
+          </CardTitle>
           <CardDescription>
-            Customize your widget's behavior, appearance, and features
+            Customize your widget's behavior, appearance, and features using the unified settings system
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -104,47 +102,75 @@ export default function WidgetManagement() {
             </TabsList>
 
             <TabsContent value="setup" className="space-y-4">
-              <SetupIntegrationTab settings={settings} updateSettings={updateSettings} />
+              <SetupIntegrationTab settings={settings} />
             </TabsContent>
 
             <TabsContent value="access" className="space-y-4">
-              <UserAccessAuthTab settings={settings} updateSettings={updateSettings} />
+              <UserAccessAuthTab settings={settings} />
             </TabsContent>
 
             <TabsContent value="ai" className="space-y-4">
-              <AIBehaviorRoutingTab settings={settings} updateSettings={updateSettings} />
+              <AIBehaviorRoutingTab settings={settings} />
             </TabsContent>
 
             <TabsContent value="appearance" className="space-y-4">
-              <AppearancePlacementTab settings={settings} updateSettings={updateSettings} />
+              <AppearancePlacementTab settings={settings} />
             </TabsContent>
 
             <TabsContent value="advanced" className="space-y-4">
-              <AdvancedFeaturesTab settings={settings} updateSettings={updateSettings} />
+              <AdvancedFeaturesTab settings={settings} />
             </TabsContent>
           </Tabs>
           
           <div className="mt-6 pt-6 border-t">
-            <Button 
-              onClick={handleSaveAllSettings} 
-              className="w-full"
-              disabled={saving}
-            >
-              {saving ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Saving...
-                </>
-              ) : (
-                'Save All Settings'
-              )}
-            </Button>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                {error && (
+                  <span className="text-sm text-destructive">{error}</span>
+                )}
+                {!hasUnsavedChanges && !saving && (
+                  <div className="flex items-center gap-1 text-sm text-green-600">
+                    <Check className="h-4 w-4" />
+                    All changes saved
+                  </div>
+                )}
+              </div>
+              <Button 
+                onClick={handleSaveAllSettings} 
+                disabled={saving || !hasUnsavedChanges}
+                className="min-w-[120px]"
+              >
+                {saving ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  'Save All Settings'
+                )}
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>
-      
-      {/* Interactive Widget */}
-      <InteractiveWidget />
+    </div>
+  );
+}
+
+// Main component with SettingsProvider wrapper
+export default function WidgetManagement() {
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight">Widget Management</h1>
+        <p className="text-muted-foreground">
+          Configure your customer support widget settings with the new unified architecture
+        </p>
+      </div>
+
+      <SettingsProvider>
+        <WidgetManagementContent />
+      </SettingsProvider>
     </div>
   );
 }
