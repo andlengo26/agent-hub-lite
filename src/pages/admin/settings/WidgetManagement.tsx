@@ -18,6 +18,7 @@ import {
   AppearancePlacementTab,
   AdvancedFeaturesTab,
 } from '@/components/admin/settings';
+import { InteractiveWidget } from '@/components/admin/InteractiveWidget';
 
 // Internal component that uses the settings context
 function WidgetManagementContent() {
@@ -177,6 +178,7 @@ export default function WidgetManagement() {
 
       <SettingsProvider>
         <WidgetManagementContent />
+        <InteractiveWidget />
       </SettingsProvider>
     </div>
   );
