@@ -90,12 +90,9 @@ export function VirtualScroll<T>({
     }
   }, [itemHeight]);
 
-  // Expose scroll methods
-  React.useImperativeHandle(containerRef, () => ({
-    scrollToIndex,
-    scrollToTop: () => scrollToIndex(0),
-    scrollToBottom: () => scrollToIndex(items.length - 1)
-  }));
+  // Scroll methods exposed through ref
+  const scrollToTop = useCallback(() => scrollToIndex(0), [scrollToIndex]);
+  const scrollToBottom = useCallback(() => scrollToIndex(items.length - 1), [scrollToIndex, items.length]);
 
   if (loading && loadingComponent) {
     return <div className={className}>{loadingComponent}</div>;

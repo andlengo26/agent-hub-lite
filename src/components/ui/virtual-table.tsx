@@ -188,8 +188,8 @@ export function VirtualTable<T extends { id: string }>({
         <div className="w-12 flex justify-center">
           <Checkbox
             checked={selectedIds.size === processedData.length && processedData.length > 0}
-            indeterminate={selectedIds.size > 0 && selectedIds.size < processedData.length}
             onCheckedChange={handleSelectAll}
+            className={selectedIds.size > 0 && selectedIds.size < processedData.length ? 'data-[state=checked]:bg-primary data-[state=checked]:opacity-50' : ''}
           />
         </div>
       )}

@@ -15,11 +15,11 @@ export function createLazyComponent<T extends ComponentType<any>>(
 ): React.ComponentType<React.ComponentProps<T>> {
   const LazyComponent = lazy(importFn);
   
-  return React.forwardRef<any, React.ComponentProps<T>>((props, ref) => (
+  return (props: React.ComponentProps<T>) => (
     <Suspense fallback={fallback || <DefaultLazyFallback />}>
-      <LazyComponent {...props} ref={ref} />
+      <LazyComponent {...props} />
     </Suspense>
-  ));
+  );
 }
 
 // Default loading fallback
@@ -173,18 +173,18 @@ export function useLazyComponent<T extends ComponentType<any>>(
   return { Component, loading, error };
 }
 
-// Dynamic import utilities for common patterns
+// Simplified lazy imports - avoid complex default export detection
 export const LazyImports = {
-  // Admin components
+  // Admin components - use named imports
   ChatPanel: () => import('@/components/admin/ChatPanel'),
-  EngagementAccordion: () => import('@/components/admin/EngagementAccordion'),
+  EngagementAccordion: () => import('@/components/admin/EngagementAccordion'), 
   AgentConsoleLayout: () => import('@/components/admin/agent-console/AgentConsoleLayout'),
   
   // Settings components
   WidgetSettings: () => import('@/pages/admin/settings/WidgetManagement'),
   MoodleConfiguration: () => import('@/pages/admin/settings/MoodleConfiguration'),
   
-  // Content components
+  // Content components 
   DocumentUploadModal: () => import('@/components/modals/DocumentUploadModal'),
   FAQModal: () => import('@/components/modals/FAQModal'),
   ResourceModal: () => import('@/components/modals/ResourceModal'),
@@ -200,30 +200,35 @@ export const LazyImports = {
   MoodleComponents: () => import('@/modules/moodle'),
 };
 
-// Pre-built lazy components for common use cases
-export const LazyChatPanel = createLazyComponent(
-  LazyImports.ChatPanel,
-  <SkeletonFallback type="card" lines={4} />
+// Pre-built lazy components - simplified approach
+export const LazyChatPanel = lazy(() => 
+  import('@/components/admin/ChatPanel').then(m => ({ 
+    default: (m as any).ChatPanel || (m as any).default || (() => <DefaultLazyFallback />) 
+  }))
 );
 
-export const LazyEngagementAccordion = createLazyComponent(
-  LazyImports.EngagementAccordion,
-  <SkeletonFallback type="list" lines={3} />
+export const LazyEngagementAccordion = lazy(() => 
+  import('@/components/admin/EngagementAccordion').then(m => ({ 
+    default: (m as any).EngagementAccordion || (m as any).default || (() => <DefaultLazyFallback />) 
+  }))
 );
 
-export const LazyAgentConsole = createLazyComponent(
-  LazyImports.AgentConsoleLayout,
-  <SkeletonFallback type="table" lines={5} />
+export const LazyAgentConsole = lazy(() => 
+  import('@/components/admin/agent-console/AgentConsoleLayout').then(m => ({ 
+    default: (m as any).AgentConsoleLayout || (m as any).default || (() => <DefaultLazyFallback />) 
+  }))
 );
 
-export const LazyWidgetSettings = createLazyComponent(
-  LazyImports.WidgetSettings,
-  <SkeletonFallback type="form" lines={6} />
+export const LazyWidgetSettings = lazy(() => 
+  import('@/pages/admin/settings/WidgetManagement').then(m => ({ 
+    default: (m as any).default || (() => <DefaultLazyFallback />) 
+  }))
 );
 
-export const LazyInteractiveWidget = createLazyComponent(
-  LazyImports.InteractiveWidget,
-  <div className="w-16 h-16 bg-primary/10 rounded-full animate-pulse" />
+export const LazyInteractiveWidget = lazy(() => 
+  import('@/components/admin/InteractiveWidget').then(m => ({ 
+    default: (m as any).InteractiveWidget || (m as any).default || (() => <DefaultLazyFallback />) 
+  }))
 );
 
 // Preload utility for better UX

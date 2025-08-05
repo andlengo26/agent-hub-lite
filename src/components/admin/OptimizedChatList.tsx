@@ -51,7 +51,7 @@ export function OptimizedChatList({
       render: (value: any, chat: Chat) => (
         <div className="flex flex-col">
           <span className="font-medium truncate">{value}</span>
-          <span className="text-sm text-muted-foreground truncate">{chat.customerEmail}</span>
+          <span className="text-sm text-muted-foreground truncate">{chat.requesterEmail}</span>
         </div>
       ),
     },
