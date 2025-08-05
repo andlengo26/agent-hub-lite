@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { MoodleLoginButton } from "@/components/widget/MoodleLoginButton";
+import { MoodleLoginButton } from "@/modules/moodle/components/MoodleLoginButton";
 import { IdentificationFormData, IdentificationValidationResult, IdentificationSession } from "@/types/user-identification";
 import { WidgetSettings } from "@/hooks/useWidgetSettings";
 

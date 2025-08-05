@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { MessageRenderer } from '@/components/widget/messages/MessageRenderer';
-import { MoodleLoginButton } from '@/components/widget/MoodleLoginButton';
+import { MoodleLoginButton } from '@/modules/moodle/components/MoodleLoginButton';
 import { Message } from '@/types/message';
 import { IdentificationFormData, IdentificationValidationResult, IdentificationSession } from '@/types/user-identification';
 import { WidgetSettings } from '@/hooks/useWidgetSettings';

@@ -6,7 +6,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { WidgetSettings } from '@/hooks/useWidgetSettings';
-import { MoodleAuthService } from '@/services/moodleAuthService';
+import { MoodleAuthService } from '@/modules/moodle/services/MoodleAuthService';
 import {
   IdentificationType,
   UserIdentificationData,

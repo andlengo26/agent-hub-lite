@@ -7,7 +7,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import { useIdentificationSession } from '@/hooks/user-identification/useIdentificationSession';
 import { useIdentificationValidation } from '@/hooks/user-identification/useIdentificationValidation';
 import { useIdentificationRequirements } from '@/hooks/user-identification/useIdentificationRequirements';
-import { useMoodleAutoIdentification } from '@/hooks/useMoodleAutoIdentification';
+import { useMoodleAutoIdentification } from '@/modules/moodle/hooks/useMoodleAutoIdentification';
 import { CustomerService } from '@/services/customerService';
 import { WidgetSettings } from '@/hooks/useWidgetSettings';
 import {
