@@ -650,10 +650,39 @@ export function InteractiveWidget() {
   // Panel navigation handlers
   const handleStartChat = () => {
     setCurrentPanel('chat');
+    
+    // Initialize welcome message if no messages exist
+    if (messages.length === 0 && settings?.aiSettings?.welcomeMessage) {
+      console.log('📝 Creating welcome message for new chat');
+      const welcomeMessage: Message = {
+        id: 'welcome',
+        type: 'ai',
+        content: settings.aiSettings.welcomeMessage,
+        timestamp: new Date()
+      };
+      setMessages([welcomeMessage]);
+      sessionPersistence.createNewSession(welcomeMessage, isExpanded);
+      startAISession(); // Start the conversation lifecycle
+    }
   };
 
   const handleContinueChat = () => {
     setCurrentPanel('chat');
+    
+    // If no messages but we have an active session, restore or create welcome message
+    if (messages.length === 0 && settings?.aiSettings?.welcomeMessage) {
+      console.log('📝 Restoring/creating welcome message for existing chat session');
+      const welcomeMessage: Message = {
+        id: 'welcome',
+        type: 'ai',
+        content: settings.aiSettings.welcomeMessage,
+        timestamp: new Date()
+      };
+      setMessages([welcomeMessage]);
+      if (!sessionPersistence.currentSession) {
+        sessionPersistence.createNewSession(welcomeMessage, isExpanded);
+      }
+    }
   };
 
   const handleBackToMain = () => {
