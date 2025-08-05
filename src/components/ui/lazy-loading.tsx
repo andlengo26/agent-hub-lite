@@ -3,7 +3,7 @@
  * Dynamic imports and code splitting for performance
  */
 
-import React, { Suspense, lazy, ComponentType } from 'react';
+import { Suspense, lazy, ComponentType, ReactNode, FC, forwardRef, useState, useRef, useEffect, DependencyList } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card } from '@/components/ui/card';
 import { Loader2 } from 'lucide-react';
@@ -11,8 +11,8 @@ import { Loader2 } from 'lucide-react';
 // Generic lazy loading wrapper
 export function createLazyComponent<T extends ComponentType<any>>(
   importFn: () => Promise<{ default: T }>,
-  fallback?: React.ReactNode
-): React.ComponentType<React.ComponentProps<T>> {
+  fallback?: ReactNode
+): ComponentType<React.ComponentProps<T>> {
   const LazyComponent = lazy(importFn);
   
   return (props: React.ComponentProps<T>) => (
@@ -23,7 +23,7 @@ export function createLazyComponent<T extends ComponentType<any>>(
 }
 
 // Default loading fallback
-export const DefaultLazyFallback: React.FC = () => (
+export const DefaultLazyFallback: FC = () => (
   <Card className="p-6">
     <div className="flex items-center justify-center space-x-2">
       <Loader2 className="h-4 w-4 animate-spin" />
@@ -33,7 +33,7 @@ export const DefaultLazyFallback: React.FC = () => (
 );
 
 // Skeleton fallback for different component types
-export const SkeletonFallback: React.FC<{
+export const SkeletonFallback: FC<{
   type?: 'table' | 'form' | 'card' | 'list';
   lines?: number;
 }> = ({ type = 'card', lines = 3 }) => {
@@ -96,19 +96,19 @@ export const SkeletonFallback: React.FC<{
 export function withLazyLoading<P extends object>(
   Component: ComponentType<P>,
   options: {
-    fallback?: React.ReactNode;
+    fallback?: ReactNode;
     rootMargin?: string;
     threshold?: number;
   } = {}
 ) {
   const { fallback = <DefaultLazyFallback />, rootMargin = '50px', threshold = 0.1 } = options;
   
-  return React.forwardRef<any, P & { lazy?: boolean }>((props, ref) => {
+  return forwardRef<any, P & { lazy?: boolean }>((props, ref) => {
     const { lazy = true, ...componentProps } = props;
-    const [isVisible, setIsVisible] = React.useState(!lazy);
-    const elementRef = React.useRef<HTMLDivElement>(null);
+    const [isVisible, setIsVisible] = useState(!lazy);
+    const elementRef = useRef<HTMLDivElement>(null);
 
-    React.useEffect(() => {
+    useEffect(() => {
       if (!lazy || isVisible) return;
 
       const observer = new IntersectionObserver(
@@ -139,13 +139,13 @@ export function withLazyLoading<P extends object>(
 // Lazy loading hook for components
 export function useLazyComponent<T extends ComponentType<any>>(
   importFn: () => Promise<{ default: T }>,
-  deps: React.DependencyList = []
+  deps: DependencyList = []
 ) {
-  const [Component, setComponent] = React.useState<T | null>(null);
-  const [loading, setLoading] = React.useState(true);
-  const [error, setError] = React.useState<Error | null>(null);
+  const [Component, setComponent] = useState<T | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
 
-  React.useEffect(() => {
+  useEffect(() => {
     let cancelled = false;
     
     setLoading(true);
@@ -221,7 +221,7 @@ export const preloadComponent = (importFn: () => Promise<any>) => {
 
 // Resource preloading hook
 export function usePreloadResources(resources: Array<() => Promise<any>>, delay: number = 2000) {
-  React.useEffect(() => {
+  useEffect(() => {
     const timer = setTimeout(() => {
       resources.forEach(resource => {
         resource().catch(() => {

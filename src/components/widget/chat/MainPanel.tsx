@@ -3,11 +3,11 @@
  * Handles the main widget interface with tabs and content
  */
 
-import React from 'react';
 import { Search, MessageSquare, User, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { TabType } from './NavigationTabs';
+import { FAQ, Resource, ChatHistory, IdentificationSession } from '@/types/main-panel';
 
 interface MainPanelProps {
   activeTab: TabType;
@@ -29,9 +29,9 @@ interface MainPanelProps {
   onFAQSearch: (value: string) => void;
   
   // Data props
-  faqs: any[];
-  resources: any[];
-  chats: any[];
+  faqs: FAQ[];
+  resources: Resource[];
+  chats: ChatHistory[];
   
   // Loading states
   faqLoading: boolean;
@@ -39,11 +39,12 @@ interface MainPanelProps {
   chatsLoading: boolean;
   
   // Search functions
-  searchResources: (query: string) => any[];
+  searchResources: (query: string) => Resource[];
   
   // User identification
   userIdentification: {
-    session: any;
+    session: IdentificationSession | null;
+    [key: string]: any; // Allow additional properties
   };
 }
 

@@ -3,7 +3,7 @@
  * Uses virtual scrolling for large chat datasets
  */
 
-import React, { useMemo, useState, useCallback } from 'react';
+import { useMemo, useState, useCallback, memo } from 'react';
 import { VirtualTable } from '@/components/ui/virtual-table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -12,9 +12,14 @@ import { usePerformanceMonitor, useDebounced } from '@/utils/performance';
 import { Chat } from '@/types';
 import { MoreHorizontal, UserPlus, MessageSquareX, XCircle } from 'lucide-react';
 
+interface User {
+  id: string;
+  name: string;
+}
+
 interface OptimizedChatListProps {
   chats: Chat[];
-  users: any[];
+  users: User[];
   onChatSelect?: (chat: Chat) => void;
   onAssignAgent?: (chat: Chat) => void;
   onCloseChat?: (chat: Chat) => void;
@@ -124,7 +129,7 @@ export function OptimizedChatList({
 
   // Handle selection changes
   const handleSelectionChange = useCallback((selectedChats: Chat[]) => {
-    console.log('Selected chats:', selectedChats.length);
+    // Selection changes handled internally by component
   }, []);
 
   if (loading) {
@@ -154,4 +159,4 @@ export function OptimizedChatList({
 }
 
 // Memoized version for better performance
-export const MemoizedOptimizedChatList = React.memo(OptimizedChatList);
+export const MemoizedOptimizedChatList = memo(OptimizedChatList);

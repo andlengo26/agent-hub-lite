@@ -1,4 +1,4 @@
-import React from 'react';
+import type { ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -7,7 +7,7 @@ import { Download, Archive, Trash2, X } from 'lucide-react';
 interface BulkAction {
   id: string;
   label: string;
-  icon: React.ReactNode;
+  icon: ReactNode;
   variant?: 'default' | 'secondary' | 'destructive' | 'outline';
   onClick: () => void;
 }
@@ -33,21 +33,21 @@ export function BulkActionsToolbar({
       label: 'Export',
       icon: <Download className="h-4 w-4" />,
       variant: 'outline',
-      onClick: () => console.log('Export selected'),
+      onClick: () => {}, // Export action handler
     },
     {
       id: 'archive',
       label: 'Archive',
       icon: <Archive className="h-4 w-4" />,
       variant: 'outline',
-      onClick: () => console.log('Archive selected'),
+      onClick: () => {}, // Archive action handler
     },
     {
       id: 'delete',
       label: 'Delete',
       icon: <Trash2 className="h-4 w-4" />,
       variant: 'destructive',
-      onClick: () => console.log('Delete selected'),
+      onClick: () => {}, // Delete action handler
     },
   ];
 

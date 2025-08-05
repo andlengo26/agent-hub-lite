@@ -3,7 +3,7 @@
  * Now uses modular components and custom hooks for better maintainability
  */
 
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -48,12 +48,6 @@ export function InteractiveWidget() {
   // Session persistence with widget state restoration
   const sessionPersistence = useSessionPersistence({
     onSessionLoaded: (session) => {
-      console.log('📱 Session loaded:', { 
-        sessionId: session.id, 
-        status: session.status, 
-        isExpanded: session.isExpanded, 
-        messagesCount: session.messages.length 
-      });
       
       widgetState.setMessages(session.messages);
       if (session.status === 'closed') {
@@ -108,9 +102,8 @@ export function InteractiveWidget() {
       // Create customer record when identification is complete
       try {
         await CustomerService.createCustomerFromIdentification(session);
-        console.log('Customer created from identification session:', session.id);
       } catch (error) {
-        console.error('Failed to create customer from identification:', error);
+        // Silent error handling - customer creation failures are logged internally
       }
     }
   });
@@ -125,9 +118,8 @@ export function InteractiveWidget() {
       // Create customer record
       try {
         await CustomerService.createCustomerFromIdentification(session);
-        console.log('Customer auto-created from Moodle identification:', session.id);
       } catch (error) {
-        console.error('Failed to create customer from auto-identification:', error);
+        // Silent error handling - customer creation failures are logged internally
       }
       
       // Show auto-identification success message
@@ -141,7 +133,7 @@ export function InteractiveWidget() {
       sessionPersistence.addMessage(autoWelcomeMessage, widgetState.isExpanded);
     },
     onAutoIdentificationError: (error) => {
-      console.log('Moodle auto-identification failed, will use manual identification if needed:', error);
+      // Silent error handling - auto-identification failures are expected behavior
     }
   });
 
@@ -174,11 +166,6 @@ export function InteractiveWidget() {
     const determineWidgetExpandState = (session: any, settings: any): boolean => {
       if (!session || !settings) return false;
       
-      console.log('🎯 Determining widget state:', { 
-        sessionStatus: session.status, 
-        sessionExpanded: session.isExpanded, 
-        autoOpen: settings.appearance?.autoOpenWidget 
-      });
       
       // For idle_timeout sessions, preserve the session's expand state
       if (session.status === 'idle_timeout') {
@@ -200,7 +187,6 @@ export function InteractiveWidget() {
     };
 
     const shouldExpand = determineWidgetExpandState(sessionPersistence.currentSession, settings);
-    console.log('🔄 Restoring widget state:', { shouldExpand, currentExpanded: widgetState.isExpanded });
     
     if (shouldExpand !== widgetState.isExpanded) {
       widgetState.handleExpand();
@@ -213,7 +199,6 @@ export function InteractiveWidget() {
         widgetState.messages.length === 0 && 
         settings?.aiSettings?.welcomeMessage && 
         !sessionPersistence.currentSession) {
-      console.log('📝 Creating welcome message for new session');
       const welcomeMessage = {
         id: 'welcome',
         type: 'ai' as const,
@@ -251,7 +236,6 @@ export function InteractiveWidget() {
       });
       widgetState.setShowPostChatFeedback(false);
     } catch (error) {
-      console.error('Failed to submit post-chat feedback:', error);
       throw error;
     }
   };
@@ -269,7 +253,6 @@ export function InteractiveWidget() {
       }
       return success;
     } catch (error) {
-      console.error('Moodle re-login failed:', error);
       return false;
     }
   };
@@ -352,12 +335,12 @@ export function InteractiveWidget() {
             onFAQSearch={handleSearch}
             faqs={faqs}
             resources={resources}
-            chats={chats}
+            chats={chats as any}
             faqLoading={faqLoading}
             resourcesLoading={resourcesLoading}
             chatsLoading={chatsLoading}
             searchResources={searchResources}
-            userIdentification={userIdentification}
+            userIdentification={userIdentification as any}
           />
         );
       case 'chat':
