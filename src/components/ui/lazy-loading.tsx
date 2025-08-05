@@ -1,0 +1,252 @@
+/**
+ * Lazy Loading Component Utilities
+ * Dynamic imports and code splitting for performance
+ */
+
+import React, { Suspense, lazy, ComponentType } from 'react';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Card } from '@/components/ui/card';
+import { Loader2 } from 'lucide-react';
+
+// Generic lazy loading wrapper
+export function createLazyComponent<T extends ComponentType<any>>(
+  importFn: () => Promise<{ default: T }>,
+  fallback?: React.ReactNode
+): React.ComponentType<React.ComponentProps<T>> {
+  const LazyComponent = lazy(importFn);
+  
+  return React.forwardRef<any, React.ComponentProps<T>>((props, ref) => (
+    <Suspense fallback={fallback || <DefaultLazyFallback />}>
+      <LazyComponent {...props} ref={ref} />
+    </Suspense>
+  ));
+}
+
+// Default loading fallback
+export const DefaultLazyFallback: React.FC = () => (
+  <Card className="p-6">
+    <div className="flex items-center justify-center space-x-2">
+      <Loader2 className="h-4 w-4 animate-spin" />
+      <span className="text-sm text-muted-foreground">Loading...</span>
+    </div>
+  </Card>
+);
+
+// Skeleton fallback for different component types
+export const SkeletonFallback: React.FC<{
+  type?: 'table' | 'form' | 'card' | 'list';
+  lines?: number;
+}> = ({ type = 'card', lines = 3 }) => {
+  switch (type) {
+    case 'table':
+      return (
+        <Card className="p-6">
+          <Skeleton className="h-8 w-48 mb-4" />
+          <div className="space-y-3">
+            {Array.from({ length: lines }).map((_, i) => (
+              <Skeleton key={i} className="h-12 w-full" />
+            ))}
+          </div>
+        </Card>
+      );
+    
+    case 'form':
+      return (
+        <Card className="p-6">
+          <div className="space-y-4">
+            {Array.from({ length: lines }).map((_, i) => (
+              <div key={i} className="space-y-2">
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-10 w-full" />
+              </div>
+            ))}
+          </div>
+        </Card>
+      );
+    
+    case 'list':
+      return (
+        <div className="space-y-3">
+          {Array.from({ length: lines }).map((_, i) => (
+            <div key={i} className="flex items-center space-x-3">
+              <Skeleton className="h-10 w-10 rounded-full" />
+              <div className="space-y-2 flex-1">
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-3 w-3/4" />
+              </div>
+            </div>
+          ))}
+        </div>
+      );
+    
+    default:
+      return (
+        <Card className="p-6">
+          <div className="space-y-3">
+            {Array.from({ length: lines }).map((_, i) => (
+              <Skeleton key={i} className="h-4 w-full" />
+            ))}
+          </div>
+        </Card>
+      );
+  }
+};
+
+// Higher-order component for lazy loading with intersection observer
+export function withLazyLoading<P extends object>(
+  Component: ComponentType<P>,
+  options: {
+    fallback?: React.ReactNode;
+    rootMargin?: string;
+    threshold?: number;
+  } = {}
+) {
+  const { fallback = <DefaultLazyFallback />, rootMargin = '50px', threshold = 0.1 } = options;
+  
+  return React.forwardRef<any, P & { lazy?: boolean }>((props, ref) => {
+    const { lazy = true, ...componentProps } = props;
+    const [isVisible, setIsVisible] = React.useState(!lazy);
+    const elementRef = React.useRef<HTMLDivElement>(null);
+
+    React.useEffect(() => {
+      if (!lazy || isVisible) return;
+
+      const observer = new IntersectionObserver(
+        ([entry]) => {
+          if (entry.isIntersecting) {
+            setIsVisible(true);
+            observer.disconnect();
+          }
+        },
+        { rootMargin, threshold }
+      );
+
+      if (elementRef.current) {
+        observer.observe(elementRef.current);
+      }
+
+      return () => observer.disconnect();
+    }, [lazy, isVisible, rootMargin, threshold]);
+
+    if (!isVisible) {
+      return <div ref={elementRef}>{fallback}</div>;
+    }
+
+    return <Component {...(componentProps as P)} ref={ref} />;
+  });
+}
+
+// Lazy loading hook for components
+export function useLazyComponent<T extends ComponentType<any>>(
+  importFn: () => Promise<{ default: T }>,
+  deps: React.DependencyList = []
+) {
+  const [Component, setComponent] = React.useState<T | null>(null);
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState<Error | null>(null);
+
+  React.useEffect(() => {
+    let cancelled = false;
+    
+    setLoading(true);
+    setError(null);
+    
+    importFn()
+      .then(module => {
+        if (!cancelled) {
+          setComponent(() => module.default);
+          setLoading(false);
+        }
+      })
+      .catch(err => {
+        if (!cancelled) {
+          setError(err);
+          setLoading(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, deps);
+
+  return { Component, loading, error };
+}
+
+// Dynamic import utilities for common patterns
+export const LazyImports = {
+  // Admin components
+  ChatPanel: () => import('@/components/admin/ChatPanel'),
+  EngagementAccordion: () => import('@/components/admin/EngagementAccordion'),
+  AgentConsoleLayout: () => import('@/components/admin/agent-console/AgentConsoleLayout'),
+  
+  // Settings components
+  WidgetSettings: () => import('@/pages/admin/settings/WidgetManagement'),
+  MoodleConfiguration: () => import('@/pages/admin/settings/MoodleConfiguration'),
+  
+  // Content components
+  DocumentUploadModal: () => import('@/components/modals/DocumentUploadModal'),
+  FAQModal: () => import('@/components/modals/FAQModal'),
+  ResourceModal: () => import('@/components/modals/ResourceModal'),
+  
+  // Widget components
+  InteractiveWidget: () => import('@/components/admin/InteractiveWidget'),
+  WidgetPreview: () => import('@/components/widget/WidgetPreview'),
+  
+  // Chart components (heavy dependencies)
+  ChartComponents: () => import('@/components/ui/chart'),
+  
+  // Moodle module
+  MoodleComponents: () => import('@/modules/moodle'),
+};
+
+// Pre-built lazy components for common use cases
+export const LazyChatPanel = createLazyComponent(
+  LazyImports.ChatPanel,
+  <SkeletonFallback type="card" lines={4} />
+);
+
+export const LazyEngagementAccordion = createLazyComponent(
+  LazyImports.EngagementAccordion,
+  <SkeletonFallback type="list" lines={3} />
+);
+
+export const LazyAgentConsole = createLazyComponent(
+  LazyImports.AgentConsoleLayout,
+  <SkeletonFallback type="table" lines={5} />
+);
+
+export const LazyWidgetSettings = createLazyComponent(
+  LazyImports.WidgetSettings,
+  <SkeletonFallback type="form" lines={6} />
+);
+
+export const LazyInteractiveWidget = createLazyComponent(
+  LazyImports.InteractiveWidget,
+  <div className="w-16 h-16 bg-primary/10 rounded-full animate-pulse" />
+);
+
+// Preload utility for better UX
+export const preloadComponent = (importFn: () => Promise<any>) => {
+  // Preload on mouseover or focus for better perceived performance
+  return () => {
+    importFn().catch(() => {
+      // Silently fail preloading, component will load normally when needed
+    });
+  };
+};
+
+// Resource preloading hook
+export function usePreloadResources(resources: Array<() => Promise<any>>, delay: number = 2000) {
+  React.useEffect(() => {
+    const timer = setTimeout(() => {
+      resources.forEach(resource => {
+        resource().catch(() => {
+          // Ignore preload errors
+        });
+      });
+    }, delay);
+
+    return () => clearTimeout(timer);
+  }, [resources, delay]);
+}
