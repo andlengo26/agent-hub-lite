@@ -54,6 +54,7 @@ export function InteractiveWidget() {
   const [selectedMessage, setSelectedMessage] = useState<any>(null);
   const [hasActiveChat, setHasActiveChat] = useState(false);
   const [lastDetailPanel, setLastDetailPanel] = useState<'faq-detail' | 'resource-detail' | 'message-detail' | null>(null);
+  const [hasUserSentFirstMessage, setHasUserSentFirstMessage] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { settings } = useWidgetSettings();
   const { currentOrg } = useTenant();
@@ -351,8 +352,9 @@ export function InteractiveWidget() {
       return; // Spam prevention will show its own toast
     }
 
-    // Check if user identification is required
-    if (!userIdentification.canSendMessage()) {
+    // Check if user identification is required (only for subsequent messages, not the first)
+    const isFirstMessage = !hasUserSentFirstMessage;
+    if (!isFirstMessage && !userIdentification.canSendMessage()) {
       // Add identification message to the conversation
       const identificationMessage: Message = {
         id: `identification_${Date.now()}`,
@@ -380,6 +382,11 @@ export function InteractiveWidget() {
     sessionPersistence.updateLastInteraction?.();
     setIsTyping(true);
 
+    // Mark that user has sent their first message
+    if (isFirstMessage) {
+      setHasUserSentFirstMessage(true);
+    }
+
     // Simulate AI response with user context (only for non-welcome messages)
     setTimeout(() => {
       const isWelcomeMessage = messages.length === 0 || 
@@ -405,6 +412,21 @@ export function InteractiveWidget() {
       // Start the AI session timer on first AI response
       if (messages.length === 1) { // welcome message + user message = 2, so first AI response
         startAISession();
+      }
+
+      // After AI responds to first message, check if identification is needed
+      if (isFirstMessage && userIdentification.isRequired && !userIdentification.isCompleted) {
+        // Show identification form after AI response (auto-identification happens on widget load)
+        setTimeout(() => {
+          const identificationMessage: Message = {
+            id: `identification_${Date.now()}`,
+            type: 'identification',
+            timestamp: new Date(),
+            isCompleted: false
+          };
+          setMessages(prev => [...prev, identificationMessage]);
+          sessionPersistence.addMessage(identificationMessage, isExpanded);
+        }, 500);
       }
     }, 1000 + Math.random() * 2000);
   };
@@ -1051,9 +1073,13 @@ export function InteractiveWidget() {
                 <Input
                   value={inputValue}
                   onChange={(e) => setInputValue(e.target.value)}
-                  placeholder={userIdentification.canSendMessage() ? "Type your message..." : "Complete identification to send messages"}
+                  placeholder={
+                    !hasUserSentFirstMessage || userIdentification.canSendMessage() 
+                      ? "Type your message..." 
+                      : "Complete identification to send messages"
+                  }
                   className="min-h-[40px] pr-24"
-                  disabled={!userIdentification.canSendMessage()}
+                  disabled={hasUserSentFirstMessage && !userIdentification.canSendMessage()}
                 />
                 <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex gap-1">
                   <Button
@@ -1081,7 +1107,7 @@ export function InteractiveWidget() {
               <Button
                 type="submit"
                 size="sm"
-                disabled={!inputValue.trim() || !userIdentification.canSendMessage()}
+                disabled={!inputValue.trim() || (hasUserSentFirstMessage && !userIdentification.canSendMessage())}
                 style={{ backgroundColor: appearance.primaryColor, color: '#ffffff' }}
               >
                 <Send className="h-4 w-4" />
