@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { SettingsProvider, useSettings } from '@/contexts/SettingsContext';
+import { adaptSettingsForTabs, createUpdateSettingsWrapper } from '@/components/admin/settings/SettingsAdapter';
 import { Loader2, Check } from 'lucide-react';
 import {
   SetupIntegrationTab,
@@ -21,9 +22,12 @@ import {
 // Internal component that uses the settings context
 function WidgetManagementContent() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const { settings, loading, saving, saveSettings, error } = useSettings();
+  const { settings, loading, saving, saveSettings, error, updateSettings: updateSettingsContext } = useSettings();
   const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'setup');
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+
+  // Create compatibility wrapper for legacy updateSettings
+  const updateSettings = createUpdateSettingsWrapper(updateSettingsContext);
 
   useEffect(() => {
     const tab = searchParams.get('tab');
@@ -61,7 +65,10 @@ function WidgetManagementContent() {
     );
   }
 
-  if (!settings) {
+  // Adapt consolidated settings to legacy format for existing tabs
+  const adaptedSettings = settings ? adaptSettingsForTabs(settings) : null;
+
+  if (!adaptedSettings) {
     return (
       <div className="text-center py-8">
         <p className="text-muted-foreground">Failed to load widget settings</p>
@@ -102,23 +109,23 @@ function WidgetManagementContent() {
             </TabsList>
 
             <TabsContent value="setup" className="space-y-4">
-              <SetupIntegrationTab settings={settings} />
+              <SetupIntegrationTab settings={adaptedSettings} updateSettings={updateSettings} />
             </TabsContent>
 
             <TabsContent value="access" className="space-y-4">
-              <UserAccessAuthTab settings={settings} />
+              <UserAccessAuthTab settings={adaptedSettings} updateSettings={updateSettings} />
             </TabsContent>
 
             <TabsContent value="ai" className="space-y-4">
-              <AIBehaviorRoutingTab settings={settings} />
+              <AIBehaviorRoutingTab settings={adaptedSettings} updateSettings={updateSettings} />
             </TabsContent>
 
             <TabsContent value="appearance" className="space-y-4">
-              <AppearancePlacementTab settings={settings} />
+              <AppearancePlacementTab settings={adaptedSettings} updateSettings={updateSettings} />
             </TabsContent>
 
             <TabsContent value="advanced" className="space-y-4">
-              <AdvancedFeaturesTab settings={settings} />
+              <AdvancedFeaturesTab settings={adaptedSettings} updateSettings={updateSettings} />
             </TabsContent>
           </Tabs>
           

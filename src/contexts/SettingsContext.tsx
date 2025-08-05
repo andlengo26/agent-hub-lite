@@ -47,6 +47,7 @@ export interface UserInfoSettings {
 }
 
 export interface IntegrationsSettings {
+  apiKey: string;
   aiModel: string;
   moodle: {
     enabled: boolean;
@@ -157,6 +158,7 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
       requiredFields: originalSettings.userInfo.requiredFields
     },
     integrations: {
+      apiKey: originalSettings.integrations.apiKey,
       aiModel: originalSettings.integrations.aiModel,
       moodle: originalSettings.integrations.moodle
     },
