@@ -1,6 +1,6 @@
 /**
  * User identification form for the chat widget
- * Supports both manual form submission and Moodle authentication
+ * Updated to use consolidated Moodle module
  */
 
 import React, { useState } from 'react';
@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
-import { MoodleLoginButton } from './MoodleLoginButton';
+import { MoodleLoginButton } from '@/modules/moodle/components/MoodleLoginButton';
 import { WidgetSettings } from '@/hooks/useWidgetSettings';
 import { IdentificationFormData, IdentificationValidationResult, IdentificationSession } from '@/types/user-identification';
 

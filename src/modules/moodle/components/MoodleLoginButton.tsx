@@ -1,14 +1,14 @@
 /**
- * Moodle Login Button Component
- * Handles Moodle authentication flow in the chat widget
+ * Consolidated Moodle Login Button
+ * Uses the unified Moodle service
  */
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { LogIn, Loader2, AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { MoodleAuthService } from '@/services/moodleAuthService';
-import { MoodleConfig } from '@/types/moodle';
+import { MoodleAuthService } from '../services/MoodleAuthService';
+import { MoodleConfig } from '../types';
 import { IdentificationSession } from '@/types/user-identification';
 
 interface MoodleLoginButtonProps {

@@ -1,10 +1,10 @@
 /**
- * Moodle Authentication Service
- * Handles authentication with Moodle LMS systems
+ * Consolidated Moodle Authentication Service
+ * Handles all Moodle authentication operations
  */
 
 import { UserIdentificationData, IdentificationSession } from '@/types/user-identification';
-import { MoodleConfig, MoodleUserInfo, MoodleAuthResponse, MoodleValidationError } from '@/types/moodle';
+import { MoodleConfig, MoodleUserInfo, MoodleAuthResponse } from '../types';
 
 export class MoodleAuthService {
   /**
@@ -214,5 +214,17 @@ export class MoodleAuthService {
     }
 
     return errors;
+  }
+
+  /**
+   * Clear Moodle session data
+   */
+  static clearMoodleSession(): void {
+    try {
+      localStorage.removeItem('widget_user_identification');
+      sessionStorage.removeItem('moodle_session');
+    } catch (error) {
+      console.warn('Failed to clear Moodle session:', error);
+    }
   }
 }

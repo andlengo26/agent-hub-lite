@@ -1,5 +1,6 @@
 /**
- * Prompt for Moodle re-login to merge chat history
+ * Consolidated Moodle Re-Login Prompt
+ * Moved from widget components to Moodle module
  */
 
 import { useState } from 'react';

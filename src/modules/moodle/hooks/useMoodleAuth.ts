@@ -1,19 +1,15 @@
 /**
- * Hook for handling Moodle authentication
- * Extracted from useUserIdentification for better separation of concerns
+ * Moodle Authentication Hook
+ * Simplified auth hook using the consolidated service
  */
 
 import { useCallback } from 'react';
-import { MoodleAuthService } from '@/services/moodleAuthService';
-import { MoodleConfig } from '@/types/moodle';
+import { MoodleAuthService } from '../services/MoodleAuthService';
+import { MoodleConfig } from '../types';
 import { IdentificationSession } from '@/types/user-identification';
+import { MoodleAuthHookProps } from '../types';
 
-interface UseMoodleAuthProps {
-  onSuccess: (session: IdentificationSession) => void;
-  onError: (error: string) => void;
-}
-
-export function useMoodleAuth({ onSuccess, onError }: UseMoodleAuthProps) {
+export function useMoodleAuth({ onSuccess, onError }: MoodleAuthHookProps) {
   
   const authenticateWithMoodle = useCallback(async (moodleConfig: MoodleConfig): Promise<boolean> => {
     try {

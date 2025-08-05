@@ -1,36 +1,14 @@
 /**
- * Unified Moodle Provider
- * Consolidates all Moodle-related logic into a single context
+ * Consolidated Moodle Provider
+ * Single context provider for all Moodle functionality
  */
 
-import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
-import { MoodleAuthService } from '@/services/moodleAuthService';
-import { MoodleConfig, MoodleUserInfo, MoodleAuthResponse } from '@/types/moodle';
+import React, { createContext, useState, useCallback, useEffect } from 'react';
+import { MoodleAuthService } from '../services/MoodleAuthService';
+import { MoodleConfig, MoodleUserInfo, MoodleAuthResponse, MoodleContextValue } from '../types';
 import { IdentificationSession } from '@/types/user-identification';
 
-interface MoodleContextValue {
-  // State
-  isAuthenticated: boolean;
-  currentUser: MoodleUserInfo | null;
-  isAuthenticating: boolean;
-  authError: string | null;
-  config: MoodleConfig | null;
-  
-  // Actions
-  authenticate: (credentials?: { username: string; password: string }) => Promise<MoodleAuthResponse>;
-  logout: () => void;
-  attemptAutoAuthentication: () => Promise<boolean>;
-  resetAuthentication: () => void;
-  
-  // Utilities
-  createIdentificationSession: (user: MoodleUserInfo) => IdentificationSession;
-  validateMoodleConfig: (config: MoodleConfig) => { isValid: boolean; errors: string[] };
-  
-  // Error handling
-  clearError: () => void;
-}
-
-const MoodleContext = createContext<MoodleContextValue | null>(null);
+export const MoodleContext = createContext<MoodleContextValue | null>(null);
 
 interface MoodleProviderProps {
   children: React.ReactNode;
@@ -95,14 +73,7 @@ export function MoodleProvider({
     setIsAuthenticated(false);
     setCurrentUser(null);
     setAuthError(null);
-    // Clear any stored Moodle session data
-    try {
-      if (MoodleAuthService && 'clearMoodleSession' in MoodleAuthService) {
-        (MoodleAuthService as any).clearMoodleSession();
-      }
-    } catch (error) {
-      console.log('Failed to clear Moodle session:', error);
-    }
+    MoodleAuthService.clearMoodleSession();
   }, []);
 
   const attemptAutoAuthentication = useCallback(async (): Promise<boolean> => {
@@ -203,12 +174,4 @@ export function MoodleProvider({
       {children}
     </MoodleContext.Provider>
   );
-}
-
-export function useMoodle() {
-  const context = useContext(MoodleContext);
-  if (!context) {
-    throw new Error('useMoodle must be used within a MoodleProvider');
-  }
-  return context;
 }

@@ -1,24 +1,19 @@
 /**
- * Hook for automatically identifying Moodle users when the widget loads
+ * Moodle Auto-Identification Hook
+ * Handles automatic user identification when widget loads
  */
 
 import { useEffect, useCallback, useRef } from 'react';
-import { MoodleAuthService } from '@/services/moodleAuthService';
-import { WidgetSettings } from '@/hooks/useWidgetSettings';
+import { MoodleAuthService } from '../services/MoodleAuthService';
 import { IdentificationSession } from '@/types/user-identification';
 import { useToast } from '@/hooks/use-toast';
-
-interface UseMoodleAutoIdentificationProps {
-  settings: WidgetSettings | null;
-  onAutoIdentificationSuccess: (session: IdentificationSession) => void;
-  onAutoIdentificationError?: (error: string) => void;
-}
+import { MoodleAutoIdentificationProps } from '../types';
 
 export function useMoodleAutoIdentification({
   settings,
   onAutoIdentificationSuccess,
   onAutoIdentificationError
-}: UseMoodleAutoIdentificationProps) {
+}: MoodleAutoIdentificationProps) {
   const { toast } = useToast();
   const attemptedAutoAuth = useRef(false);
 
