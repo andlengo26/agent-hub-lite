@@ -3,6 +3,8 @@ import { MessageCircle, X, Maximize2, Minimize2, Send, Paperclip, Mic, MicOff, P
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { MoodleLoginButton } from "@/components/widget/MoodleLoginButton";
 import { useWidgetSettings } from "@/hooks/useWidgetSettings";
 import { useToast } from "@/hooks/use-toast";
 import { useConversationLifecycle } from "@/hooks/useConversationLifecycle";
@@ -1067,6 +1069,92 @@ export function InteractiveWidget() {
 
         {/* Fixed Input Area */}
         <div className="border-t border-border bg-background pt-4 px-4 pb-4 shrink-0">
+          {/* User identification form if required */}
+          {hasUserSentFirstMessage && !userIdentification.canSendMessage() && (
+            <div className="mb-4 p-4 bg-muted rounded-lg space-y-3">
+              <div className="text-sm font-medium">Complete your identification to continue:</div>
+              
+              {/* Manual identification form */}
+              {settings?.userInfo?.enableManualForm && (
+                <div className="space-y-3">
+                  {settings.userInfo.requiredFields.name && (
+                    <div className="space-y-1">
+                      <Label htmlFor="id-name" className="text-xs">Name</Label>
+                      <Input
+                        id="id-name"
+                        type="text"
+                        value={userIdentification.formData.name}
+                        onChange={(e) => userIdentification.updateFormData('name', e.target.value)}
+                        className="text-sm h-8"
+                      />
+                      {userIdentification.validationResult?.errors.name && (
+                        <p className="text-xs text-destructive">{userIdentification.validationResult.errors.name}</p>
+                      )}
+                    </div>
+                  )}
+
+                  {settings.userInfo.requiredFields.email && (
+                    <div className="space-y-1">
+                      <Label htmlFor="id-email" className="text-xs">Email</Label>
+                      <Input
+                        id="id-email"
+                        type="email"
+                        value={userIdentification.formData.email}
+                        onChange={(e) => userIdentification.updateFormData('email', e.target.value)}
+                        className="text-sm h-8"
+                      />
+                      {userIdentification.validationResult?.errors.email && (
+                        <p className="text-xs text-destructive">{userIdentification.validationResult.errors.email}</p>
+                      )}
+                    </div>
+                  )}
+
+                  {settings.userInfo.requiredFields.mobile && (
+                    <div className="space-y-1">
+                      <Label htmlFor="id-mobile" className="text-xs">Mobile</Label>
+                      <Input
+                        id="id-mobile"
+                        type="tel"
+                        value={userIdentification.formData.mobile}
+                        onChange={(e) => userIdentification.updateFormData('mobile', e.target.value)}
+                        className="text-sm h-8"
+                      />
+                      {userIdentification.validationResult?.errors.mobile && (
+                        <p className="text-xs text-destructive">{userIdentification.validationResult.errors.mobile}</p>
+                      )}
+                    </div>
+                  )}
+
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={userIdentification.submitManualIdentification}
+                      className="flex-1 text-sm h-8"
+                      style={{ 
+                        backgroundColor: appearance.primaryColor,
+                        color: '#ffffff'
+                      }}
+                    >
+                      Continue
+                    </Button>
+                    
+                    {/* Moodle login button if enabled */}
+                    {settings?.userInfo?.enableMoodleAuth && settings?.integrations?.moodle?.enabled && (
+                      <MoodleLoginButton
+                        config={settings.integrations.moodle}
+                        onAuthSuccess={(session) => userIdentification.setIdentificationSession(session)}
+                        onAuthError={(error) => console.error('Moodle auth error:', error)}
+                        appearance={{
+                          primaryColor: appearance.primaryColor,
+                          textColor: '#ffffff'
+                        }}
+                      />
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
           <form onSubmit={(e) => { e.preventDefault(); handleSendMessage(); }} className="space-y-3">
             <div className="flex gap-2">
               <div className="flex-1 relative">
