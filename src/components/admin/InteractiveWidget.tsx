@@ -1,10 +1,14 @@
-import { useState, useRef, useEffect } from "react";
-import { MessageCircle, X, Maximize2, Minimize2, Send, Paperclip, Mic, MicOff, Phone, User, LogOut, Book, Home, MessageSquare, FileText, Search, ArrowLeft } from "lucide-react";
+import React from "react";
+import { MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { MoodleLoginButton } from "@/components/widget/MoodleLoginButton";
+import { Card, CardContent } from "@/components/ui/card";
+import { ChatWidgetHeader } from "@/components/widget/chat/ChatWidgetHeader";
+import { ChatPanel } from "@/components/widget/chat/ChatPanel";
+import { NavigationTabs } from "@/components/widget/chat/NavigationTabs";
+import { MainPanel } from "@/components/widget/chat/MainPanel";
+import { FAQDetailPanel, ResourceDetailPanel, MessageDetailPanel } from "@/components/widget/chat/DetailPanels";
+import { useWidgetState } from "@/hooks/widget/useWidgetState";
+import { useWidgetActions } from "@/hooks/widget/useWidgetActions";
 import { useWidgetSettings } from "@/hooks/useWidgetSettings";
 import { useToast } from "@/hooks/use-toast";
 import { useConversationLifecycle } from "@/hooks/useConversationLifecycle";
@@ -35,32 +39,11 @@ import { Message } from "@/types/message";
 import { IdentificationSession } from "@/types/user-identification";
 
 export function InteractiveWidget() {
-  const [isExpanded, setIsExpanded] = useState(false);
-  const [isMaximized, setIsMaximized] = useState(false);
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [inputValue, setInputValue] = useState("");
-  const [isTyping, setIsTyping] = useState(false);
-  const [isRecording, setIsRecording] = useState(false);
-  const [showQuotaWarning, setShowQuotaWarning] = useState(false);
-  const [showFAQBrowser, setShowFAQBrowser] = useState(false);
-  const [showResourceBrowser, setShowResourceBrowser] = useState(false);
-  const [showPostChatFeedback, setShowPostChatFeedback] = useState(false);
-  const [showMoodleReLoginPrompt, setShowMoodleReLoginPrompt] = useState(false);
-  const [isConversationClosed, setIsConversationClosed] = useState(false);
-  const [activeTab, setActiveTab] = useState<'home' | 'messages' | 'resources'>('home');
-  const [searchQuery, setSearchQuery] = useState("");
-  const [currentPanel, setCurrentPanel] = useState<'main' | 'chat' | 'faq-detail' | 'resource-detail' | 'message-detail'>('main');
-  const [selectedFAQ, setSelectedFAQ] = useState<any>(null);
-  const [selectedResource, setSelectedResource] = useState<any>(null);
-  const [selectedChat, setSelectedChat] = useState<any>(null);
-  const [selectedMessage, setSelectedMessage] = useState<any>(null);
-  const [hasActiveChat, setHasActiveChat] = useState(false);
-  const [lastDetailPanel, setLastDetailPanel] = useState<'faq-detail' | 'resource-detail' | 'message-detail' | null>(null);
-  const [hasUserSentFirstMessage, setHasUserSentFirstMessage] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
   const { settings } = useWidgetSettings();
   const { currentOrg } = useTenant();
-  const { toast } = useToast();
+  // Initialize widget state management
+  const widgetState = useWidgetState({ settings, sessionPersistence });
+  
   const { resources, loading: resourcesLoading, searchResources } = useResources();
   const { chats, loading: chatsLoading } = useChats();
   const { faqs, searchQuery: faqQuery, handleSearch, isLoading: faqLoading } = useFAQSearch();
