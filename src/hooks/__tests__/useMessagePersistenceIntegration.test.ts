@@ -162,7 +162,7 @@ describe('Message Persistence Integration', () => {
 
     // Trigger recovery
     act(() => {
-      result.current.forceRecovery();
+      result.current.syncConversation();
     });
 
     // Verify recovery was triggered

@@ -196,27 +196,24 @@ export function useWidgetState({ settings, conversationPersistence }: UseWidgetS
     }
   }, [conversationPersistence.isLoading, settings?.appearance?.autoOpenWidget, isExpanded, messages.length, conversationPersistence.conversationState]);
 
-  // CRITICAL: Deterministic state restoration with race condition prevention
+  // Basic state restoration - enhanced recovery handled by useMessageRecoveryEnhanced
   useEffect(() => {
     if (conversationPersistence.isLoading || !conversationPersistence.conversationState) return;
     
     const state = conversationPersistence.conversationState;
     
-    // Restore messages if we have them and current messages are empty
-    // IMPORTANT: Only restore when messages are truly empty to prevent duplicate restoration
+    // Only restore messages on initial load when current messages are empty
     if (state.messages?.length > 0 && messages.length === 0) {
-      logger.messagePersistence('RESTORING_MESSAGES_FROM_PERSISTENCE', {
+      logger.messagePersistence('INITIAL_MESSAGE_RESTORE', {
         persistedCount: state.messages.length,
-        currentCount: messages.length,
         conversationId: state.conversationId
       }, 'useWidgetState');
       
       const restoredMessages = state.messages.map(msg => ({
         ...msg,
-        timestamp: new Date(msg.timestamp) // Ensure timestamp is a Date object
+        timestamp: new Date(msg.timestamp)
       }));
       
-      // Use the persistence layer's updateMessages for consistency
       setMessages(restoredMessages);
       
       // Check if user has sent messages before
@@ -224,17 +221,6 @@ export function useWidgetState({ settings, conversationPersistence }: UseWidgetS
       if (hasUserMessages) {
         setHasUserSentFirstMessage(true);
       }
-      
-      logger.messagePersistence('MESSAGE_RESTORATION_COMPLETE', {
-        restoredCount: restoredMessages.length,
-        hasUserMessages
-      }, 'useWidgetState');
-    } else if (state.messages?.length > 0 && messages.length > 0) {
-      // Log potential race condition if both have messages
-      logger.raceCondition('RESTORATION_SKIPPED_BOTH_HAVE_MESSAGES', {
-        persistedCount: state.messages.length,
-        currentCount: messages.length
-      }, 'useWidgetState');
     }
     
     // Handle conversation status

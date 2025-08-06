@@ -22,8 +22,10 @@ import { useSpamPrevention } from "@/hooks/useSpamPrevention";
 import { useUserIdentification } from "@/hooks/useUserIdentification";
 import { useMoodleAutoIdentification } from "@/modules/moodle/hooks/useMoodleAutoIdentification";
 import { useConversationPersistence } from "@/hooks/useConversationPersistence";
+import { useMessageRecoveryEnhanced } from "@/hooks/useMessageRecoveryEnhanced";
 import { useTenant } from "@/contexts/TenantContext";
 import { ConversationEndModal } from "./ConversationEndModal";
+import { ConversationDebugPanel } from "./ConversationDebugPanel";
 import { FAQBrowser } from "@/components/widget/FAQBrowser";
 import { ResourceBrowser } from "@/components/widget/ResourceBrowser";
 import { ChatClosedState } from "@/components/widget/ChatClosedState";
@@ -50,6 +52,14 @@ export function InteractiveWidget() {
 
   // Initialize widget state management
   const widgetState = useWidgetState({ settings, conversationPersistence });
+  
+  // Enhanced message recovery with bidirectional sync
+  const messageRecovery = useMessageRecoveryEnhanced({
+    messages: widgetState.messages,
+    conversationPersistence,
+    setMessages: widgetState.setMessages,
+    debugMode: process.env.NODE_ENV === 'development'
+  });
 
   // Conversation lifecycle
   const {
@@ -423,6 +433,15 @@ export function InteractiveWidget() {
         />
 
         <CardContent className="flex-1 flex flex-col p-0 overflow-hidden">
+          {/* Debug Panel - Show in development */}
+          {messageRecovery.debugMode && (
+            <ConversationDebugPanel
+              messageRecovery={messageRecovery}
+              conversationState={conversationPersistence.conversationState}
+              currentMessages={widgetState.messages}
+            />
+          )}
+          
           {/* Main Content Area */}
           {widgetState.currentPanel === 'chat' ? (
             // For chat panel, render directly without extra padding/scrolling
