@@ -81,17 +81,20 @@ export function useWidgetActions({
       return; // Spam prevention will show its own toast
     }
 
-    // Check if user identification is required (only for subsequent messages, not the first)
+    // Check if user identification is required
     const isFirstMessage = !hasUserSentFirstMessage;
-    if (!isFirstMessage && !userIdentification.canSendMessage()) {
-      // Add identification message to the conversation
-      const identificationMessage: Message = {
-        id: `identification_${Date.now()}`,
-        type: 'identification',
-        timestamp: new Date(),
-        isCompleted: false
-      };
-      setMessages(prev => [...prev, identificationMessage]);
+    if (!userIdentification.canSendMessage()) {
+      // Add identification message to the conversation if it's not the first message
+      if (!isFirstMessage) {
+        const identificationMessage: Message = {
+          id: `identification_${Date.now()}`,
+          type: 'identification',
+          timestamp: new Date(),
+          isCompleted: false
+        };
+        setMessages(prev => [...prev, identificationMessage]);
+        sessionPersistence.addMessage?.(identificationMessage, isExpanded);
+      }
       return;
     }
 
@@ -116,48 +119,52 @@ export function useWidgetActions({
       setHasUserSentFirstMessage(true);
     }
 
-    // Simulate AI response with user context
-    setTimeout(() => {
-      const isWelcomeMessage = messages.length === 0 || 
-        (messages.length === 1 && messages[0].type === 'ai' && messages[0].content.includes(settings?.aiSettings?.welcomeMessage || ''));
-      
-      const userContext = userIdentification.getUserContext();
-      const contextSuffix = !isWelcomeMessage && userContext ? ` (${userContext})` : '';
-      
-      const aiResponse: Message = {
-        id: (Date.now() + 1).toString(),
-        type: 'ai',
-        content: `Thank you for your message: "${userMessage.content}". This is a demo response from the ${settings?.aiSettings?.assistantName}. In production, this would connect to your configured AI model (${settings?.integrations?.aiModel}) to provide intelligent responses.${contextSuffix}`,
-        timestamp: new Date(),
-        feedbackSubmitted: false
-      };
-      
-      setMessages(prev => [...prev, aiResponse]);
-      sessionPersistence.addMessage?.(aiResponse, isExpanded);
-      incrementMessageCount();
-      messageQuota.incrementQuota();
-      sessionPersistence.updateLastInteraction?.();
-      setIsTyping(false);
-      
-      // Start the AI session timer on first AI response
-      if (messages.length === 1) {
-        startAISession();
-      }
+    // Generate AI response only if user is identified or it's the first message
+    if (userIdentification.canSendMessage() || isFirstMessage) {
+      // Simulate AI response with user context
+      setTimeout(() => {
+        const isWelcomeMessage = messages.length === 0 || 
+          (messages.length === 1 && messages[0].type === 'ai' && messages[0].content.includes(settings?.aiSettings?.welcomeMessage || ''));
+        
+        const userContext = userIdentification.getUserContext();
+        const contextSuffix = !isWelcomeMessage && userContext ? ` (${userContext})` : '';
+        
+        const aiResponse: Message = {
+          id: (Date.now() + 1).toString(),
+          type: 'ai',
+          content: `Thank you for your message: "${userMessage.content}". This is a demo response from the ${settings?.aiSettings?.assistantName}. In production, this would connect to your configured AI model (${settings?.integrations?.aiModel}) to provide intelligent responses.${contextSuffix}`,
+          timestamp: new Date(),
+          feedbackSubmitted: false
+        };
+        
+        setMessages(prev => [...prev, aiResponse]);
+        sessionPersistence.addMessage?.(aiResponse, isExpanded);
+        incrementMessageCount();
+        messageQuota.incrementQuota();
+        sessionPersistence.updateLastInteraction?.();
+        setIsTyping(false);
+        
+        // Start the AI session timer on first AI response
+        if (messages.length === 1) {
+          startAISession();
+        }
+      }, 1000 + Math.random() * 2000);
+    }
 
-      // After AI responds to first message, check if identification is needed
-      if (isFirstMessage && userIdentification.isRequired && !userIdentification.isCompleted) {
-        setTimeout(() => {
-          const identificationMessage: Message = {
-            id: `identification_${Date.now()}`,
-            type: 'identification',
-            timestamp: new Date(),
-            isCompleted: false
-          };
-          setMessages(prev => [...prev, identificationMessage]);
-          sessionPersistence.addMessage?.(identificationMessage, isExpanded);
-        }, 500);
-      }
-    }, 1000 + Math.random() * 2000);
+    // After first message, check if identification is needed
+    if (isFirstMessage && userIdentification.isRequired && !userIdentification.isCompleted) {
+      setTimeout(() => {
+        const identificationMessage: Message = {
+          id: `identification_${Date.now()}`,
+          type: 'identification',
+          timestamp: new Date(),
+          isCompleted: false
+        };
+        setMessages(prev => [...prev, identificationMessage]);
+        sessionPersistence.addMessage?.(identificationMessage, isExpanded);
+        setIsTyping(false); // Stop typing for identification prompt
+      }, 1500); // Delay to allow first AI response
+    }
   }, [
     conversationState.status,
     messageQuota,
@@ -311,9 +318,32 @@ export function useWidgetActions({
       };
       
       sessionPersistence.addMessage?.(acknowledgmentMessage, isExpanded);
+      
+      // Generate AI response to the last user message if there was one pending
+      const lastUserMessage = filtered[filtered.length - 1];
+      if (lastUserMessage && lastUserMessage.type === 'user') {
+        setTimeout(() => {
+          const userContext = `${userData.name || 'User'}${userData.email ? ` (${userData.email})` : ''}`;
+          const contextSuffix = ` (${userContext})`;
+          
+          const aiResponse: Message = {
+            id: `ai_${Date.now()}`,
+            type: 'ai',
+            content: `Thank you for your message: "${lastUserMessage.content}". This is a demo response from the ${settings?.aiSettings?.assistantName}. In production, this would connect to your configured AI model (${settings?.integrations?.aiModel}) to provide intelligent responses.${contextSuffix}`,
+            timestamp: new Date(),
+            feedbackSubmitted: false
+          };
+          
+          setMessages(current => [...current, aiResponse]);
+          sessionPersistence.addMessage?.(aiResponse, isExpanded);
+          incrementMessageCount();
+          messageQuota.incrementQuota();
+        }, 1000);
+      }
+      
       return [...filtered, acknowledgmentMessage];
     });
-  }, [setMessages, sessionPersistence, isExpanded]);
+  }, [setMessages, sessionPersistence, isExpanded, settings, incrementMessageCount, messageQuota]);
 
   const handleFAQSelect = useCallback((question: string, answer: string) => {
     const faqMessage: Message = {

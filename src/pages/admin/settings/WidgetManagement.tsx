@@ -168,18 +168,9 @@ function WidgetManagementContent() {
 // Main component with SettingsProvider wrapper
 export default function WidgetManagement() {
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Widget Management</h1>
-        <p className="text-muted-foreground">
-          Configure your customer support widget settings with the new unified architecture
-        </p>
-      </div>
-
-      <SettingsProvider>
-        <WidgetManagementContent />
-        <InteractiveWidget />
-      </SettingsProvider>
-    </div>
+    <SettingsProvider>
+      <WidgetManagementContent />
+      <InteractiveWidget />
+    </SettingsProvider>
   );
 }
