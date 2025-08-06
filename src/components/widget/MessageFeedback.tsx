@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { ThumbsUp, ThumbsDown } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { logger } from '@/lib/logger';
 
 interface MessageFeedbackProps {
   messageId: string;
@@ -40,7 +41,7 @@ export function MessageFeedback({ messageId, onFeedback, disabled = false, appea
         description: type === 'positive' ? "We're glad this was helpful!" : "We'll use your feedback to improve.",
       });
     } catch (error) {
-      console.error('Failed to submit feedback:', error);
+      logger.error('Failed to submit feedback', error);
       toast({
         title: "Error",
         description: "Failed to submit feedback. Please try again.",

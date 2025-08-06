@@ -30,6 +30,7 @@ import {
   Paperclip
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { logger } from '@/lib/logger';
 
 interface EmailComposerProps {
   isOpen: boolean;
@@ -97,7 +98,7 @@ Customer Support Team`
       });
       onClose();
     } catch (error) {
-      console.error('Failed to send email:', error);
+      logger.error('Failed to send email', error);
     } finally {
       setIsSending(false);
     }

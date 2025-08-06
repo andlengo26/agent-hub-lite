@@ -22,6 +22,7 @@ import { toast } from "@/hooks/use-toast";
 import { isWithinInterval, parseISO } from "date-fns";
 import { applySectionVisibility } from '@/lib/chat-utils';
 import { getSectionVisibility } from '@/lib/section-visibility';
+import { logger } from '@/lib/logger';
 
 
 
@@ -110,9 +111,11 @@ export default function MyChats() {
   });
 
   // Debug logging
-  console.log('MyChats - Current user:', currentUser?.id);
-  console.log('MyChats - Filtered chats count:', allChats.length);
-  console.log('MyChats - All chats sample:', allChats.slice(0, 3));
+  logger.debug('MyChats state', {
+    currentUserId: currentUser?.id,
+    filteredChatsCount: allChats.length,
+    sampleChats: allChats.slice(0, 3)
+  });
   // WebSocket connection removed
   
   // User chats are already filtered by the hook
@@ -188,7 +191,7 @@ export default function MyChats() {
       label: "Export as CSV",
       icon: <Download className="h-4 w-4" />,
       onClick: async (selectedChats: Chat[]) => {
-        console.log('Export chats:', selectedChats); // Export functionality removed
+        logger.debug('Export chats', { selectedChats }); // Export functionality removed
         toast({
           title: "Export Complete",
           description: `${selectedChats.length} chats exported to CSV`,

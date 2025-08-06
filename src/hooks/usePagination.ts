@@ -1,16 +1,16 @@
 import { useState, useMemo } from 'react';
 
-interface UsePaginationProps {
-  data: any[];
+interface UsePaginationProps<T = any> {
+  data: T[];
   defaultPageSize?: number;
 }
 
-interface UsePaginationReturn {
+interface UsePaginationReturn<T = any> {
   currentPage: number;
   pageSize: number;
   totalPages: number;
   totalItems: number;
-  paginatedData: any[];
+  paginatedData: T[];
   setCurrentPage: (page: number) => void;
   setPageSize: (size: number) => void;
   goToPage: (page: number) => void;
@@ -18,10 +18,10 @@ interface UsePaginationReturn {
   goToPreviousPage: () => void;
 }
 
-export function usePagination({ 
+export function usePagination<T = any>({ 
   data, 
   defaultPageSize = 10 
-}: UsePaginationProps): UsePaginationReturn {
+}: UsePaginationProps<T>): UsePaginationReturn<T> {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(defaultPageSize);
 

@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { MoodleLoginButton } from '@/modules/moodle/components/MoodleLoginButton';
 import { WidgetSettings } from '@/hooks/useWidgetSettings';
+import { logger } from '@/lib/logger';
 import { IdentificationFormData, IdentificationValidationResult, IdentificationSession } from '@/types/user-identification';
 
 interface UserIdentificationFormProps {
@@ -53,7 +54,7 @@ export function UserIdentificationForm({
       // Always reset the local submitting state
       setIsSubmittingLocal(false);
     } catch (error) {
-      console.error('Form submission error:', error);
+      logger.error('Form submission error', error);
       setIsSubmittingLocal(false);
     }
   };
@@ -90,7 +91,7 @@ export function UserIdentificationForm({
             <MoodleLoginButton
               config={settings.integrations.moodle}
               onAuthSuccess={onMoodleAuth || (() => {})}
-              onAuthError={(error) => console.error('Moodle auth error:', error)}
+              onAuthError={(error) => logger.error('Moodle auth error', error)}
               appearance={appearance}
               disabled={isSubmitting}
             />

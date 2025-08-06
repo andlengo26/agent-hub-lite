@@ -3,7 +3,7 @@
  * Allows users to show/hide sections in the chat queue
  */
 
-import React from 'react';
+
 import { MultiSelect } from '@/components/ui/multi-select';
 import { SectionVisibility, SECTION_OPTIONS } from '@/lib/section-visibility';
 

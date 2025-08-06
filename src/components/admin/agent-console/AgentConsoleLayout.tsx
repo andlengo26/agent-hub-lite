@@ -12,6 +12,7 @@ import { useAgentConsole } from '@/contexts/AgentConsoleContext';
 import { Chat, User } from '@/types';
 import { useRealTimeSync } from '@/hooks/useRealTimeSync';
 import { toast } from '@/hooks/use-toast';
+import { logger } from '@/lib/logger';
 
 interface AgentConsoleLayoutProps {
   queueChats: Chat[];
@@ -131,7 +132,7 @@ export function AgentConsoleLayout({
             onSendMessage={handleSendMessage}
             onAcceptChat={handleChatAccept}
             onCancelChat={(chatId) => setSelectedQueueChatId(undefined)}
-            onEmailTranscript={(chatId) => console.log('Email transcript:', chatId)}
+            onEmailTranscript={(chatId) => logger.debug('Email transcript requested', { chatId })}
             onTakeoverChat={handleTakeoverChat}
             onReassignChat={handleReassignChat}
           />

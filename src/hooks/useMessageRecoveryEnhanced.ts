@@ -21,7 +21,13 @@ interface MessageWithFingerprint {
 
 interface UseMessageRecoveryEnhancedProps {
   messages: Message[];
-  conversationPersistence: any;
+  conversationPersistence: {
+    addMessage: (message: Message) => void;
+    updateMessages: (messages: Message[], operation?: string) => void;
+    conversationState: { messages: Message[] } | null;
+    clearConversation: () => void;
+    isLoading?: boolean;
+  };
   setMessages: (messages: Message[] | ((prev: Message[]) => Message[])) => void;
   debugMode?: boolean;
 }

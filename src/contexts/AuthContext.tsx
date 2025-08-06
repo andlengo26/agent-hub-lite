@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User } from '@/types';
+import { logger } from '@/lib/logger';
 
 interface AuthContextType {
   currentUser: User | null;
@@ -106,7 +107,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const defaultUser = users.find(u => u.id === savedUserId) || users[0];
         setCurrentUser(defaultUser);
       } catch (error) {
-        console.error('Auth initialization failed:', error);
+        logger.error('Auth initialization failed', error);
       } finally {
         setIsLoading(false);
       }

@@ -178,7 +178,7 @@ export function useUpdateOrganization() {
   const { toast } = useToast();
 
   return useMutation({
-    mutationFn: ({ orgId, data }: { orgId: string; data: any }) =>
+    mutationFn: ({ orgId, data }: { orgId: string; data: Record<string, unknown> }) =>
       apiClient.updateOrganization(orgId, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['organizations'] });

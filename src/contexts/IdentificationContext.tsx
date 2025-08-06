@@ -10,6 +10,7 @@ import { useIdentificationRequirements } from '@/hooks/user-identification/useId
 import { useMoodleAutoIdentification } from '@/modules/moodle/hooks/useMoodleAutoIdentification';
 import { CustomerService } from '@/services/customerService';
 import { WidgetSettings } from '@/hooks/useWidgetSettings';
+import { logger } from '@/lib/logger';
 import {
   IdentificationSession,
   IdentificationFormData,
@@ -84,7 +85,7 @@ export function IdentificationProvider({
       await handleIdentificationSuccess(session);
     },
     onAutoIdentificationError: (error) => {
-      console.log('Moodle auto-identification failed:', error);
+      logger.debug('Moodle auto-identification failed', error);
     }
   });
 
@@ -102,14 +103,14 @@ export function IdentificationProvider({
 
       // Create customer record
       await CustomerService.createCustomerFromIdentification(identificationSession);
-      console.log('Customer created from identification session:', identificationSession.id);
+      logger.debug('Customer created from identification session', { sessionId: identificationSession.id });
 
       // Notify parent
       onIdentificationComplete?.(identificationSession);
       
       return true;
     } catch (error) {
-      console.error('Failed to complete identification:', error);
+      logger.error('Failed to complete identification', error);
       return false;
     }
   }, [saveSession, onIdentificationComplete]);

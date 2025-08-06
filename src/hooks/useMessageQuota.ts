@@ -99,7 +99,7 @@ export function useMessageQuota({
     localStorage.setItem(STORAGE_KEY, JSON.stringify(quotaState));
   }, [quotaState]);
 
-  const checkQuotaExceeded = useCallback((state: any, limits: any) => {
+  const checkQuotaExceeded = useCallback((state: Record<string, unknown>, limits: Record<string, unknown>) => {
     if (limits.enableDailyQuota && state.dailyCount >= limits.maxDailyMessages) return true;
     if (limits.enableHourlyQuota && state.hourlyCount >= limits.maxHourlyMessages) return true;
     if (limits.enableSessionQuota && state.sessionCount >= limits.maxSessionMessages) return true;

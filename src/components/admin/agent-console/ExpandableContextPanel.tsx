@@ -33,6 +33,7 @@ import {
 import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { logger } from '@/lib/logger';
 
 interface ExpandableContextPanelProps {
   currentChat?: Chat;
@@ -120,7 +121,7 @@ export function ExpandableContextPanel({
           );
           setEngagements(customerEngagements);
         })
-        .catch(console.error)
+        .catch(error => logger.error('Failed to load context data', error))
         .finally(() => setEngagementsLoading(false));
     }
   }, [currentChat]);

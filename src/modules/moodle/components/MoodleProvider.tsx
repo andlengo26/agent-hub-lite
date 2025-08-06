@@ -7,6 +7,7 @@ import React, { createContext, useState, useCallback, useEffect } from 'react';
 import { MoodleAuthService } from '../services/MoodleAuthService';
 import { MoodleConfig, MoodleUserInfo, MoodleAuthResponse, MoodleContextValue } from '../types';
 import { IdentificationSession } from '@/types/user-identification';
+import { logger } from '@/lib/logger';
 
 export const MoodleContext = createContext<MoodleContextValue | null>(null);
 
@@ -85,7 +86,7 @@ export function MoodleProvider({
       const response = await authenticate();
       return response.success;
     } catch (error) {
-      console.error('Auto-authentication failed:', error);
+      logger.error('Auto-authentication failed', error);
       return false;
     }
   }, [config, authenticate]);

@@ -13,6 +13,7 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { CalendarDays, Phone, Mail, MessageSquare, Wifi, WifiOff } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
+import { logger } from '@/lib/logger';
 
 // Define columns for customer engagement table
 const customerColumns: Column<Customer>[] = [
@@ -91,7 +92,7 @@ export default function EngagementHistory() {
   });
 
   // Debug: Log customer data state
-  console.log('📊 EngagementHistory - Customer data state:', {
+  logger.debug('EngagementHistory customer data state', {
     isLoading,
     error: error?.message,
     customerCount: customersData?.data?.length || 0,
@@ -102,7 +103,7 @@ export default function EngagementHistory() {
   const { isConnected } = useRealTimeSync({
     onEngagementUpdate: () => {
       // Refresh customer data when engagements are updated
-      console.log('🔄 Engagement updated, invalidating customer queries');
+      logger.debug('Engagement updated, invalidating customer queries');
       refetch();
     },
     enableNotifications: false, // Don't show notifications on this overview page
@@ -111,15 +112,15 @@ export default function EngagementHistory() {
   // Filter customers based on date range and remove invalid entries
   const filteredCustomers = useMemo(() => {
     if (!customersData?.data) {
-      console.log('🔍 No customer data available for filtering');
+      logger.debug('No customer data available for filtering');
       return [];
     }
 
-    console.log(`🔍 Filtering ${customersData.data.length} customers`);
+    logger.debug('Filtering customers', { count: customersData.data.length });
     // Step 2: Prune out undefined rows upstream
     let filtered = customersData.data.filter(customer => {
       if (!customer || !customer.id) {
-        console.warn('⚠️ Null/undefined/invalid customer found in data:', customer);
+        logger.warn('Invalid customer found in data', customer);
         return false;
       }
       return true;
@@ -139,28 +140,30 @@ export default function EngagementHistory() {
       });
     }
 
-    console.log(`✅ Filtered to ${filtered.length} customers`);
+    logger.debug('Filtered customers', { resultCount: filtered.length });
     
-    // Step 5: Verify with logging
-    console.table(filtered.slice(0, 3).map(customer => ({
-      id: customer.id,
-      name: customer.name,
-      email: customer.email,
-      engagementCount: customer.engagementCount
-    })));
+    // Verify with debug logging
+    logger.debug('Filtered customer sample', 
+      filtered.slice(0, 3).map(customer => ({
+        id: customer.id,
+        name: customer.name,
+        email: customer.email,
+        engagementCount: customer.engagementCount
+      }))
+    );
     
     return filtered;
   }, [customersData?.data, dateRange]);
 
   // Handle viewing customer details
   const handleViewDetails = (customer: Customer) => {
-    console.log('📍 Navigating to customer details:', customer.id);
+    logger.debug('Navigating to customer details', { customerId: customer.id });
     navigate(`/chats/history/${customer.id}`);
   };
 
   // Handle bulk actions
   const handleBulkExport = (selectedCustomers: Customer[]) => {
-    console.log(`📤 Exporting ${selectedCustomers.length} customers`);
+    logger.debug('Exporting customers', { count: selectedCustomers.length });
     
     const csvData = selectedCustomers.map(customer => ({
       Name: customer.name,
@@ -202,7 +205,7 @@ export default function EngagementHistory() {
   ];
 
   if (error) {
-    console.error('❌ EngagementHistory error:', error);
+    logger.error('EngagementHistory error', error);
     return (
       <div className="container mx-auto py-6">
         <div className="text-center space-y-4">

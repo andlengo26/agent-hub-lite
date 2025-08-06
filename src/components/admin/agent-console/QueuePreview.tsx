@@ -30,6 +30,7 @@ import {
   getSectionVisibility, 
   setSectionVisibility 
 } from '@/lib/section-visibility';
+import { logger } from '@/lib/logger';
 
 interface QueuePreviewProps {
   chats: Chat[];
@@ -101,7 +102,7 @@ export function QueuePreview({
 
   const handleBulkExport = () => {
     // Export functionality simplified - could be implemented later
-    console.log('Export selected chats:', selectedChats);
+    logger.debug('Export selected chats', { selectedChats });
   };
 
   const clearSelection = () => {
@@ -141,7 +142,7 @@ export function QueuePreview({
   } = useWaitTimeTracking({
     chats: filteredChats,
     onChatMissed: async (chatId: string, waitTime: number) => {
-      console.log(`Chat ${chatId} transitioned to missed after ${waitTime} minutes`);
+      logger.debug('Chat transitioned to missed', { chatId, waitTime });
       await waitTimeService.transitionToMissed(chatId, waitTime);
       // In a real implementation, this would trigger a chat status update
     }
