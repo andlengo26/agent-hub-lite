@@ -9,6 +9,7 @@ import { Message } from '@/types/message';
 import { IdentificationSession } from '@/types/user-identification';
 import { conversationService } from '@/services/conversationService';
 import { feedbackService } from '@/services/feedbackService';
+import { logger } from '@/lib/logger';
 
 interface UseWidgetActionsProps {
   settings: any;
@@ -289,15 +290,34 @@ export function useWidgetActions({
   }, [setMessages]);
 
   const handleIdentificationComplete = useCallback((session: IdentificationSession) => {
+    logger.stateTransition('IDENTIFICATION_PENDING', 'IDENTIFICATION_COMPLETE', 'User completed identification', {
+      userData: session.userData,
+      currentMessageCount: messages.length
+    }, 'useWidgetActions');
+    
     // Hide identification form after completion
     userIdentification.hideIdentificationForm();
     
     setMessages(prev => {
-      // Remove identification message and convert pending messages to regular messages
+      const originalCount = prev.length;
+      logger.messagePersistence('IDENTIFICATION_PROCESSING_START', {
+        originalMessageCount: originalCount,
+        messageTypes: prev.map(m => m.type)
+      }, 'useWidgetActions');
+      
+      // CRITICAL FIX: Preserve ALL messages, don't filter out any existing content
+      // Only remove identification messages, keep all user and AI messages
       const messagesWithoutIdentification = prev.filter(msg => msg.type !== 'identification');
       const updatedMessages = messagesWithoutIdentification.map(msg => 
         msg.type === 'user' && msg.isPending ? { ...msg, isPending: false } : msg
       );
+      
+      logger.messagePersistence('MESSAGES_FILTERED', {
+        originalCount,
+        afterFilterCount: messagesWithoutIdentification.length,
+        afterUpdateCount: updatedMessages.length,
+        removedIdentificationCount: originalCount - messagesWithoutIdentification.length
+      }, 'useWidgetActions');
       
       const { userData } = session;
       const welcomeFields = [];
@@ -314,12 +334,22 @@ export function useWidgetActions({
       
       const newMessages = [...updatedMessages, acknowledgmentMessage];
       
+      logger.messagePersistence('ACKNOWLEDGMENT_ADDED', {
+        beforeAckCount: updatedMessages.length,
+        afterAckCount: newMessages.length
+      }, 'useWidgetActions');
+      
       // Process any pending user messages
       const pendingMessages = messagesWithoutIdentification.filter(msg => 
         msg.type === 'user' && msg.isPending
       );
       
       if (pendingMessages.length > 0) {
+        logger.messagePersistence('PROCESSING_PENDING_MESSAGES', {
+          pendingCount: pendingMessages.length,
+          pendingMessages: pendingMessages.map(m => ({ id: m.id, content: m.content?.substring(0, 50) }))
+        }, 'useWidgetActions');
+        
         // Generate AI response to the latest pending message
         const latestPendingMessage = pendingMessages[pendingMessages.length - 1];
         setTimeout(() => {
@@ -334,7 +364,13 @@ export function useWidgetActions({
             feedbackSubmitted: false
           };
           
-          setMessages(current => [...current, aiResponse]);
+          setMessages(current => {
+            const updatedCurrent = [...current, aiResponse];
+            logger.messagePersistence('AI_RESPONSE_ADDED', {
+              messageCount: updatedCurrent.length
+            }, 'useWidgetActions');
+            return updatedCurrent;
+          });
           conversationPersistence.addMessage?.(aiResponse, isExpanded);
           incrementMessageCount();
           messageQuota.incrementQuota();
@@ -344,12 +380,23 @@ export function useWidgetActions({
         setLocalIsTyping(true);
       }
       
-      // Update conversation with all messages (removing identification message)
-      conversationPersistence.updateMessages?.(newMessages);
+      // CRITICAL FIX: Use addMessage instead of updateMessages to preserve message history
+      // This ensures we don't overwrite the entire conversation history
+      conversationPersistence.addMessage?.(acknowledgmentMessage, isExpanded);
+      
+      logger.messagePersistence('IDENTIFICATION_PROCESSING_COMPLETE', {
+        finalMessageCount: newMessages.length,
+        messageTypes: newMessages.map(m => m.type)
+      }, 'useWidgetActions');
+      
+      logger.messageValidation(originalCount, newMessages.length, 'IDENTIFICATION_COMPLETE', {
+        expectedReduction: 1, // Only identification message should be removed
+        actualChange: newMessages.length - originalCount
+      });
       
       return newMessages;
     });
-  }, [setMessages, conversationPersistence, isExpanded, settings, incrementMessageCount, messageQuota, userIdentification]);
+  }, [setMessages, conversationPersistence, isExpanded, settings, incrementMessageCount, messageQuota, userIdentification, messages.length]);
 
   const handleFAQSelect = useCallback((question: string, answer: string) => {
     const faqMessage: Message = {

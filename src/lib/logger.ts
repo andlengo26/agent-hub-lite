@@ -100,6 +100,30 @@ class Logger {
   featureFlag(flagName: string, enabled: boolean, context?: any) {
     this.info(`Feature flag: ${flagName} = ${enabled}`, context, 'FeatureFlags');
   }
+
+  // Message persistence logging
+  messagePersistence(operation: string, data?: any, component?: string) {
+    this.debug(`MESSAGE PERSISTENCE: ${operation}`, data, component || 'MessagePersistence');
+  }
+
+  // State transition logging
+  stateTransition(from: string, to: string, reason?: string, data?: any, component?: string) {
+    this.info(`STATE TRANSITION: ${from} → ${to}${reason ? ` (${reason})` : ''}`, data, component || 'StateTransition');
+  }
+
+  // Race condition detection logging
+  raceCondition(operation: string, details: any, component?: string) {
+    this.warn(`RACE CONDITION DETECTED: ${operation}`, details, component || 'RaceCondition');
+  }
+
+  // Message count validation
+  messageValidation(expected: number, actual: number, operation: string, data?: any) {
+    if (expected !== actual) {
+      this.error(`MESSAGE COUNT MISMATCH: Expected ${expected}, got ${actual} during ${operation}`, data, 'MessageValidation');
+    } else {
+      this.debug(`Message count validation passed: ${actual} messages during ${operation}`, data, 'MessageValidation');
+    }
+  }
 }
 
 export const logger = new Logger();

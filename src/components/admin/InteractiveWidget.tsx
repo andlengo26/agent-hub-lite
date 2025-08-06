@@ -493,7 +493,7 @@ export function InteractiveWidget() {
             onDismiss={() => widgetState.setShowMoodleReLoginPrompt(false)}
             previousSessionData={{
               username: userIdentification.session?.userData?.studentId,
-              lastActive: conversationPersistence.conversationState?.timestamp
+              lastActive: conversationPersistence.conversationState?.lastInteractionTime?.toISOString()
             }}
           />
         </div>

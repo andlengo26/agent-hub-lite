@@ -6,6 +6,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Message } from '@/types/message';
 import { IdentificationSession } from '@/types/user-identification';
+import { logger } from '@/lib/logger';
 
 const CONVERSATION_STORAGE_KEY = 'widget_conversation_state';
 const STORAGE_KEY = CONVERSATION_STORAGE_KEY; // Alias for backward compatibility
@@ -15,8 +16,8 @@ interface ConversationState {
   identificationSession: IdentificationSession | null;
   conversationId?: string;
   status: 'new' | 'active' | 'completed' | 'pending_identification';
-  timestamp: string;
-  lastInteractionTime: string;
+  createdAt: Date;
+  lastInteractionTime: Date;
   isExpanded?: boolean;
   pendingMessages?: Message[]; // Messages waiting for identification
 }
@@ -33,80 +34,106 @@ export function useConversationPersistence({ onStateLoaded }: UseConversationPer
   useEffect(() => {
     const loadConversationState = () => {
       setIsLoading(true);
-      console.log('🔄 Loading conversation state from storage...');
+      logger.messagePersistence('LOAD_START', { storageKey: STORAGE_KEY }, 'useConversationPersistence');
+      
       const savedState = localStorage.getItem(STORAGE_KEY);
+      logger.messagePersistence('STORAGE_READ', { 
+        hasData: !!savedState, 
+        dataLength: savedState?.length || 0 
+      }, 'useConversationPersistence');
       
       if (savedState) {
         try {
           const parsedState: ConversationState = JSON.parse(savedState);
+          logger.messagePersistence('PARSE_SUCCESS', { 
+            messageCount: parsedState.messages?.length || 0,
+            status: parsedState.status,
+            conversationId: parsedState.conversationId 
+          }, 'useConversationPersistence');
           
-          // Convert string timestamps back to Date objects in messages
-          const messagesWithDates = parsedState.messages.map(msg => ({
-            ...msg,
-            timestamp: new Date(msg.timestamp)
-          }));
-
-          // Validate identification session is still fresh (24 hours)
-          let validSession = parsedState.identificationSession;
-          if (validSession) {
-            const sessionAge = new Date().getTime() - new Date(validSession.timestamp).getTime();
-            if (sessionAge > 24 * 60 * 60 * 1000 || !validSession.isValid) {
-              validSession = null;
-            }
-          }
-
-          // Validate conversation state is not stale (7 days)
-          const stateAge = new Date().getTime() - new Date(parsedState.timestamp).getTime();
-          const isStateValid = stateAge < 7 * 24 * 60 * 60 * 1000;
-
-          if (isStateValid) {
-            const loadedState: ConversationState = {
+          // Validate conversation state structure and freshness
+          if (parsedState.messages && Array.isArray(parsedState.messages)) {
+            // Convert string dates back to Date objects for messages
+            const messagesWithDates = parsedState.messages.map(msg => ({
+              ...msg,
+              timestamp: new Date(msg.timestamp)
+            }));
+            
+            const loadedState = {
               ...parsedState,
               messages: messagesWithDates,
-              identificationSession: validSession,
-              // If session expired but we have messages, require re-identification
-              status: validSession ? parsedState.status : 
-                     (messagesWithDates.length > 0 ? 'pending_identification' : 'new')
+              createdAt: new Date(parsedState.createdAt),
+              lastInteractionTime: new Date(parsedState.lastInteractionTime)
             };
             
-            console.log('✅ Loaded conversation state:', {
-              messages: loadedState.messages.length,
-              status: loadedState.status,
-              isExpanded: loadedState.isExpanded
-            });
+            logger.messagePersistence('DATES_CONVERTED', { 
+              messageCount: messagesWithDates.length,
+              oldestMessage: messagesWithDates[0]?.timestamp,
+              newestMessage: messagesWithDates[messagesWithDates.length - 1]?.timestamp
+            }, 'useConversationPersistence');
             
-            setConversationState(loadedState);
-            onStateLoaded?.(loadedState);
-          } else {
-            console.log('❌ Conversation state is stale, removing...');
-            localStorage.removeItem(STORAGE_KEY);
-            setConversationState(null);
+            // Check if conversation is still fresh (24 hours)
+            const conversationAge = new Date().getTime() - loadedState.createdAt.getTime();
+            const maxAge = 24 * 60 * 60 * 1000; // 24 hours
+            
+            if (conversationAge < maxAge) {
+              logger.messagePersistence('LOAD_SUCCESS', { 
+                messageCount: messagesWithDates.length,
+                conversationAge: Math.round(conversationAge / (1000 * 60)) + ' minutes'
+              }, 'useConversationPersistence');
+              setConversationState(loadedState);
+              onStateLoaded?.(loadedState);
+            } else {
+              logger.messagePersistence('STALE_STATE_REMOVED', { 
+                conversationAge: Math.round(conversationAge / (1000 * 60 * 60)) + ' hours'
+              }, 'useConversationPersistence');
+              localStorage.removeItem(STORAGE_KEY);
+              setConversationState(null);
+            }
           }
         } catch (error) {
-          console.error('Failed to load conversation state:', error);
+          logger.error('Failed to parse conversation state', error, 'useConversationPersistence');
           localStorage.removeItem(STORAGE_KEY);
           setConversationState(null);
         }
       } else {
-        console.log('📭 No saved conversation state found');
+        logger.messagePersistence('NO_EXISTING_STATE', {}, 'useConversationPersistence');
         setConversationState(null);
       }
       
       setIsLoading(false);
+      logger.messagePersistence('LOAD_COMPLETE', { 
+        hasState: !!conversationState 
+      }, 'useConversationPersistence');
     };
 
     loadConversationState();
-  }, []); // Remove onStateLoaded from dependencies to prevent infinite loop
+  }, []);
 
   const saveConversationState = useCallback((state: ConversationState) => {
+    logger.messagePersistence('SAVE_START', { 
+      messageCount: state.messages.length,
+      status: state.status,
+      conversationId: state.conversationId
+    }, 'useConversationPersistence');
+    
     const stateToSave = {
       ...state,
-      timestamp: new Date().toISOString(),
+      createdAt: state.createdAt.toISOString(),
       lastInteractionTime: new Date().toISOString()
     };
     
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(stateToSave));
-    setConversationState(stateToSave);
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(stateToSave));
+      setConversationState(state); // Use original state, not the serialized version
+      
+      logger.messagePersistence('SAVE_SUCCESS', { 
+        messageCount: state.messages.length,
+        storageSize: JSON.stringify(stateToSave).length
+      }, 'useConversationPersistence');
+    } catch (error) {
+      logger.error('Failed to save conversation state', error, 'useConversationPersistence');
+    }
   }, []);
 
   const updateConversationState = useCallback((updates: Partial<ConversationState>) => {
@@ -115,19 +142,25 @@ export function useConversationPersistence({ onStateLoaded }: UseConversationPer
     const updatedState = {
       ...conversationState,
       ...updates,
-      lastInteractionTime: new Date().toISOString()
+      lastInteractionTime: new Date()
     };
     
     saveConversationState(updatedState);
   }, [conversationState, saveConversationState]);
 
   const createNewConversation = useCallback((initialMessage?: Message, isExpanded?: boolean) => {
+    logger.messagePersistence('CREATE_NEW_CONVERSATION', { 
+      hasInitialMessage: !!initialMessage,
+      isExpanded,
+      messageType: initialMessage?.type
+    }, 'useConversationPersistence');
+    
     const newState: ConversationState = {
       messages: initialMessage ? [initialMessage] : [],
       identificationSession: null,
       status: 'new',
-      timestamp: new Date().toISOString(),
-      lastInteractionTime: new Date().toISOString(),
+      createdAt: new Date(),
+      lastInteractionTime: new Date(),
       isExpanded,
       pendingMessages: []
     };
@@ -137,40 +170,53 @@ export function useConversationPersistence({ onStateLoaded }: UseConversationPer
   }, [saveConversationState]);
 
   const clearConversation = useCallback(() => {
+    const currentMessageCount = conversationState?.messages.length || 0;
+    logger.messagePersistence('CLEAR_CONVERSATION', { 
+      messageCount: currentMessageCount 
+    }, 'useConversationPersistence');
+    
     localStorage.removeItem(STORAGE_KEY);
     setConversationState(null);
-  }, []);
+  }, [conversationState]);
 
-  const addMessage = useCallback((message: Message, requiresIdentification = false) => {
-    if (!conversationState) {
-      // Create new conversation with the message
-      const newState = createNewConversation(message);
-      if (requiresIdentification && message.type === 'user') {
-        updateConversationState({
-          status: 'pending_identification',
-          pendingMessages: [message]
-        });
-      }
-      return;
-    }
-
-    const updatedMessages = [...conversationState.messages, message];
+  const addMessage = useCallback((message: Message, requiresIdentification?: boolean) => {
+    const currentMessageCount = conversationState?.messages.length || 0;
     
-    if (requiresIdentification && message.type === 'user' && !conversationState.identificationSession) {
-      // Add to pending messages and mark as pending identification
-      updateConversationState({
-        messages: updatedMessages,
-        status: 'pending_identification',
-        pendingMessages: [...(conversationState.pendingMessages || []), message]
-      });
+    if (!conversationState) {
+      logger.messagePersistence('CREATE_NEW_CONVERSATION', { 
+        messageType: message.type,
+        messageContent: message.type === 'identification' ? 'identification' : (message as any).content?.substring(0, 50) + '...',
+        requiresIdentification
+      }, 'useConversationPersistence');
+      
+      const newState: ConversationState = {
+        messages: [message],
+        identificationSession: null,
+        conversationId: `conv_${Date.now()}`,
+        status: 'active',
+        createdAt: new Date(),
+        lastInteractionTime: new Date(),
+        isExpanded: requiresIdentification || false
+      };
+      saveConversationState(newState);
+      logger.messageValidation(1, 1, 'CREATE_NEW_CONVERSATION');
     } else {
-      // Normal message flow
-      updateConversationState({
-        messages: updatedMessages,
-        status: conversationState.identificationSession ? 'active' : conversationState.status
-      });
+      logger.messagePersistence('ADD_MESSAGE', { 
+        messageType: message.type,
+        messageContent: message.type === 'identification' ? 'identification' : (message as any).content?.substring(0, 50) + '...',
+        currentMessageCount,
+        newMessageCount: currentMessageCount + 1
+      }, 'useConversationPersistence');
+      
+      const updatedState = {
+        ...conversationState,
+        messages: [...conversationState.messages, message],
+        lastInteractionTime: new Date()
+      };
+      saveConversationState(updatedState);
+      logger.messageValidation(currentMessageCount + 1, updatedState.messages.length, 'ADD_MESSAGE');
     }
-  }, [conversationState, createNewConversation, updateConversationState]);
+  }, [conversationState, saveConversationState]);
 
   const setIdentificationSession = useCallback((session: IdentificationSession) => {
     if (!conversationState) {
@@ -179,8 +225,8 @@ export function useConversationPersistence({ onStateLoaded }: UseConversationPer
         messages: [],
         identificationSession: session,
         status: 'active',
-        timestamp: new Date().toISOString(),
-        lastInteractionTime: new Date().toISOString(),
+        createdAt: new Date(),
+        lastInteractionTime: new Date(),
         pendingMessages: []
       };
       saveConversationState(newState);
@@ -200,8 +246,35 @@ export function useConversationPersistence({ onStateLoaded }: UseConversationPer
   }, [conversationState, saveConversationState, updateConversationState]);
 
   const updateMessages = useCallback((messages: Message[]) => {
-    updateConversationState({ messages });
-  }, [updateConversationState]);
+    if (!conversationState) {
+      logger.warn('Attempted to update messages without conversation state', { messageCount: messages.length }, 'useConversationPersistence');
+      return;
+    }
+    
+    const oldCount = conversationState.messages.length;
+    logger.messagePersistence('UPDATE_MESSAGES', { 
+      oldCount,
+      newCount: messages.length,
+      difference: messages.length - oldCount
+    }, 'useConversationPersistence');
+    
+    // Detect potential race conditions
+    if (Math.abs(messages.length - oldCount) > 3) {
+      logger.raceCondition('MESSAGE_UPDATE_LARGE_CHANGE', {
+        oldCount,
+        newCount: messages.length,
+        difference: messages.length - oldCount
+      }, 'useConversationPersistence');
+    }
+    
+    const updatedState = {
+      ...conversationState,
+      messages,
+      lastInteractionTime: new Date()
+    };
+    saveConversationState(updatedState);
+    logger.messageValidation(messages.length, updatedState.messages.length, 'UPDATE_MESSAGES');
+  }, [conversationState, saveConversationState]);
 
   const updateWidgetState = useCallback((isExpanded: boolean) => {
     updateConversationState({ isExpanded });

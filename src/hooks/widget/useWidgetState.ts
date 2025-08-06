@@ -5,6 +5,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { Message } from '@/types/message';
+import { logger } from '@/lib/logger';
 import { IdentificationSession } from '@/types/user-identification';
 
 export type PanelType = 'main' | 'chat' | 'faq-detail' | 'resource-detail' | 'message-detail';
