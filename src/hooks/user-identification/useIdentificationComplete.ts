@@ -10,7 +10,7 @@ interface UseIdentificationCompleteProps {
   settings: any;
   messages: Message[];
   setMessages: (messages: Message[] | ((prev: Message[]) => Message[])) => void;
-  sessionPersistence: any;
+  conversationPersistence: any;
   isExpanded: boolean;
   incrementMessageCount: () => void;
   messageQuota: any;
@@ -20,7 +20,7 @@ export function useIdentificationComplete({
   settings,
   messages,
   setMessages,
-  sessionPersistence,
+  conversationPersistence,
   isExpanded,
   incrementMessageCount,
   messageQuota
@@ -43,7 +43,7 @@ export function useIdentificationComplete({
         timestamp: new Date()
       };
       
-      sessionPersistence.addMessage?.(acknowledgmentMessage, isExpanded);
+      conversationPersistence.addMessage?.(acknowledgmentMessage, isExpanded);
       
       // Generate AI response to the last user message if there was one pending
       const lastUserMessage = filtered[filtered.length - 1];
@@ -61,7 +61,7 @@ export function useIdentificationComplete({
           };
           
           setMessages(current => [...current, aiResponse]);
-          sessionPersistence.addMessage?.(aiResponse, isExpanded);
+          conversationPersistence.addMessage?.(aiResponse, isExpanded);
           incrementMessageCount();
           messageQuota.incrementQuota();
         }, 1000);
@@ -69,7 +69,7 @@ export function useIdentificationComplete({
       
       return [...filtered, acknowledgmentMessage];
     });
-  }, [setMessages, sessionPersistence, isExpanded, settings, incrementMessageCount, messageQuota]);
+  }, [setMessages, conversationPersistence, isExpanded, settings, incrementMessageCount, messageQuota]);
 
   return {
     handleIdentificationComplete

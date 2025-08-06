@@ -12,10 +12,10 @@ export type TabType = 'home' | 'messages' | 'resources';
 
 interface UseWidgetStateProps {
   settings: any;
-  sessionPersistence: any;
+  conversationPersistence: any;
 }
 
-export function useWidgetState({ settings, sessionPersistence }: UseWidgetStateProps) {
+export function useWidgetState({ settings, conversationPersistence }: UseWidgetStateProps) {
   // Widget display states
   const [isExpanded, setIsExpanded] = useState(false);
   const [isMaximized, setIsMaximized] = useState(false);
@@ -92,14 +92,14 @@ export function useWidgetState({ settings, sessionPersistence }: UseWidgetStateP
   const handleExpand = useCallback(() => {
     console.log('🔵 User clicked to expand widget');
     setIsExpanded(true);
-    sessionPersistence.updateWidgetState?.(true);
-  }, [sessionPersistence]);
+    conversationPersistence.updateWidgetState?.(true);
+  }, [conversationPersistence]);
 
   const handleMinimize = useCallback(() => {
     console.log('❌ User clicked to minimize widget');
     setIsExpanded(false);
-    sessionPersistence.updateWidgetState?.(false);
-  }, [sessionPersistence]);
+    conversationPersistence.updateWidgetState?.(false);
+  }, [conversationPersistence]);
 
   const handleToggleMaximize = useCallback(() => {
     setIsMaximized(!isMaximized);
@@ -127,9 +127,9 @@ export function useWidgetState({ settings, sessionPersistence }: UseWidgetStateP
         timestamp: new Date()
       };
       setMessages([welcomeMessage]);
-      sessionPersistence.createNewSession?.(welcomeMessage, isExpanded);
+      conversationPersistence.createNewConversation?.(welcomeMessage, isExpanded);
     }
-  }, [messages.length, settings?.aiSettings?.welcomeMessage, sessionPersistence, isExpanded]);
+  }, [messages.length, settings?.aiSettings?.welcomeMessage, conversationPersistence, isExpanded]);
 
   const handleContinueChat = useCallback(() => {
     setCurrentPanel('chat');
@@ -144,11 +144,11 @@ export function useWidgetState({ settings, sessionPersistence }: UseWidgetStateP
         timestamp: new Date()
       };
       setMessages([welcomeMessage]);
-      if (!sessionPersistence.currentSession) {
-        sessionPersistence.createNewSession?.(welcomeMessage, isExpanded);
+      if (!conversationPersistence.conversationState) {
+        conversationPersistence.createNewConversation?.(welcomeMessage, isExpanded);
       }
     }
-  }, [messages.length, settings?.aiSettings?.welcomeMessage, sessionPersistence, isExpanded]);
+  }, [messages.length, settings?.aiSettings?.welcomeMessage, conversationPersistence, isExpanded]);
 
   // Tab management
   const handleTabChange = useCallback((tab: TabType) => {
@@ -184,20 +184,20 @@ export function useWidgetState({ settings, sessionPersistence }: UseWidgetStateP
     if (settings?.appearance?.autoOpenWidget && 
         !isExpanded && 
         messages.length === 0 && 
-        !sessionPersistence.currentSession) {
+        !conversationPersistence.conversationState) {
       console.log('🚀 Auto-opening widget for new session');
       setTimeout(() => {
         setIsExpanded(true);
-        sessionPersistence.updateWidgetState?.(true);
+        conversationPersistence.updateWidgetState?.(true);
       }, 2000);
     }
-  }, [settings?.appearance?.autoOpenWidget, isExpanded, messages.length, sessionPersistence.currentSession]);
+  }, [settings?.appearance?.autoOpenWidget, isExpanded, messages.length, conversationPersistence.conversationState]);
 
-  // Initialize messages from session on widget load
+  // Initialize messages from conversation state on widget load
   useEffect(() => {
-    if (sessionPersistence.currentSession?.messages?.length > 0 && messages.length === 0) {
-      console.log('📝 Restoring messages from session:', sessionPersistence.currentSession.messages.length);
-      const restoredMessages = sessionPersistence.currentSession.messages.map(msg => ({
+    if (conversationPersistence.conversationState?.messages?.length > 0 && messages.length === 0) {
+      console.log('📝 Restoring messages from conversation:', conversationPersistence.conversationState.messages.length);
+      const restoredMessages = conversationPersistence.conversationState.messages.map(msg => ({
         ...msg,
         timestamp: new Date(msg.timestamp) // Ensure timestamp is a Date object
       }));
@@ -210,11 +210,11 @@ export function useWidgetState({ settings, sessionPersistence }: UseWidgetStateP
       }
       
       // Auto-expand if there's an active conversation
-      if (restoredMessages.length > 1 || sessionPersistence.currentSession.isExpanded) {
+      if (restoredMessages.length > 1 || conversationPersistence.conversationState.isExpanded) {
         setIsExpanded(true);
       }
     }
-  }, [sessionPersistence.currentSession, messages.length, setMessages]);
+  }, [conversationPersistence.conversationState, messages.length, setMessages]);
 
   // Track active chat state
   useEffect(() => {

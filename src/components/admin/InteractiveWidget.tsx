@@ -21,7 +21,7 @@ import { useMessageQuota } from "@/hooks/useMessageQuota";
 import { useSpamPrevention } from "@/hooks/useSpamPrevention";
 import { useUserIdentification } from "@/hooks/useUserIdentification";
 import { useMoodleAutoIdentification } from "@/modules/moodle/hooks/useMoodleAutoIdentification";
-import { useSessionPersistence } from "@/hooks/useSessionPersistence";
+import { useConversationPersistence } from "@/hooks/useConversationPersistence";
 import { useTenant } from "@/contexts/TenantContext";
 import { ConversationEndModal } from "./ConversationEndModal";
 import { FAQBrowser } from "@/components/widget/FAQBrowser";
@@ -45,24 +45,29 @@ export function InteractiveWidget() {
   const { chats, loading: chatsLoading } = useChats();
   const { faqs, searchQuery: faqQuery, handleSearch, isLoading: faqLoading } = useFAQSearch();
   
-  // Session persistence with widget state restoration
-  const sessionPersistence = useSessionPersistence({
-    onSessionLoaded: (session) => {
+  // Conversation persistence with coordination
+  const conversationPersistence = useConversationPersistence({
+    onStateLoaded: (state) => {
       
-      widgetState.setMessages(session.messages);
-      if (session.status === 'closed') {
+      widgetState.setMessages(state.messages);
+      if (state.status === 'completed') {
         widgetState.setIsConversationClosed(true);
       }
       
       // Check if we should show Moodle re-login prompt
-      if (session.userContext && settings?.integrations?.moodle) {
+      if (state.identificationSession?.userData && settings?.integrations?.moodle) {
         widgetState.setShowMoodleReLoginPrompt(true);
+      }
+
+      // Auto-expand if there's an active conversation or if it was previously expanded
+      if (state.messages.length > 1 || state.isExpanded) {
+        // Handle expansion through the widget state
       }
     }
   });
 
   // Initialize widget state management
-  const widgetState = useWidgetState({ settings, sessionPersistence });
+  const widgetState = useWidgetState({ settings, conversationPersistence });
 
   // Conversation lifecycle
   const {
@@ -133,7 +138,7 @@ export function InteractiveWidget() {
         timestamp: new Date()
       };
       widgetState.setMessages(prev => [...prev, autoWelcomeMessage]);
-      sessionPersistence.addMessage(autoWelcomeMessage, widgetState.isExpanded);
+      conversationPersistence.addMessage(autoWelcomeMessage, widgetState.isExpanded);
     },
     onAutoIdentificationError: (error) => {
       // Silent error handling - auto-identification failures are expected behavior
@@ -143,7 +148,7 @@ export function InteractiveWidget() {
   // Initialize widget actions
   const widgetActions = useWidgetActions({
     settings,
-    sessionPersistence,
+    conversationPersistence,
     conversationState,
     messageQuota,
     spamPrevention,
@@ -161,46 +166,46 @@ export function InteractiveWidget() {
     handleConfirmedEnd
   });
 
-  // Restore widget state when session and settings are both available
+  // Restore widget state when conversation state and settings are both available
   useEffect(() => {
-    if (!sessionPersistence.currentSession || !settings) return;
+    if (!conversationPersistence.conversationState || !settings) return;
     
-    const determineWidgetExpandState = (session: any, settings: any): boolean => {
-      if (!session || !settings) return false;
+    const determineWidgetExpandState = (state: any, settings: any): boolean => {
+      if (!state || !settings) return false;
       
       
-      // For idle_timeout sessions, preserve the session's expand state
-      if (session.status === 'idle_timeout') {
-        return session.isExpanded;
+      // For pending_identification sessions, preserve the state's expand state
+      if (state.status === 'pending_identification') {
+        return state.isExpanded;
       }
       
-      // Never auto-expand if session is ended or closed
-      if (session.status === 'ended' || session.status === 'closed') {
+      // Never auto-expand if conversation is completed
+      if (state.status === 'completed') {
         return false;
       }
       
-      // If session has explicit isExpanded state, use it
-      if (typeof session.isExpanded === 'boolean') {
-        return session.isExpanded;
+      // If state has explicit isExpanded state, use it
+      if (typeof state.isExpanded === 'boolean') {
+        return state.isExpanded;
       }
       
-      // Fall back to autoOpenWidget setting for active sessions with messages
-      return settings.appearance?.autoOpenWidget && session.messages?.length > 0;
+      // Fall back to autoOpenWidget setting for active conversations with messages
+      return settings.appearance?.autoOpenWidget && state.messages?.length > 0;
     };
 
-    const shouldExpand = determineWidgetExpandState(sessionPersistence.currentSession, settings);
+    const shouldExpand = determineWidgetExpandState(conversationPersistence.conversationState, settings);
     
     if (shouldExpand !== widgetState.isExpanded) {
       widgetState.handleExpand();
     }
-  }, [sessionPersistence.currentSession, settings]);
+  }, [conversationPersistence.conversationState, settings]);
 
   // Create welcome message for new expanded sessions
   useEffect(() => {
     if (widgetState.isExpanded && 
         widgetState.messages.length === 0 && 
         settings?.aiSettings?.welcomeMessage && 
-        !sessionPersistence.currentSession) {
+        !conversationPersistence.conversationState) {
       const welcomeMessage = {
         id: 'welcome',
         type: 'ai' as const,
@@ -208,21 +213,21 @@ export function InteractiveWidget() {
         timestamp: new Date()
       };
       widgetState.setMessages([welcomeMessage]);
-      sessionPersistence.createNewSession(welcomeMessage, true);
+      conversationPersistence.createNewConversation(welcomeMessage, true);
     }
-  }, [widgetState.isExpanded, widgetState.messages.length, settings?.aiSettings?.welcomeMessage, sessionPersistence.currentSession]);
+  }, [widgetState.isExpanded, widgetState.messages.length, settings?.aiSettings?.welcomeMessage, conversationPersistence.conversationState]);
 
   // Reset session quota when conversation ends
   useEffect(() => {
     if (conversationState.status === 'ended') {
       messageQuota.resetSessionQuota();
       spamPrevention.resetCooldown();
-      sessionPersistence.updateSession({ status: 'ended' });
+      conversationPersistence.updateConversationState({ status: 'completed' });
       
       // Show post-chat feedback for human-handled conversations
       widgetState.setShowPostChatFeedback(false); // Disabled for now since property doesn't exist
     }
-  }, [conversationState.status, messageQuota, spamPrevention, sessionPersistence]);
+  }, [conversationState.status, messageQuota, spamPrevention, conversationPersistence]);
 
   // Handle post-chat feedback submission
   const handlePostChatFeedbackSubmit = async (feedback: { rating: number; comment: string }) => {
@@ -231,7 +236,7 @@ export function InteractiveWidget() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          conversationId: sessionPersistence.currentSession?.conversationId,
+          conversationId: conversationPersistence.conversationState?.conversationId,
           ...feedback,
           timestamp: new Date().toISOString()
         })
@@ -268,7 +273,7 @@ export function InteractiveWidget() {
       timestamp: new Date()
     };
     widgetState.setMessages(prev => [...prev, faqMessage]);
-    sessionPersistence.addMessage(faqMessage, widgetState.isExpanded);
+    conversationPersistence.addMessage(faqMessage, widgetState.isExpanded);
     
     // Navigate to chat panel
     widgetState.setCurrentPanel('chat');
@@ -468,7 +473,7 @@ export function InteractiveWidget() {
       {widgetState.showPostChatFeedback && (
         <div className="absolute inset-0 bg-background z-10">
           <PostChatFeedback
-            conversationId={sessionPersistence.currentSession?.conversationId || ''}
+            conversationId={conversationPersistence.conversationState?.conversationId || ''}
             onSubmit={handlePostChatFeedbackSubmit}
             onSkip={() => widgetState.setShowPostChatFeedback(false)}
           />
@@ -482,7 +487,7 @@ export function InteractiveWidget() {
             onDismiss={() => widgetState.setShowMoodleReLoginPrompt(false)}
             previousSessionData={{
               username: userIdentification.session?.userData?.studentId,
-              lastActive: sessionPersistence.currentSession?.timestamp.toISOString()
+              lastActive: conversationPersistence.conversationState?.timestamp
             }}
           />
         </div>

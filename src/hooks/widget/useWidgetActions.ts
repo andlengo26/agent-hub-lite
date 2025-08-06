@@ -12,7 +12,7 @@ import { feedbackService } from '@/services/feedbackService';
 
 interface UseWidgetActionsProps {
   settings: any;
-  sessionPersistence: any;
+  conversationPersistence: any;
   conversationState: any;
   messageQuota: any;
   spamPrevention: any;
@@ -32,7 +32,7 @@ interface UseWidgetActionsProps {
 
 export function useWidgetActions({
   settings,
-  sessionPersistence,
+  conversationPersistence,
   conversationState,
   messageQuota,
   spamPrevention,
@@ -93,7 +93,7 @@ export function useWidgetActions({
     };
 
     setMessages(prev => [...prev, userMessage]);
-    sessionPersistence.addMessage?.(userMessage, isExpanded);
+    conversationPersistence.addMessage?.(userMessage, isExpanded);
     setInputValue('');
     incrementMessageCount();
     
@@ -110,7 +110,7 @@ export function useWidgetActions({
           isCompleted: false
         };
         setMessages(prev => [...prev, identificationMessage]);
-        sessionPersistence.addMessage?.(identificationMessage, isExpanded);
+        conversationPersistence.addMessage?.(identificationMessage, isExpanded);
       }
       return;
     }
@@ -118,7 +118,7 @@ export function useWidgetActions({
     // Process the message normally (identification already completed)
     messageQuota.incrementQuota();
     spamPrevention.recordMessage();
-    sessionPersistence.updateLastInteraction?.();
+    conversationPersistence.updateLastInteraction?.();
     setLocalIsTyping(true);
 
     // Mark that user has sent their first message
@@ -143,10 +143,10 @@ export function useWidgetActions({
       };
       
       setMessages(prev => [...prev, aiResponse]);
-      sessionPersistence.addMessage?.(aiResponse, isExpanded);
+      conversationPersistence.addMessage?.(aiResponse, isExpanded);
       incrementMessageCount();
       messageQuota.incrementQuota();
-      sessionPersistence.updateLastInteraction?.();
+      conversationPersistence.updateLastInteraction?.();
       setLocalIsTyping(false);
       
       // Start the AI session timer on first AI response
@@ -163,7 +163,7 @@ export function useWidgetActions({
     messages,
     settings,
     isExpanded,
-    sessionPersistence,
+    conversationPersistence,
     incrementMessageCount,
     startAISession,
     setMessages,
@@ -335,7 +335,7 @@ export function useWidgetActions({
           };
           
           setMessages(current => [...current, aiResponse]);
-          sessionPersistence.addMessage?.(aiResponse, isExpanded);
+          conversationPersistence.addMessage?.(aiResponse, isExpanded);
           incrementMessageCount();
           messageQuota.incrementQuota();
           setLocalIsTyping(false);
@@ -344,12 +344,12 @@ export function useWidgetActions({
         setLocalIsTyping(true);
       }
       
-      // Update session with all messages (removing identification message)
-      sessionPersistence.updateMessages?.(newMessages);
+      // Update conversation with all messages (removing identification message)
+      conversationPersistence.updateMessages?.(newMessages);
       
       return newMessages;
     });
-  }, [setMessages, sessionPersistence, isExpanded, settings, incrementMessageCount, messageQuota, userIdentification]);
+  }, [setMessages, conversationPersistence, isExpanded, settings, incrementMessageCount, messageQuota, userIdentification]);
 
   const handleFAQSelect = useCallback((question: string, answer: string) => {
     const faqMessage: Message = {
@@ -359,8 +359,8 @@ export function useWidgetActions({
       timestamp: new Date()
     };
     setMessages(prev => [...prev, faqMessage]);
-    sessionPersistence.addMessage?.(faqMessage, isExpanded);
-  }, [setMessages, sessionPersistence, isExpanded]);
+    conversationPersistence.addMessage?.(faqMessage, isExpanded);
+  }, [setMessages, conversationPersistence, isExpanded]);
 
   const handleResourceSelect = useCallback((title: string, content: string) => {
     const resourceMessage: Message = {
@@ -370,12 +370,12 @@ export function useWidgetActions({
       timestamp: new Date()
     };
     setMessages(prev => [...prev, resourceMessage]);
-    sessionPersistence.addMessage?.(resourceMessage, isExpanded);
-  }, [setMessages, sessionPersistence, isExpanded]);
+    conversationPersistence.addMessage?.(resourceMessage, isExpanded);
+  }, [setMessages, conversationPersistence, isExpanded]);
 
   const handleStartNewChat = useCallback(() => {
     setMessages([]);
-    sessionPersistence.clearSession?.();
+    conversationPersistence.clearConversation?.();
     
     // Create new session with welcome message
     if (settings?.aiSettings?.welcomeMessage) {
@@ -386,9 +386,9 @@ export function useWidgetActions({
         timestamp: new Date()
       };
       setMessages([welcomeMessage]);
-      sessionPersistence.createNewSession?.(welcomeMessage, isExpanded);
+      conversationPersistence.createNewConversation?.(welcomeMessage, isExpanded);
     }
-  }, [settings?.aiSettings?.welcomeMessage, setMessages, sessionPersistence, isExpanded]);
+  }, [settings?.aiSettings?.welcomeMessage, setMessages, conversationPersistence, isExpanded]);
 
   const handleEndConversationWithFeedback = useCallback(async (feedback?: { rating: string; comment: string }) => {
     try {
