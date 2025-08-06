@@ -182,7 +182,6 @@ export interface ChatWidgetState {
   selectedChat?: any;
   searchQuery: string;
   showConversationEndModal: boolean;
-  showMoodleReLoginPrompt: boolean;
 }
 
 // ============= Quota and Spam Prevention =============

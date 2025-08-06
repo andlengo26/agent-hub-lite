@@ -30,7 +30,7 @@ import { FAQBrowser } from "@/components/widget/FAQBrowser";
 import { ResourceBrowser } from "@/components/widget/ResourceBrowser";
 import { ChatClosedState } from "@/components/widget/ChatClosedState";
 import { PostChatFeedback } from "@/components/widget/PostChatFeedback";
-import { MoodleReLoginPrompt } from "@/modules/moodle/components/MoodleReLoginPrompt";
+
 import { useResources } from "@/hooks/useResources";
 import { useChats } from "@/hooks/useChats";
 import { useFAQSearch } from "@/hooks/useFAQSearch";
@@ -158,17 +158,6 @@ export function InteractiveWidget() {
     handleConfirmedEnd
   });
 
-  // Handle Moodle re-login prompt when conversation state loads
-  useEffect(() => {
-    if (!conversationPersistence.conversationState || !settings) return;
-    
-    const state = conversationPersistence.conversationState;
-    
-    // Check if we should show Moodle re-login prompt
-    if (state.identificationSession?.userData && settings?.integrations?.moodle) {
-      widgetState.setShowMoodleReLoginPrompt(true);
-    }
-  }, [conversationPersistence.conversationState, settings]);
 
   // Restore widget state when conversation state and settings are both available
   useEffect(() => {
@@ -263,22 +252,6 @@ export function InteractiveWidget() {
     }
   };
 
-  // Handle Moodle re-login
-  const handleMoodleReLogin = async (): Promise<boolean> => {
-    try {
-      const success = await moodleAutoIdentification.attemptAutoIdentification();
-      if (success) {
-        widgetState.setShowMoodleReLoginPrompt(false);
-        toast({
-          title: "Login Successful",
-          description: "Your chat history has been merged"
-        });
-      }
-      return success;
-    } catch (error) {
-      return false;
-    }
-  };
 
   // Handle FAQ use in chat
   const handleUseFAQInChat = (faq: any) => {
@@ -505,18 +478,6 @@ export function InteractiveWidget() {
         </div>
       )}
 
-      {widgetState.showMoodleReLoginPrompt && (
-        <div className="absolute inset-4 bg-background z-10 rounded-lg border shadow-lg">
-          <MoodleReLoginPrompt
-            onReLogin={handleMoodleReLogin}
-            onDismiss={() => widgetState.setShowMoodleReLoginPrompt(false)}
-            previousSessionData={{
-              username: userIdentification.session?.userData?.studentId,
-              lastActive: conversationPersistence.conversationState?.lastInteractionTime?.toISOString()
-            }}
-          />
-        </div>
-      )}
 
       {/* Conversation End Modal */}
       <ConversationEndModal

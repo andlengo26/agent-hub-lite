@@ -44,7 +44,6 @@ export function useWidgetState({ settings, conversationPersistence }: UseWidgetS
   const [showFAQBrowser, setShowFAQBrowser] = useState(false);
   const [showResourceBrowser, setShowResourceBrowser] = useState(false);
   const [showPostChatFeedback, setShowPostChatFeedback] = useState(false);
-  const [showMoodleReLoginPrompt, setShowMoodleReLoginPrompt] = useState(false);
   const [isConversationClosed, setIsConversationClosed] = useState(false);
   const [showQuotaWarning, setShowQuotaWarning] = useState(false);
   
@@ -277,8 +276,6 @@ export function useWidgetState({ settings, conversationPersistence }: UseWidgetS
     setShowResourceBrowser,
     showPostChatFeedback,
     setShowPostChatFeedback,
-    showMoodleReLoginPrompt,
-    setShowMoodleReLoginPrompt,
     isConversationClosed,
     setIsConversationClosed,
     showQuotaWarning,
