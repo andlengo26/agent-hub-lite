@@ -144,12 +144,15 @@ describe('Message Persistence Integration', () => {
           ...messages,
           {
             id: 'msg_2',
-            type: 'ai',
+            type: 'ai' as const,
             content: 'AI response',
             timestamp: new Date()
-          }
+          } as Message
         ]
-      }
+      },
+      addMessage: jest.fn(),
+      updateMessages: jest.fn(),
+      clearConversation: jest.fn()
     };
 
     const { result } = renderHook(() => 
