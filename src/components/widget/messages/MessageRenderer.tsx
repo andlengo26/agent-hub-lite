@@ -3,6 +3,7 @@ import { IdentificationMessage } from "./IdentificationMessage";
 import { Message } from "@/types/message";
 import { IdentificationFormData, IdentificationValidationResult, IdentificationSession } from "@/types/user-identification";
 import { WidgetSettings } from "@/hooks/useWidgetSettings";
+import { useTypingAnimation } from "@/hooks/useTypingAnimation";
 
 interface MessageRendererProps {
   message: Message;
@@ -43,6 +44,14 @@ export function MessageRenderer({
   isSubmittingIdentification,
   getIdentificationMethodPriority
 }: MessageRendererProps) {
+  // Add typing animation for AI messages only
+  const messageContent = message.type === 'ai' || message.type === 'user' ? message.content : '';
+  const { displayedContent, isTyping } = useTypingAnimation({
+    content: messageContent,
+    enabled: message.type === 'ai',
+    speed: 2,
+    delay: 30
+  });
   if (message.type === 'identification') {
     if (!settings || !formData || !onUpdateFormData || !onSubmitIdentification || !onMoodleAuth || !getIdentificationMethodPriority) {
       return null;
@@ -111,14 +120,15 @@ export function MessageRenderer({
               Pending identification...
             </div>
           )}
-          {message.content}
+          {message.type === 'ai' ? displayedContent : (message.type === 'user' ? message.content : '')}
+          {isTyping && <span className="inline-block w-2 h-4 bg-current opacity-75 ml-1 animate-pulse">|</span>}
         </div>
         <div className="text-xs text-muted-foreground mt-1">
           {message.timestamp.toLocaleTimeString()}
         </div>
         
         {/* Feedback buttons for AI messages */}
-        {message.type === 'ai' && !message.id.includes('welcome') && aiSettings.enableFeedback && !message.feedbackSubmitted && (
+        {message.type === 'ai' && !message.id.includes('welcome') && aiSettings.enableFeedback && !message.feedbackSubmitted && !isTyping && (
           <MessageFeedback
             messageId={message.id}
             onFeedback={onFeedback}

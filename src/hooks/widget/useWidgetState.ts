@@ -202,6 +202,17 @@ export function useWidgetState({ settings, sessionPersistence }: UseWidgetStateP
         timestamp: new Date(msg.timestamp) // Ensure timestamp is a Date object
       }));
       setMessages(restoredMessages);
+      
+      // Check if user has sent messages before
+      const hasUserMessages = restoredMessages.some(msg => msg.type === 'user');
+      if (hasUserMessages) {
+        setHasUserSentFirstMessage(true);
+      }
+      
+      // Auto-expand if there's an active conversation
+      if (restoredMessages.length > 1 || sessionPersistence.currentSession.isExpanded) {
+        setIsExpanded(true);
+      }
     }
   }, [sessionPersistence.currentSession, messages.length, setMessages]);
 
