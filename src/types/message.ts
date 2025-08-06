@@ -9,6 +9,7 @@ export interface BaseMessage {
 export interface UserMessage extends BaseMessage {
   type: 'user';
   content: string;
+  isPending?: boolean; // For messages waiting for identification
 }
 
 export interface AIMessage extends BaseMessage {

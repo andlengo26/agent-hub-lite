@@ -193,6 +193,18 @@ export function useWidgetState({ settings, sessionPersistence }: UseWidgetStateP
     }
   }, [settings?.appearance?.autoOpenWidget, isExpanded, messages.length, sessionPersistence.currentSession]);
 
+  // Initialize messages from session on widget load
+  useEffect(() => {
+    if (sessionPersistence.currentSession?.messages?.length > 0 && messages.length === 0) {
+      console.log('📝 Restoring messages from session:', sessionPersistence.currentSession.messages.length);
+      const restoredMessages = sessionPersistence.currentSession.messages.map(msg => ({
+        ...msg,
+        timestamp: new Date(msg.timestamp) // Ensure timestamp is a Date object
+      }));
+      setMessages(restoredMessages);
+    }
+  }, [sessionPersistence.currentSession, messages.length, setMessages]);
+
   // Track active chat state
   useEffect(() => {
     setHasActiveChat(messages.length > 0);

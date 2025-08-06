@@ -101,11 +101,16 @@ export function MessageRenderer({
         <div 
           className={`rounded-lg px-3 py-2 text-sm ${
             message.type === 'user' 
-              ? 'text-white ml-auto' 
+              ? `text-white ml-auto ${message.isPending ? 'opacity-70 border border-dashed border-white/50' : ''}` 
               : 'bg-muted'
           }`}
           style={message.type === 'user' ? { backgroundColor: appearance.primaryColor } : {}}
         >
+          {message.type === 'user' && message.isPending && (
+            <div className="text-xs opacity-70 mb-1">
+              Pending identification...
+            </div>
+          )}
           {message.content}
         </div>
         <div className="text-xs text-muted-foreground mt-1">

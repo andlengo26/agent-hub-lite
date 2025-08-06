@@ -84,9 +84,22 @@ export function useWidgetActions({
     // Check if user identification is required
     const isFirstMessage = !hasUserSentFirstMessage;
     
-    // Block message if identification is required and not completed
+    // Always store the user message, but mark as pending if identification is required
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      type: 'user',
+      content: inputValue,
+      timestamp: new Date(),
+      isPending: !userIdentification.canSendMessage()
+    };
+
+    setMessages(prev => [...prev, userMessage]);
+    sessionPersistence.addMessage?.(userMessage, isExpanded);
+    setInputValue('');
+    incrementMessageCount();
+    
+    // If identification is required, show identification form
     if (!userIdentification.canSendMessage()) {
-      // Add identification message if not already present
       const hasIdentificationMessage = messages.some(msg => msg.type === 'identification');
       if (!hasIdentificationMessage) {
         const identificationMessage: Message = {
@@ -101,17 +114,7 @@ export function useWidgetActions({
       return;
     }
 
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      type: 'user',
-      content: inputValue,
-      timestamp: new Date()
-    };
-
-    setMessages(prev => [...prev, userMessage]);
-    sessionPersistence.addMessage?.(userMessage, isExpanded);
-    setInputValue('');
-    incrementMessageCount();
+    // Process the message normally (identification already completed)
     messageQuota.incrementQuota();
     spamPrevention.recordMessage();
     sessionPersistence.updateLastInteraction?.();
@@ -292,9 +295,13 @@ export function useWidgetActions({
   }, [setMessages]);
 
   const handleIdentificationComplete = useCallback((session: IdentificationSession) => {
-    // Remove identification message and add acknowledgment
     setMessages(prev => {
-      const filtered = prev.filter(msg => msg.type !== 'identification');
+      // Remove identification message and convert pending messages to regular messages
+      const messagesWithoutIdentification = prev.filter(msg => msg.type !== 'identification');
+      const updatedMessages = messagesWithoutIdentification.map(msg => 
+        msg.type === 'user' && msg.isPending ? { ...msg, isPending: false } : msg
+      );
+      
       const { userData } = session;
       const welcomeFields = [];
       if (userData.name) welcomeFields.push(`name: ${userData.name}`);
@@ -304,15 +311,20 @@ export function useWidgetActions({
       const acknowledgmentMessage: Message = {
         id: `ack_${Date.now()}`,
         type: 'ai',
-        content: `Thank you for providing your information${welcomeFields.length > 0 ? ` (${welcomeFields.join(', ')})` : ''}. I can now assist you more effectively. How can I help you today?`,
+        content: `Thank you for providing your information${welcomeFields.length > 0 ? ` (${welcomeFields.join(', ')})` : ''}. I can now assist you more effectively.`,
         timestamp: new Date()
       };
       
-      sessionPersistence.addMessage?.(acknowledgmentMessage, isExpanded);
+      const newMessages = [...updatedMessages, acknowledgmentMessage];
       
-      // Generate AI response to the last user message if there was one pending
-      const lastUserMessage = filtered[filtered.length - 1];
-      if (lastUserMessage && lastUserMessage.type === 'user') {
+      // Process any pending user messages
+      const pendingMessages = messagesWithoutIdentification.filter(msg => 
+        msg.type === 'user' && msg.isPending
+      );
+      
+      if (pendingMessages.length > 0) {
+        // Generate AI response to the latest pending message
+        const latestPendingMessage = pendingMessages[pendingMessages.length - 1];
         setTimeout(() => {
           const userContext = `${userData.name || 'User'}${userData.email ? ` (${userData.email})` : ''}`;
           const contextSuffix = ` (${userContext})`;
@@ -320,7 +332,7 @@ export function useWidgetActions({
           const aiResponse: Message = {
             id: `ai_${Date.now()}`,
             type: 'ai',
-            content: `Thank you for your message: "${lastUserMessage.content}". This is a demo response from the ${settings?.aiSettings?.assistantName}. In production, this would connect to your configured AI model (${settings?.integrations?.aiModel}) to provide intelligent responses.${contextSuffix}`,
+            content: `Thank you for your message: "${latestPendingMessage.content}". This is a demo response from the ${settings?.aiSettings?.assistantName}. In production, this would connect to your configured AI model (${settings?.integrations?.aiModel}) to provide intelligent responses.${contextSuffix}`,
             timestamp: new Date(),
             feedbackSubmitted: false
           };
@@ -329,12 +341,20 @@ export function useWidgetActions({
           sessionPersistence.addMessage?.(aiResponse, isExpanded);
           incrementMessageCount();
           messageQuota.incrementQuota();
+          setIsTyping(false);
         }, 1000);
+        
+        setIsTyping(true);
       }
       
-      return [...filtered, acknowledgmentMessage];
+      // Save all updated messages to session
+      newMessages.forEach(msg => {
+        sessionPersistence.addMessage?.(msg, isExpanded);
+      });
+      
+      return newMessages;
     });
-  }, [setMessages, sessionPersistence, isExpanded, settings, incrementMessageCount, messageQuota]);
+  }, [setMessages, sessionPersistence, isExpanded, settings, incrementMessageCount, messageQuota, setIsTyping]);
 
   const handleFAQSelect = useCallback((question: string, answer: string) => {
     const faqMessage: Message = {
