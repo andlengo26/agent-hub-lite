@@ -105,6 +105,9 @@ export function InteractiveWidget() {
       } catch (error) {
         // Silent error handling - customer creation failures are logged internally
       }
+      
+      // Call the widget actions identification complete handler
+      widgetActions.handleIdentificationComplete(session);
     }
   });
 

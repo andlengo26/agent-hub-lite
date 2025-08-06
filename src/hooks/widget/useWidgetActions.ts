@@ -84,17 +84,20 @@ export function useWidgetActions({
     // Check if user identification is required
     const isFirstMessage = !hasUserSentFirstMessage;
     
-    // Allow first message even without identification, but require it for subsequent messages
-    if (!isFirstMessage && !userIdentification.canSendMessage()) {
-      // Add identification message for subsequent messages when not identified
-      const identificationMessage: Message = {
-        id: `identification_${Date.now()}`,
-        type: 'identification',
-        timestamp: new Date(),
-        isCompleted: false
-      };
-      setMessages(prev => [...prev, identificationMessage]);
-      sessionPersistence.addMessage?.(identificationMessage, isExpanded);
+    // Block message if identification is required and not completed
+    if (!userIdentification.canSendMessage()) {
+      // Add identification message if not already present
+      const hasIdentificationMessage = messages.some(msg => msg.type === 'identification');
+      if (!hasIdentificationMessage) {
+        const identificationMessage: Message = {
+          id: `identification_${Date.now()}`,
+          type: 'identification',
+          timestamp: new Date(),
+          isCompleted: false
+        };
+        setMessages(prev => [...prev, identificationMessage]);
+        sessionPersistence.addMessage?.(identificationMessage, isExpanded);
+      }
       return;
     }
 
@@ -119,8 +122,8 @@ export function useWidgetActions({
       setHasUserSentFirstMessage(true);
     }
 
-    // Generate AI response only if user is identified or it's the first message
-    if (userIdentification.canSendMessage() || isFirstMessage) {
+    // Generate AI response only when user is identified or identification is not required
+    if (userIdentification.canSendMessage()) {
       // Simulate AI response with user context
       setTimeout(() => {
         const isWelcomeMessage = messages.length === 0 || 
@@ -149,21 +152,9 @@ export function useWidgetActions({
           startAISession();
         }
       }, 1000 + Math.random() * 2000);
-    }
-
-    // After first message, check if identification is needed
-    if (isFirstMessage && userIdentification.isRequired && !userIdentification.isCompleted) {
-      setTimeout(() => {
-        const identificationMessage: Message = {
-          id: `identification_${Date.now()}`,
-          type: 'identification',
-          timestamp: new Date(),
-          isCompleted: false
-        };
-        setMessages(prev => [...prev, identificationMessage]);
-        sessionPersistence.addMessage?.(identificationMessage, isExpanded);
-        setIsTyping(false); // Stop typing for identification prompt
-      }, 1500); // Delay to allow first AI response
+    } else {
+      // Stop typing if identification is required
+      setIsTyping(false);
     }
   }, [
     conversationState.status,
