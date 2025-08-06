@@ -1,6 +1,7 @@
 /**
- * Message Recovery Hook
- * Validates and recovers message state inconsistencies
+ * Message Recovery Hook - DEPRECATED
+ * Use useMessageRecoveryEnhanced instead
+ * @deprecated
  */
 
 import { useCallback, useEffect } from 'react';

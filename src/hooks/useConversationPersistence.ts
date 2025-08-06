@@ -179,6 +179,77 @@ export function useConversationPersistence({ onStateLoaded }: UseConversationPer
     setConversationState(null);
   }, [conversationState]);
 
+  // CRITICAL: Single source of truth for message updates
+  // All message modifications must go through this function to prevent race conditions
+  const updateMessages = useCallback((messages: Message[], operation: string = 'GENERIC') => {
+    if (!conversationState) {
+      logger.warn('Attempted to update messages without conversation state', { messageCount: messages.length }, 'useConversationPersistence');
+      return;
+    }
+    
+    const oldCount = conversationState.messages.length;
+    logger.messagePersistence('UPDATE_MESSAGES_START', { 
+      operation,
+      oldCount,
+      newCount: messages.length,
+      difference: messages.length - oldCount
+    }, 'useConversationPersistence');
+    
+    // Validate message integrity before update
+    const duplicateIds = new Set();
+    const uniqueIds = new Set();
+    messages.forEach(msg => {
+      if (uniqueIds.has(msg.id)) {
+        duplicateIds.add(msg.id);
+      }
+      uniqueIds.add(msg.id);
+    });
+    
+    if (duplicateIds.size > 0) {
+      logger.raceCondition('DUPLICATE_MESSAGE_IDS_DETECTED', {
+        duplicateIds: Array.from(duplicateIds),
+        operation
+      }, 'useConversationPersistence');
+      // Deduplicate messages by ID, keeping the latest
+      const seenIds = new Set();
+      const dedupedMessages = messages.filter(msg => {
+        if (seenIds.has(msg.id)) return false;
+        seenIds.add(msg.id);
+        return true;
+      });
+      logger.messagePersistence('MESSAGES_DEDUPLICATED', {
+        originalCount: messages.length,
+        dedupedCount: dedupedMessages.length
+      }, 'useConversationPersistence');
+      messages = dedupedMessages;
+    }
+    
+    // Detect potential race conditions
+    if (Math.abs(messages.length - oldCount) > 3) {
+      logger.raceCondition('MESSAGE_UPDATE_LARGE_CHANGE', {
+        operation,
+        oldCount,
+        newCount: messages.length,
+        difference: messages.length - oldCount
+      }, 'useConversationPersistence');
+    }
+    
+    // Atomic state update
+    const updatedState = {
+      ...conversationState,
+      messages,
+      lastInteractionTime: new Date()
+    };
+    
+    saveConversationState(updatedState);
+    logger.messagePersistence('UPDATE_MESSAGES_COMPLETE', {
+      operation,
+      finalCount: messages.length
+    }, 'useConversationPersistence');
+    logger.messageValidation(messages.length, updatedState.messages.length, operation);
+  }, [conversationState, saveConversationState]);
+
+  // Single message addition - routes through updateMessages for consistency
   const addMessage = useCallback((message: Message, requiresIdentification?: boolean) => {
     const currentMessageCount = conversationState?.messages.length || 0;
     
@@ -208,17 +279,20 @@ export function useConversationPersistence({ onStateLoaded }: UseConversationPer
         newMessageCount: currentMessageCount + 1
       }, 'useConversationPersistence');
       
-      const updatedState = {
-        ...conversationState,
-        messages: [...conversationState.messages, message],
-        lastInteractionTime: new Date()
-      };
-      saveConversationState(updatedState);
-      logger.messageValidation(currentMessageCount + 1, updatedState.messages.length, 'ADD_MESSAGE');
+      // Use updateMessages for consistency - this is the single source of truth
+      const newMessages = [...conversationState.messages, message];
+      updateMessages(newMessages, 'ADD_MESSAGE');
     }
-  }, [conversationState, saveConversationState]);
+  }, [conversationState, saveConversationState, updateMessages]);
 
+  // CRITICAL: Atomic identification session merge
   const setIdentificationSession = useCallback((session: IdentificationSession) => {
+    logger.messagePersistence('SET_IDENTIFICATION_SESSION_START', {
+      hasConversationState: !!conversationState,
+      sessionType: session.type,
+      sessionValid: session.isValid
+    }, 'useConversationPersistence');
+    
     if (!conversationState) {
       // Create new conversation with identification
       const newState: ConversationState = {
@@ -230,51 +304,37 @@ export function useConversationPersistence({ onStateLoaded }: UseConversationPer
         pendingMessages: []
       };
       saveConversationState(newState);
+      logger.messagePersistence('NEW_CONVERSATION_WITH_SESSION', {}, 'useConversationPersistence');
       return;
     }
 
-    // Process any pending messages now that we have identification
+    // ATOMIC MERGE: Process all messages at once to prevent race conditions
+    const currentMessages = conversationState.messages || [];
     const pendingMessages = conversationState.pendingMessages || [];
-    const allMessages = [...conversationState.messages, ...pendingMessages];
-
+    
+    logger.messagePersistence('MERGING_MESSAGES', {
+      currentCount: currentMessages.length,
+      pendingCount: pendingMessages.length
+    }, 'useConversationPersistence');
+    
+    // Remove identification messages and merge pending messages atomically
+    const nonIdentificationMessages = currentMessages.filter(msg => msg.type !== 'identification');
+    const allMessages = [...nonIdentificationMessages, ...pendingMessages];
+    
+    // Single atomic update through updateConversationState
     updateConversationState({
       identificationSession: session,
       messages: allMessages,
       status: 'active',
       pendingMessages: []
     });
+    
+    logger.messagePersistence('SET_IDENTIFICATION_SESSION_COMPLETE', {
+      finalMessageCount: allMessages.length,
+      sessionSet: true
+    }, 'useConversationPersistence');
   }, [conversationState, saveConversationState, updateConversationState]);
 
-  const updateMessages = useCallback((messages: Message[]) => {
-    if (!conversationState) {
-      logger.warn('Attempted to update messages without conversation state', { messageCount: messages.length }, 'useConversationPersistence');
-      return;
-    }
-    
-    const oldCount = conversationState.messages.length;
-    logger.messagePersistence('UPDATE_MESSAGES', { 
-      oldCount,
-      newCount: messages.length,
-      difference: messages.length - oldCount
-    }, 'useConversationPersistence');
-    
-    // Detect potential race conditions
-    if (Math.abs(messages.length - oldCount) > 3) {
-      logger.raceCondition('MESSAGE_UPDATE_LARGE_CHANGE', {
-        oldCount,
-        newCount: messages.length,
-        difference: messages.length - oldCount
-      }, 'useConversationPersistence');
-    }
-    
-    const updatedState = {
-      ...conversationState,
-      messages,
-      lastInteractionTime: new Date()
-    };
-    saveConversationState(updatedState);
-    logger.messageValidation(messages.length, updatedState.messages.length, 'UPDATE_MESSAGES');
-  }, [conversationState, saveConversationState]);
 
   const updateWidgetState = useCallback((isExpanded: boolean) => {
     updateConversationState({ isExpanded });

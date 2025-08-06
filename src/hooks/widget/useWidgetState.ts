@@ -196,19 +196,27 @@ export function useWidgetState({ settings, conversationPersistence }: UseWidgetS
     }
   }, [conversationPersistence.isLoading, settings?.appearance?.autoOpenWidget, isExpanded, messages.length, conversationPersistence.conversationState]);
 
-  // Initialize messages and state from conversation persistence on widget load
+  // CRITICAL: Deterministic state restoration with race condition prevention
   useEffect(() => {
     if (conversationPersistence.isLoading || !conversationPersistence.conversationState) return;
     
     const state = conversationPersistence.conversationState;
     
     // Restore messages if we have them and current messages are empty
+    // IMPORTANT: Only restore when messages are truly empty to prevent duplicate restoration
     if (state.messages?.length > 0 && messages.length === 0) {
-      console.log('📝 Restoring messages from conversation:', state.messages.length);
+      logger.messagePersistence('RESTORING_MESSAGES_FROM_PERSISTENCE', {
+        persistedCount: state.messages.length,
+        currentCount: messages.length,
+        conversationId: state.conversationId
+      }, 'useWidgetState');
+      
       const restoredMessages = state.messages.map(msg => ({
         ...msg,
         timestamp: new Date(msg.timestamp) // Ensure timestamp is a Date object
       }));
+      
+      // Use the persistence layer's updateMessages for consistency
       setMessages(restoredMessages);
       
       // Check if user has sent messages before
@@ -216,6 +224,17 @@ export function useWidgetState({ settings, conversationPersistence }: UseWidgetS
       if (hasUserMessages) {
         setHasUserSentFirstMessage(true);
       }
+      
+      logger.messagePersistence('MESSAGE_RESTORATION_COMPLETE', {
+        restoredCount: restoredMessages.length,
+        hasUserMessages
+      }, 'useWidgetState');
+    } else if (state.messages?.length > 0 && messages.length > 0) {
+      // Log potential race condition if both have messages
+      logger.raceCondition('RESTORATION_SKIPPED_BOTH_HAVE_MESSAGES', {
+        persistedCount: state.messages.length,
+        currentCount: messages.length
+      }, 'useWidgetState');
     }
     
     // Handle conversation status
