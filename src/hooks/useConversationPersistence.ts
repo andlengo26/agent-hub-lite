@@ -8,6 +8,7 @@ import { Message } from '@/types/message';
 import { IdentificationSession } from '@/types/user-identification';
 
 const CONVERSATION_STORAGE_KEY = 'widget_conversation_state';
+const STORAGE_KEY = CONVERSATION_STORAGE_KEY; // Alias for backward compatibility
 
 interface ConversationState {
   messages: Message[];
@@ -30,9 +31,10 @@ export function useConversationPersistence({ onStateLoaded }: UseConversationPer
 
   // Load existing conversation state from storage
   useEffect(() => {
-    const loadConversationState = async () => {
+    const loadConversationState = () => {
+      setIsLoading(true);
       console.log('🔄 Loading conversation state from storage...');
-      const savedState = localStorage.getItem(CONVERSATION_STORAGE_KEY);
+      const savedState = localStorage.getItem(STORAGE_KEY);
       
       if (savedState) {
         try {
@@ -77,12 +79,12 @@ export function useConversationPersistence({ onStateLoaded }: UseConversationPer
             onStateLoaded?.(loadedState);
           } else {
             console.log('❌ Conversation state is stale, removing...');
-            localStorage.removeItem(CONVERSATION_STORAGE_KEY);
+            localStorage.removeItem(STORAGE_KEY);
             setConversationState(null);
           }
         } catch (error) {
           console.error('Failed to load conversation state:', error);
-          localStorage.removeItem(CONVERSATION_STORAGE_KEY);
+          localStorage.removeItem(STORAGE_KEY);
           setConversationState(null);
         }
       } else {
@@ -103,7 +105,7 @@ export function useConversationPersistence({ onStateLoaded }: UseConversationPer
       lastInteractionTime: new Date().toISOString()
     };
     
-    localStorage.setItem(CONVERSATION_STORAGE_KEY, JSON.stringify(stateToSave));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(stateToSave));
     setConversationState(stateToSave);
   }, []);
 
@@ -135,7 +137,7 @@ export function useConversationPersistence({ onStateLoaded }: UseConversationPer
   }, [saveConversationState]);
 
   const clearConversation = useCallback(() => {
-    localStorage.removeItem(CONVERSATION_STORAGE_KEY);
+    localStorage.removeItem(STORAGE_KEY);
     setConversationState(null);
   }, []);
 

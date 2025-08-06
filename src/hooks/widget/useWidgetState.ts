@@ -181,6 +181,8 @@ export function useWidgetState({ settings, conversationPersistence }: UseWidgetS
 
   // Auto-expand logic
   useEffect(() => {
+    if (conversationPersistence.isLoading) return;
+    
     if (settings?.appearance?.autoOpenWidget && 
         !isExpanded && 
         messages.length === 0 && 
@@ -191,11 +193,11 @@ export function useWidgetState({ settings, conversationPersistence }: UseWidgetS
         conversationPersistence.updateWidgetState?.(true);
       }, 2000);
     }
-  }, [settings?.appearance?.autoOpenWidget, isExpanded, messages.length, conversationPersistence.conversationState]);
+  }, [conversationPersistence.isLoading, settings?.appearance?.autoOpenWidget, isExpanded, messages.length, conversationPersistence.conversationState]);
 
   // Initialize messages and state from conversation persistence on widget load
   useEffect(() => {
-    if (!conversationPersistence.conversationState) return;
+    if (conversationPersistence.isLoading || !conversationPersistence.conversationState) return;
     
     const state = conversationPersistence.conversationState;
     
@@ -225,7 +227,7 @@ export function useWidgetState({ settings, conversationPersistence }: UseWidgetS
       setIsExpanded(true);
     }
     
-  }, [conversationPersistence.conversationState, messages.length, setMessages, isExpanded]);
+  }, [conversationPersistence.conversationState, conversationPersistence.isLoading, messages.length, setMessages, isExpanded]);
 
   // Track active chat state
   useEffect(() => {

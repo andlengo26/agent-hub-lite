@@ -162,7 +162,7 @@ export function InteractiveWidget() {
 
   // Restore widget state when conversation state and settings are both available
   useEffect(() => {
-    if (!conversationPersistence.conversationState || !settings) return;
+    if (conversationPersistence.isLoading || !conversationPersistence.conversationState || !settings) return;
     
     const determineWidgetExpandState = (state: any, settings: any): boolean => {
       if (!state || !settings) return false;
@@ -191,7 +191,7 @@ export function InteractiveWidget() {
     if (shouldExpand !== widgetState.isExpanded) {
       widgetState.handleExpand();
     }
-  }, [conversationPersistence.conversationState, settings]);
+  }, [conversationPersistence.isLoading, conversationPersistence.conversationState, settings]);
 
   // Create welcome message for new expanded sessions - wait for loading to complete
   useEffect(() => {
