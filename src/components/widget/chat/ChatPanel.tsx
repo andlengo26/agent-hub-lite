@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { MessageRenderer } from '@/components/widget/messages/MessageRenderer';
+import { TypingIndicator } from '@/components/widget/messages/TypingIndicator';
 import { MoodleLoginButton } from '@/modules/moodle/components/MoodleLoginButton';
 import { Message } from '@/types/message';
 import { IdentificationFormData, IdentificationValidationResult, IdentificationSession } from '@/types/user-identification';
@@ -107,17 +108,7 @@ export function ChatPanel({
         
         {/* Typing Indicator */}
         {isTyping && (
-          <div className="flex justify-start">
-            <div className="bg-muted text-muted-foreground p-3 rounded-lg max-w-[80%]">
-              <div className="flex items-center gap-2">
-                <div className="flex space-x-1">
-                  <div className="w-2 h-2 bg-current rounded-full animate-bounce"></div>
-                  <div className="w-2 h-2 bg-current rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                  <div className="w-2 h-2 bg-current rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                </div>
-              </div>
-            </div>
-          </div>
+          <TypingIndicator appearance={appearance} />
         )}
         <div ref={messagesEndRef} />
       </div>

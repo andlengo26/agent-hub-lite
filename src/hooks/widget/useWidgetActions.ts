@@ -3,7 +3,7 @@
  * Handles all widget actions like sending messages, file uploads, etc.
  */
 
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { Message } from '@/types/message';
 import { IdentificationSession } from '@/types/user-identification';
@@ -21,7 +21,6 @@ interface UseWidgetActionsProps {
   hasUserSentFirstMessage: boolean;
   messages: Message[];
   setMessages: (messages: Message[] | ((prev: Message[]) => Message[])) => void;
-  setIsTyping: (typing: boolean) => void;
   setIsRecording: (recording: boolean) => void;
   setInputValue: (value: string) => void;
   setHasUserSentFirstMessage: (sent: boolean) => void;
@@ -42,7 +41,6 @@ export function useWidgetActions({
   hasUserSentFirstMessage,
   messages,
   setMessages,
-  setIsTyping,
   setIsRecording,
   setInputValue,
   setHasUserSentFirstMessage,
@@ -52,6 +50,7 @@ export function useWidgetActions({
   handleConfirmedEnd
 }: UseWidgetActionsProps) {
   const { toast } = useToast();
+  const [localIsTyping, setLocalIsTyping] = useState(false);
 
   const handleSendMessage = useCallback(async (inputValue: string) => {
     if (!inputValue.trim()) return;
@@ -120,7 +119,7 @@ export function useWidgetActions({
     messageQuota.incrementQuota();
     spamPrevention.recordMessage();
     sessionPersistence.updateLastInteraction?.();
-    setIsTyping(true);
+    setLocalIsTyping(true);
 
     // Mark that user has sent their first message
     if (isFirstMessage) {
@@ -148,7 +147,7 @@ export function useWidgetActions({
       incrementMessageCount();
       messageQuota.incrementQuota();
       sessionPersistence.updateLastInteraction?.();
-      setIsTyping(false);
+      setLocalIsTyping(false);
       
       // Start the AI session timer on first AI response
       if (messages.length === 1) {
@@ -169,7 +168,6 @@ export function useWidgetActions({
     startAISession,
     setMessages,
     setInputValue,
-    setIsTyping,
     setHasUserSentFirstMessage,
     toast
   ]);
@@ -340,10 +338,10 @@ export function useWidgetActions({
           sessionPersistence.addMessage?.(aiResponse, isExpanded);
           incrementMessageCount();
           messageQuota.incrementQuota();
-          setIsTyping(false);
+          setLocalIsTyping(false);
         }, 1000);
         
-        setIsTyping(true);
+        setLocalIsTyping(true);
       }
       
       // Update session with all messages (removing identification message)
@@ -351,7 +349,7 @@ export function useWidgetActions({
       
       return newMessages;
     });
-  }, [setMessages, sessionPersistence, isExpanded, settings, incrementMessageCount, messageQuota, setIsTyping, userIdentification]);
+  }, [setMessages, sessionPersistence, isExpanded, settings, incrementMessageCount, messageQuota, userIdentification]);
 
   const handleFAQSelect = useCallback((question: string, answer: string) => {
     const faqMessage: Message = {
@@ -434,6 +432,7 @@ export function useWidgetActions({
     handleFAQSelect,
     handleResourceSelect,
     handleStartNewChat,
-    handleEndConversationWithFeedback
+    handleEndConversationWithFeedback,
+    isTyping: localIsTyping
   };
 }

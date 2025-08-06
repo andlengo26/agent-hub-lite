@@ -152,7 +152,6 @@ export function InteractiveWidget() {
     hasUserSentFirstMessage: widgetState.hasUserSentFirstMessage,
     messages: widgetState.messages,
     setMessages: widgetState.setMessages,
-    setIsTyping: widgetState.setIsTyping,
     setIsRecording: widgetState.setIsRecording,
     setInputValue: widgetState.setInputValue,
     setHasUserSentFirstMessage: widgetState.setHasUserSentFirstMessage,
