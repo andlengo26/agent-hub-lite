@@ -26,55 +26,74 @@ interface UseConversationPersistenceProps {
 
 export function useConversationPersistence({ onStateLoaded }: UseConversationPersistenceProps = {}) {
   const [conversationState, setConversationState] = useState<ConversationState | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Load existing conversation state from storage
   useEffect(() => {
-    const savedState = localStorage.getItem(CONVERSATION_STORAGE_KEY);
-    if (savedState) {
-      try {
-        const parsedState: ConversationState = JSON.parse(savedState);
-        
-        // Convert string timestamps back to Date objects in messages
-        const messagesWithDates = parsedState.messages.map(msg => ({
-          ...msg,
-          timestamp: new Date(msg.timestamp)
-        }));
-
-        // Validate identification session is still fresh (24 hours)
-        let validSession = parsedState.identificationSession;
-        if (validSession) {
-          const sessionAge = new Date().getTime() - new Date(validSession.timestamp).getTime();
-          if (sessionAge > 24 * 60 * 60 * 1000 || !validSession.isValid) {
-            validSession = null;
-          }
-        }
-
-        // Validate conversation state is not stale (7 days)
-        const stateAge = new Date().getTime() - new Date(parsedState.timestamp).getTime();
-        const isStateValid = stateAge < 7 * 24 * 60 * 60 * 1000;
-
-        if (isStateValid) {
-          const loadedState: ConversationState = {
-            ...parsedState,
-            messages: messagesWithDates,
-            identificationSession: validSession,
-            // If session expired but we have messages, require re-identification
-            status: validSession ? parsedState.status : 
-                   (messagesWithDates.length > 0 ? 'pending_identification' : 'new')
-          };
+    const loadConversationState = async () => {
+      console.log('🔄 Loading conversation state from storage...');
+      const savedState = localStorage.getItem(CONVERSATION_STORAGE_KEY);
+      
+      if (savedState) {
+        try {
+          const parsedState: ConversationState = JSON.parse(savedState);
           
-          setConversationState(loadedState);
-          onStateLoaded?.(loadedState);
-        } else {
+          // Convert string timestamps back to Date objects in messages
+          const messagesWithDates = parsedState.messages.map(msg => ({
+            ...msg,
+            timestamp: new Date(msg.timestamp)
+          }));
+
+          // Validate identification session is still fresh (24 hours)
+          let validSession = parsedState.identificationSession;
+          if (validSession) {
+            const sessionAge = new Date().getTime() - new Date(validSession.timestamp).getTime();
+            if (sessionAge > 24 * 60 * 60 * 1000 || !validSession.isValid) {
+              validSession = null;
+            }
+          }
+
+          // Validate conversation state is not stale (7 days)
+          const stateAge = new Date().getTime() - new Date(parsedState.timestamp).getTime();
+          const isStateValid = stateAge < 7 * 24 * 60 * 60 * 1000;
+
+          if (isStateValid) {
+            const loadedState: ConversationState = {
+              ...parsedState,
+              messages: messagesWithDates,
+              identificationSession: validSession,
+              // If session expired but we have messages, require re-identification
+              status: validSession ? parsedState.status : 
+                     (messagesWithDates.length > 0 ? 'pending_identification' : 'new')
+            };
+            
+            console.log('✅ Loaded conversation state:', {
+              messages: loadedState.messages.length,
+              status: loadedState.status,
+              isExpanded: loadedState.isExpanded
+            });
+            
+            setConversationState(loadedState);
+            onStateLoaded?.(loadedState);
+          } else {
+            console.log('❌ Conversation state is stale, removing...');
+            localStorage.removeItem(CONVERSATION_STORAGE_KEY);
+            setConversationState(null);
+          }
+        } catch (error) {
+          console.error('Failed to load conversation state:', error);
           localStorage.removeItem(CONVERSATION_STORAGE_KEY);
           setConversationState(null);
         }
-      } catch (error) {
-        console.error('Failed to load conversation state:', error);
-        localStorage.removeItem(CONVERSATION_STORAGE_KEY);
+      } else {
+        console.log('📭 No saved conversation state found');
         setConversationState(null);
       }
-    }
+      
+      setIsLoading(false);
+    };
+
+    loadConversationState();
   }, []); // Remove onStateLoaded from dependencies to prevent infinite loop
 
   const saveConversationState = useCallback((state: ConversationState) => {
@@ -194,6 +213,7 @@ export function useConversationPersistence({ onStateLoaded }: UseConversationPer
 
   return {
     conversationState,
+    isLoading,
     saveConversationState,
     updateConversationState,
     createNewConversation,

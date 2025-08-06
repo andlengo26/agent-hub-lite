@@ -193,12 +193,25 @@ export function InteractiveWidget() {
     }
   }, [conversationPersistence.conversationState, settings]);
 
-  // Create welcome message for new expanded sessions
+  // Create welcome message for new expanded sessions - wait for loading to complete
   useEffect(() => {
+    if (conversationPersistence.isLoading) return;
+    
+    console.log('🔍 Welcome message check (expanded):', {
+      isExpanded: widgetState.isExpanded,
+      messagesLength: widgetState.messages.length,
+      hasWelcomeMessage: !!settings?.aiSettings?.welcomeMessage,
+      hasPersistedState: !!conversationPersistence.conversationState,
+      isLoading: conversationPersistence.isLoading
+    });
+    
     if (widgetState.isExpanded && 
         widgetState.messages.length === 0 && 
         settings?.aiSettings?.welcomeMessage && 
-        !conversationPersistence.conversationState) {
+        !conversationPersistence.conversationState &&
+        !conversationPersistence.isLoading) {
+      
+      console.log('🤖 Adding welcome message for expanded widget');
       const welcomeMessage = {
         id: 'welcome',
         type: 'ai' as const,
@@ -208,7 +221,7 @@ export function InteractiveWidget() {
       widgetState.setMessages([welcomeMessage]);
       conversationPersistence.createNewConversation(welcomeMessage, true);
     }
-  }, [widgetState.isExpanded, widgetState.messages.length, settings?.aiSettings?.welcomeMessage, conversationPersistence.conversationState]);
+  }, [widgetState.isExpanded, widgetState.messages.length, settings?.aiSettings?.welcomeMessage, conversationPersistence.conversationState, conversationPersistence.isLoading]);
 
   // Reset session quota when conversation ends
   useEffect(() => {
