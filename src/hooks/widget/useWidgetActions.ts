@@ -83,18 +83,18 @@ export function useWidgetActions({
 
     // Check if user identification is required
     const isFirstMessage = !hasUserSentFirstMessage;
-    if (!userIdentification.canSendMessage()) {
-      // Add identification message to the conversation if it's not the first message
-      if (!isFirstMessage) {
-        const identificationMessage: Message = {
-          id: `identification_${Date.now()}`,
-          type: 'identification',
-          timestamp: new Date(),
-          isCompleted: false
-        };
-        setMessages(prev => [...prev, identificationMessage]);
-        sessionPersistence.addMessage?.(identificationMessage, isExpanded);
-      }
+    
+    // Allow first message even without identification, but require it for subsequent messages
+    if (!isFirstMessage && !userIdentification.canSendMessage()) {
+      // Add identification message for subsequent messages when not identified
+      const identificationMessage: Message = {
+        id: `identification_${Date.now()}`,
+        type: 'identification',
+        timestamp: new Date(),
+        isCompleted: false
+      };
+      setMessages(prev => [...prev, identificationMessage]);
+      sessionPersistence.addMessage?.(identificationMessage, isExpanded);
       return;
     }
 
