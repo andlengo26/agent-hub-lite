@@ -45,26 +45,8 @@ export function InteractiveWidget() {
   const { chats, loading: chatsLoading } = useChats();
   const { faqs, searchQuery: faqQuery, handleSearch, isLoading: faqLoading } = useFAQSearch();
   
-  // Conversation persistence with coordination
-  const conversationPersistence = useConversationPersistence({
-    onStateLoaded: (state) => {
-      
-      widgetState.setMessages(state.messages);
-      if (state.status === 'completed') {
-        widgetState.setIsConversationClosed(true);
-      }
-      
-      // Check if we should show Moodle re-login prompt
-      if (state.identificationSession?.userData && settings?.integrations?.moodle) {
-        widgetState.setShowMoodleReLoginPrompt(true);
-      }
-
-      // Auto-expand if there's an active conversation or if it was previously expanded
-      if (state.messages.length > 1 || state.isExpanded) {
-        // Handle expansion through the widget state
-      }
-    }
-  });
+  // Conversation persistence - no callback to avoid circular dependency
+  const conversationPersistence = useConversationPersistence();
 
   // Initialize widget state management
   const widgetState = useWidgetState({ settings, conversationPersistence });
@@ -166,13 +148,24 @@ export function InteractiveWidget() {
     handleConfirmedEnd
   });
 
+  // Handle Moodle re-login prompt when conversation state loads
+  useEffect(() => {
+    if (!conversationPersistence.conversationState || !settings) return;
+    
+    const state = conversationPersistence.conversationState;
+    
+    // Check if we should show Moodle re-login prompt
+    if (state.identificationSession?.userData && settings?.integrations?.moodle) {
+      widgetState.setShowMoodleReLoginPrompt(true);
+    }
+  }, [conversationPersistence.conversationState, settings]);
+
   // Restore widget state when conversation state and settings are both available
   useEffect(() => {
     if (!conversationPersistence.conversationState || !settings) return;
     
     const determineWidgetExpandState = (state: any, settings: any): boolean => {
       if (!state || !settings) return false;
-      
       
       // For pending_identification sessions, preserve the state's expand state
       if (state.status === 'pending_identification') {

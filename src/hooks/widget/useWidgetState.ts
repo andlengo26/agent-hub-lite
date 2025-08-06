@@ -193,11 +193,16 @@ export function useWidgetState({ settings, conversationPersistence }: UseWidgetS
     }
   }, [settings?.appearance?.autoOpenWidget, isExpanded, messages.length, conversationPersistence.conversationState]);
 
-  // Initialize messages from conversation state on widget load
+  // Initialize messages and state from conversation persistence on widget load
   useEffect(() => {
-    if (conversationPersistence.conversationState?.messages?.length > 0 && messages.length === 0) {
-      console.log('📝 Restoring messages from conversation:', conversationPersistence.conversationState.messages.length);
-      const restoredMessages = conversationPersistence.conversationState.messages.map(msg => ({
+    if (!conversationPersistence.conversationState) return;
+    
+    const state = conversationPersistence.conversationState;
+    
+    // Restore messages if we have them and current messages are empty
+    if (state.messages?.length > 0 && messages.length === 0) {
+      console.log('📝 Restoring messages from conversation:', state.messages.length);
+      const restoredMessages = state.messages.map(msg => ({
         ...msg,
         timestamp: new Date(msg.timestamp) // Ensure timestamp is a Date object
       }));
@@ -208,13 +213,19 @@ export function useWidgetState({ settings, conversationPersistence }: UseWidgetS
       if (hasUserMessages) {
         setHasUserSentFirstMessage(true);
       }
-      
-      // Auto-expand if there's an active conversation
-      if (restoredMessages.length > 1 || conversationPersistence.conversationState.isExpanded) {
-        setIsExpanded(true);
-      }
     }
-  }, [conversationPersistence.conversationState, messages.length, setMessages]);
+    
+    // Handle conversation status
+    if (state.status === 'completed') {
+      setIsConversationClosed(true);
+    }
+    
+    // Restore widget expansion state
+    if (state.isExpanded && !isExpanded) {
+      setIsExpanded(true);
+    }
+    
+  }, [conversationPersistence.conversationState, messages.length, setMessages, isExpanded]);
 
   // Track active chat state
   useEffect(() => {
