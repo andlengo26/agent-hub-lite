@@ -313,10 +313,16 @@ export function useWidgetState({ settings, conversationPersistence, availableDat
     
   }, [conversationPersistence.conversationState, conversationPersistence.isLoading, viewPersistence.isLoading, messages.length, setMessages, isExpanded]);
 
-  // Track active chat state
+  // Track active chat state - only consider it active if user has interacted
   useEffect(() => {
-    setHasActiveChat(messages.length > 0);
-  }, [messages.length]);
+    // A chat is only "active" if:
+    // 1. User has sent at least one message, OR
+    // 2. There are messages from restored conversation with user messages
+    const hasUserMessages = messages.some(msg => msg.type === 'user');
+    const isActive = hasUserMessages || hasUserSentFirstMessage;
+    
+    setHasActiveChat(isActive);
+  }, [messages, hasUserSentFirstMessage]);
 
   // Handle search query changes
   const handleSearchQueryChange = useCallback((query: string) => {
