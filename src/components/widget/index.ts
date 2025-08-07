@@ -12,3 +12,4 @@ export { QuotaBadge } from './QuotaBadge';
 export { QuotaWarningBanner } from './QuotaWarningBanner';
 export { UserIdentificationForm } from './UserIdentificationForm';
 export { WidgetHeader } from './WidgetHeader';
+export { InteractiveWidget } from './InteractiveWidget';

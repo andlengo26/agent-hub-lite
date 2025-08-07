@@ -24,8 +24,8 @@ import { useMoodleAutoIdentification } from "@/modules/moodle/hooks/useMoodleAut
 import { useConversationPersistence } from "@/hooks/useConversationPersistence";
 import { useMessageRecoveryEnhanced } from "@/hooks/useMessageRecoveryEnhanced";
 import { useTenant } from "@/contexts/TenantContext";
-import { ConversationEndModal } from "./ConversationEndModal";
-import { ConversationDebugPanel } from "./ConversationDebugPanel";
+import { ConversationEndModal } from "@/components/admin/ConversationEndModal";
+import { ConversationDebugPanel } from "@/components/admin/ConversationDebugPanel";
 import { FAQBrowser } from "@/components/widget/FAQBrowser";
 import { ResourceBrowser } from "@/components/widget/ResourceBrowser";
 import { ChatClosedState } from "@/components/widget/ChatClosedState";

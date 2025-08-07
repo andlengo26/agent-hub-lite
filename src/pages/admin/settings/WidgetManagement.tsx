@@ -18,7 +18,7 @@ import {
   AppearancePlacementTab,
   AdvancedFeaturesTab,
 } from '@/components/admin/settings';
-import { InteractiveWidget } from '@/components/admin/InteractiveWidget';
+import { InteractiveWidget } from '@/components/widget/InteractiveWidget';
 
 // Internal component that uses the settings context
 function WidgetManagementContent() {

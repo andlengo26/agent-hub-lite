@@ -204,7 +204,7 @@ export const LazyWidgetSettings = lazy(() =>
 );
 
 export const LazyInteractiveWidget = lazy(() => 
-  import('@/components/admin/InteractiveWidget').then(m => ({ 
+  import('@/components/widget/InteractiveWidget').then(m => ({ 
     default: (m as any).InteractiveWidget || (m as any).default || (() => <DefaultLazyFallback />) 
   }))
 );
