@@ -50,8 +50,16 @@ export function InteractiveWidget() {
   // Conversation persistence - no callback to avoid circular dependency
   const conversationPersistence = useConversationPersistence();
 
-  // Initialize widget state management
-  const widgetState = useWidgetState({ settings, conversationPersistence });
+  // Initialize widget state management with available data for view persistence
+  const widgetState = useWidgetState({ 
+    settings, 
+    conversationPersistence,
+    availableData: {
+      faqs: faqs || [],
+      resources: resources || [],
+      chats: chats || []
+    }
+  });
   
   // Enhanced message recovery with bidirectional sync
   const messageRecovery = useMessageRecoveryEnhanced({

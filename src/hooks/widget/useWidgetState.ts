@@ -7,21 +7,43 @@ import { useState, useEffect, useCallback } from 'react';
 import { Message } from '@/types/message';
 import { logger } from '@/lib/logger';
 import { IdentificationSession } from '@/types/user-identification';
-
-export type PanelType = 'main' | 'chat' | 'faq-detail' | 'resource-detail' | 'message-detail';
-export type TabType = 'home' | 'messages' | 'resources';
+import { useWidgetViewPersistence, PanelType, TabType } from './useWidgetViewPersistence';
 
 interface UseWidgetStateProps {
   settings: any;
   conversationPersistence: any;
+  availableData?: {
+    faqs?: Array<{ id: string }>;
+    resources?: Array<{ id: string }>;
+    chats?: Array<{ id: string }>;
+  };
 }
 
-export function useWidgetState({ settings, conversationPersistence }: UseWidgetStateProps) {
+export function useWidgetState({ settings, conversationPersistence, availableData }: UseWidgetStateProps) {
+  // Initialize view persistence
+  const viewPersistence = useWidgetViewPersistence({
+    onStateLoaded: (loadedState) => {
+      if (loadedState && availableData) {
+        const validatedState = viewPersistence.validateRestoredState(loadedState, availableData);
+        if (validatedState) {
+          logger.debug('WIDGET_VIEW_RESTORED', {
+            panel: validatedState.currentPanel,
+            tab: validatedState.activeTab
+          }, 'useWidgetState');
+        }
+      }
+    }
+  });
+
   // Widget display states
   const [isExpanded, setIsExpanded] = useState(false);
   const [isMaximized, setIsMaximized] = useState(false);
-  const [currentPanel, setCurrentPanel] = useState<PanelType>('main');
-  const [activeTab, setActiveTab] = useState<TabType>('home');
+  const [currentPanel, setCurrentPanel] = useState<PanelType>(
+    viewPersistence.viewState?.currentPanel || 'main'
+  );
+  const [activeTab, setActiveTab] = useState<TabType>(
+    viewPersistence.viewState?.activeTab || 'home'
+  );
   
   // Chat states
   const [messages, setMessages] = useState<Message[]>([]);
@@ -31,14 +53,31 @@ export function useWidgetState({ settings, conversationPersistence }: UseWidgetS
   const [hasUserSentFirstMessage, setHasUserSentFirstMessage] = useState(false);
   const [hasActiveChat, setHasActiveChat] = useState(false);
   
-  // Selection states
-  const [selectedFAQ, setSelectedFAQ] = useState<any>(null);
-  const [selectedResource, setSelectedResource] = useState<any>(null);
-  const [selectedChat, setSelectedChat] = useState<any>(null);
-  const [lastDetailPanel, setLastDetailPanel] = useState<'faq-detail' | 'resource-detail' | 'message-detail' | null>(null);
+  // Selection states - initialize from persisted state
+  const [selectedFAQ, setSelectedFAQ] = useState<any>(() => {
+    if (viewPersistence.viewState?.selectedFAQId && availableData?.faqs) {
+      return availableData.faqs.find(f => f.id === viewPersistence.viewState?.selectedFAQId);
+    }
+    return null;
+  });
+  const [selectedResource, setSelectedResource] = useState<any>(() => {
+    if (viewPersistence.viewState?.selectedResourceId && availableData?.resources) {
+      return availableData.resources.find(r => r.id === viewPersistence.viewState?.selectedResourceId);
+    }
+    return null;
+  });
+  const [selectedChat, setSelectedChat] = useState<any>(() => {
+    if (viewPersistence.viewState?.selectedChatId && availableData?.chats) {
+      return availableData.chats.find(c => c.id === viewPersistence.viewState?.selectedChatId);
+    }
+    return null;
+  });
+  const [lastDetailPanel, setLastDetailPanel] = useState<'faq-detail' | 'resource-detail' | 'message-detail' | null>(
+    viewPersistence.viewState?.lastDetailPanel || null
+  );
   
   // Search states
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState(viewPersistence.viewState?.searchQuery || '');
   
   // Modal states
   const [showFAQBrowser, setShowFAQBrowser] = useState(false);
@@ -112,10 +151,13 @@ export function useWidgetState({ settings, conversationPersistence }: UseWidgetS
     if (currentPanel === 'faq-detail' || currentPanel === 'resource-detail' || currentPanel === 'message-detail') {
       setLastDetailPanel(currentPanel);
     }
-  }, [currentPanel]);
+    // Track panel change
+    viewPersistence.trackPanelChange('main', { lastDetailPanel: currentPanel as any });
+  }, [currentPanel, viewPersistence]);
 
   const handleStartChat = useCallback(() => {
     setCurrentPanel('chat');
+    viewPersistence.trackPanelChange('chat');
     
     // Initialize welcome message if no messages exist
     if (messages.length === 0 && settings?.aiSettings?.welcomeMessage) {
@@ -129,10 +171,11 @@ export function useWidgetState({ settings, conversationPersistence }: UseWidgetS
       setMessages([welcomeMessage]);
       conversationPersistence.createNewConversation?.(welcomeMessage, isExpanded);
     }
-  }, [messages.length, settings?.aiSettings?.welcomeMessage, conversationPersistence, isExpanded]);
+  }, [messages.length, settings?.aiSettings?.welcomeMessage, conversationPersistence, isExpanded, viewPersistence]);
 
   const handleContinueChat = useCallback(() => {
     setCurrentPanel('chat');
+    viewPersistence.trackPanelChange('chat');
     
     // If no messages but we have an active session, restore or create welcome message
     if (messages.length === 0 && settings?.aiSettings?.welcomeMessage) {
@@ -148,40 +191,45 @@ export function useWidgetState({ settings, conversationPersistence }: UseWidgetS
         conversationPersistence.createNewConversation?.(welcomeMessage, isExpanded);
       }
     }
-  }, [messages.length, settings?.aiSettings?.welcomeMessage, conversationPersistence, isExpanded]);
+  }, [messages.length, settings?.aiSettings?.welcomeMessage, conversationPersistence, isExpanded, viewPersistence]);
 
   // Tab management
   const handleTabChange = useCallback((tab: TabType) => {
     setActiveTab(tab);
+    viewPersistence.trackTabChange(tab);
     
     // Special handling for messages tab
     if (tab === 'messages' && currentPanel === 'main' && lastDetailPanel === 'message-detail' && selectedChat) {
       setCurrentPanel('message-detail');
+      viewPersistence.trackPanelChange('message-detail');
     }
-  }, [currentPanel, lastDetailPanel, selectedChat]);
+  }, [currentPanel, lastDetailPanel, selectedChat, viewPersistence]);
 
   // Detail panel handlers
   const handleFAQDetail = useCallback((faq: any) => {
     setSelectedFAQ(faq);
     setCurrentPanel('faq-detail');
     setLastDetailPanel('faq-detail');
-  }, []);
+    viewPersistence.trackSelection('faq', faq.id, 'faq-detail');
+  }, [viewPersistence]);
 
   const handleResourceDetail = useCallback((resource: any) => {
     setSelectedResource(resource);
     setCurrentPanel('resource-detail');
     setLastDetailPanel('resource-detail');
-  }, []);
+    viewPersistence.trackSelection('resource', resource.id, 'resource-detail');
+  }, [viewPersistence]);
 
   const handleMessageDetail = useCallback((chat: any) => {
     setSelectedChat(chat);
     setCurrentPanel('message-detail');
     setLastDetailPanel('message-detail');
-  }, []);
+    viewPersistence.trackSelection('chat', chat.id, 'message-detail');
+  }, [viewPersistence]);
 
   // Auto-expand logic
   useEffect(() => {
-    if (conversationPersistence.isLoading) return;
+    if (conversationPersistence.isLoading || viewPersistence.isLoading) return;
     
     if (settings?.appearance?.autoOpenWidget && 
         !isExpanded && 
@@ -193,11 +241,11 @@ export function useWidgetState({ settings, conversationPersistence }: UseWidgetS
         conversationPersistence.updateWidgetState?.(true);
       }, 2000);
     }
-  }, [conversationPersistence.isLoading, settings?.appearance?.autoOpenWidget, isExpanded, messages.length, conversationPersistence.conversationState]);
+  }, [conversationPersistence.isLoading, viewPersistence.isLoading, settings?.appearance?.autoOpenWidget, isExpanded, messages.length, conversationPersistence.conversationState]);
 
   // Basic state restoration - enhanced recovery handled by useMessageRecoveryEnhanced
   useEffect(() => {
-    if (conversationPersistence.isLoading || !conversationPersistence.conversationState) return;
+    if (conversationPersistence.isLoading || viewPersistence.isLoading || !conversationPersistence.conversationState) return;
     
     const state = conversationPersistence.conversationState;
     
@@ -232,12 +280,37 @@ export function useWidgetState({ settings, conversationPersistence }: UseWidgetS
       setIsExpanded(true);
     }
     
-  }, [conversationPersistence.conversationState, conversationPersistence.isLoading, messages.length, setMessages, isExpanded]);
+  }, [conversationPersistence.conversationState, conversationPersistence.isLoading, viewPersistence.isLoading, messages.length, setMessages, isExpanded]);
 
   // Track active chat state
   useEffect(() => {
     setHasActiveChat(messages.length > 0);
   }, [messages.length]);
+
+  // Handle search query changes
+  const handleSearchQueryChange = useCallback((query: string) => {
+    setSearchQuery(query);
+    viewPersistence.trackSearchChange(query);
+  }, [viewPersistence]);
+
+  // Enhanced panel setters that also track view state
+  const setCurrentPanelWithTracking = useCallback((panel: PanelType) => {
+    setCurrentPanel(panel);
+    viewPersistence.trackPanelChange(panel);
+  }, [viewPersistence]);
+
+  const setActiveTabWithTracking = useCallback((tab: TabType) => {
+    setActiveTab(tab);
+    viewPersistence.trackTabChange(tab);
+  }, [viewPersistence]);
+
+  // Clear view state when conversation is cleared
+  useEffect(() => {
+    if (!conversationPersistence.conversationState && viewPersistence.viewState) {
+      logger.debug('WIDGET_VIEW_CLEARED_ON_SESSION_END', {}, 'useWidgetState');
+      viewPersistence.clearViewState();
+    }
+  }, [conversationPersistence.conversationState, viewPersistence]);
 
   return {
     // Display states
@@ -267,7 +340,7 @@ export function useWidgetState({ settings, conversationPersistence }: UseWidgetS
     
     // Search states
     searchQuery,
-    setSearchQuery,
+    setSearchQuery: handleSearchQueryChange,
     
     // Modal states
     showFAQBrowser,
@@ -298,11 +371,14 @@ export function useWidgetState({ settings, conversationPersistence }: UseWidgetS
     handleMessageDetail,
     
     // Setters for external use
-    setCurrentPanel,
-    setActiveTab,
+    setCurrentPanel: setCurrentPanelWithTracking,
+    setActiveTab: setActiveTabWithTracking,
     setSelectedFAQ,
     setSelectedResource,
     setSelectedChat,
-    setLastDetailPanel
+    setLastDetailPanel,
+    
+    // View persistence state
+    viewPersistence
   };
 }
