@@ -5,7 +5,15 @@
       "userId": "student_123",
       "username": "john.doe",
       "timestamp": "2025-08-03T10:30:00Z",
-      "status": "ended",
+      "status": "user_ended",
+      "endTime": "2025-08-03T10:35:00Z",
+      "terminationReason": "user_feedback",
+      "terminationFeedback": {
+        "rating": "5",
+        "comment": "Very helpful with assignment submission!"
+      },
+      "messageCount": 9,
+      "sessionDuration": 300000,
       "messages": [
         {
           "id": "msg_001",

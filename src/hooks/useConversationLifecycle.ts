@@ -6,6 +6,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { WidgetSettings } from './useWidgetSettings';
 import { conversationService, ConversationTransition } from '@/services/conversationService';
+import { chatSessionService } from '@/services/chatSessionService';
 import { useSessionTimer } from './useSessionTimer';
 import { summaryService, ConversationSummary } from '@/services/summaryService';
 
@@ -41,6 +42,7 @@ export function useConversationLifecycle(settings: WidgetSettings | null) {
   const [transitions, setTransitions] = useState<ConversationTransitionLocal[]>([]);
   const [conversationSummary, setConversationSummary] = useState<ConversationSummary | null>(null);
   const conversationIdRef = useRef(`conv_${Date.now()}`);
+  const chatSessionIdRef = useRef<string | null>(null);
   const [showEndConfirmation, setShowEndConfirmation] = useState(false);
   const { toast } = useToast();
   
