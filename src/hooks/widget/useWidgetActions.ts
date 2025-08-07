@@ -10,7 +10,6 @@ import { IdentificationSession } from '@/types/user-identification';
 import { conversationService } from '@/services/conversationService';
 import { feedbackService } from '@/services/feedbackService';
 import { logger } from '@/lib/logger';
-import { LoadingStateManager } from './useWidgetLoadingState';
 
 interface UseWidgetActionsProps {
   settings: any;
@@ -30,7 +29,6 @@ interface UseWidgetActionsProps {
   startAISession: () => void;
   requestHumanAgent: (reason: string) => void;
   handleConfirmedEnd: () => void;
-  loadingStateManager?: LoadingStateManager;
 }
 
 export function useWidgetActions({
@@ -50,23 +48,13 @@ export function useWidgetActions({
   incrementMessageCount,
   startAISession,
   requestHumanAgent,
-  handleConfirmedEnd,
-  loadingStateManager
+  handleConfirmedEnd
 }: UseWidgetActionsProps) {
   const { toast } = useToast();
   const [localIsTyping, setLocalIsTyping] = useState(false);
 
   const handleSendMessage = useCallback(async (inputValue: string) => {
     if (!inputValue.trim()) return;
-    
-    // Add loading operation for message sending
-    const messageId = `send-message-${Date.now()}`;
-    loadingStateManager?.addOperation({
-      id: messageId,
-      type: 'message',
-      priority: 2,
-      blockInteractions: false // Don't block during message send
-    });
     
     // Check conversation state
     if (conversationState.status !== 'active' && conversationState.status !== 'waiting_human') {

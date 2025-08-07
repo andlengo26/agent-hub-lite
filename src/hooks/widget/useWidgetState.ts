@@ -7,8 +7,6 @@ import { useState, useEffect, useCallback } from 'react';
 import { Message } from '@/types/message';
 import { logger } from '@/lib/logger';
 import { IdentificationSession } from '@/types/user-identification';
-import { useWidgetLoadingState } from './useWidgetLoadingState';
-import { useInteractionProtection } from './useInteractionProtection';
 
 export type PanelType = 'main' | 'chat' | 'faq-detail' | 'resource-detail' | 'message-detail';
 export type TabType = 'home' | 'messages' | 'resources';
@@ -19,14 +17,6 @@ interface UseWidgetStateProps {
 }
 
 export function useWidgetState({ settings, conversationPersistence }: UseWidgetStateProps) {
-  // Initialize loading state management
-  const loadingStateManager = useWidgetLoadingState();
-  
-  // Initialize interaction protection
-  const interactionProtection = useInteractionProtection(loadingStateManager, {
-    debugMode: process.env.NODE_ENV === 'development'
-  });
-
   // Widget display states
   const [isExpanded, setIsExpanded] = useState(false);
   const [isMaximized, setIsMaximized] = useState(false);
@@ -98,51 +88,18 @@ export function useWidgetState({ settings, conversationPersistence }: UseWidgetS
     }
   }, [isMaximized, settings?.appearance]);
 
-  // Save widget navigation state to persistence
-  const saveWidgetNavigationState = useCallback(() => {
-    if (conversationPersistence.updateWidgetNavigationState) {
-      conversationPersistence.updateWidgetNavigationState({
-        currentPanel,
-        activeTab,
-        selectedFAQ,
-        selectedResource,
-        selectedChat,
-        lastDetailPanel,
-        searchQuery
-      });
-    }
-  }, [conversationPersistence, currentPanel, activeTab, selectedFAQ, selectedResource, selectedChat, lastDetailPanel, searchQuery]);
-
   // Widget state management
   const handleExpand = useCallback(() => {
     console.log('🔵 User clicked to expand widget');
-    
-    // Add loading operation for widget expansion
-    loadingStateManager.addOperation({
-      id: 'widget-expand',
-      type: 'conversation',
-      priority: 1,
-      blockInteractions: false // Don't block on expand
-    });
-    
     setIsExpanded(true);
     conversationPersistence.updateWidgetState?.(true);
-    
-    // Remove loading after expansion completes
-    setTimeout(() => {
-      loadingStateManager.removeOperation('widget-expand');
-    }, 300);
-  }, [conversationPersistence, loadingStateManager]);
+  }, [conversationPersistence]);
 
   const handleMinimize = useCallback(() => {
     console.log('❌ User clicked to minimize widget');
-    
-    // Clear any stuck loading states before minimizing
-    loadingStateManager.clearAllOperations();
-    
     setIsExpanded(false);
     conversationPersistence.updateWidgetState?.(false);
-  }, [conversationPersistence, loadingStateManager]);
+  }, [conversationPersistence]);
 
   const handleToggleMaximize = useCallback(() => {
     setIsMaximized(!isMaximized);
@@ -155,12 +112,10 @@ export function useWidgetState({ settings, conversationPersistence }: UseWidgetS
     if (currentPanel === 'faq-detail' || currentPanel === 'resource-detail' || currentPanel === 'message-detail') {
       setLastDetailPanel(currentPanel);
     }
-    saveWidgetNavigationState();
-  }, [currentPanel, saveWidgetNavigationState]);
+  }, [currentPanel]);
 
   const handleStartChat = useCallback(() => {
     setCurrentPanel('chat');
-    saveWidgetNavigationState();
     
     // Initialize welcome message if no messages exist
     if (messages.length === 0 && settings?.aiSettings?.welcomeMessage) {
@@ -174,11 +129,10 @@ export function useWidgetState({ settings, conversationPersistence }: UseWidgetS
       setMessages([welcomeMessage]);
       conversationPersistence.createNewConversation?.(welcomeMessage, isExpanded);
     }
-  }, [messages.length, settings?.aiSettings?.welcomeMessage, conversationPersistence, isExpanded, saveWidgetNavigationState]);
+  }, [messages.length, settings?.aiSettings?.welcomeMessage, conversationPersistence, isExpanded]);
 
   const handleContinueChat = useCallback(() => {
     setCurrentPanel('chat');
-    saveWidgetNavigationState();
     
     // If no messages but we have an active session, restore or create welcome message
     if (messages.length === 0 && settings?.aiSettings?.welcomeMessage) {
@@ -194,7 +148,7 @@ export function useWidgetState({ settings, conversationPersistence }: UseWidgetS
         conversationPersistence.createNewConversation?.(welcomeMessage, isExpanded);
       }
     }
-  }, [messages.length, settings?.aiSettings?.welcomeMessage, conversationPersistence, isExpanded, saveWidgetNavigationState]);
+  }, [messages.length, settings?.aiSettings?.welcomeMessage, conversationPersistence, isExpanded]);
 
   // Tab management
   const handleTabChange = useCallback((tab: TabType) => {
@@ -204,31 +158,26 @@ export function useWidgetState({ settings, conversationPersistence }: UseWidgetS
     if (tab === 'messages' && currentPanel === 'main' && lastDetailPanel === 'message-detail' && selectedChat) {
       setCurrentPanel('message-detail');
     }
-    
-    saveWidgetNavigationState();
-  }, [currentPanel, lastDetailPanel, selectedChat, saveWidgetNavigationState]);
+  }, [currentPanel, lastDetailPanel, selectedChat]);
 
   // Detail panel handlers
   const handleFAQDetail = useCallback((faq: any) => {
     setSelectedFAQ(faq);
     setCurrentPanel('faq-detail');
     setLastDetailPanel('faq-detail');
-    saveWidgetNavigationState();
-  }, [saveWidgetNavigationState]);
+  }, []);
 
   const handleResourceDetail = useCallback((resource: any) => {
     setSelectedResource(resource);
     setCurrentPanel('resource-detail');
     setLastDetailPanel('resource-detail');
-    saveWidgetNavigationState();
-  }, [saveWidgetNavigationState]);
+  }, []);
 
   const handleMessageDetail = useCallback((chat: any) => {
     setSelectedChat(chat);
     setCurrentPanel('message-detail');
     setLastDetailPanel('message-detail');
-    saveWidgetNavigationState();
-  }, [saveWidgetNavigationState]);
+  }, []);
 
   // Auto-expand logic
   useEffect(() => {
@@ -245,20 +194,6 @@ export function useWidgetState({ settings, conversationPersistence }: UseWidgetS
       }, 2000);
     }
   }, [conversationPersistence.isLoading, settings?.appearance?.autoOpenWidget, isExpanded, messages.length, conversationPersistence.conversationState]);
-
-  // Track conversation persistence loading state
-  useEffect(() => {
-    if (conversationPersistence.isLoading) {
-      loadingStateManager.addOperation({
-        id: 'conversation-persistence-load',
-        type: 'conversation',
-        priority: 3,
-        blockInteractions: true
-      });
-    } else {
-      loadingStateManager.removeOperation('conversation-persistence-load');
-    }
-  }, [conversationPersistence.isLoading, loadingStateManager]);
 
   // Basic state restoration - enhanced recovery handled by useMessageRecoveryEnhanced
   useEffect(() => {
@@ -298,36 +233,6 @@ export function useWidgetState({ settings, conversationPersistence }: UseWidgetS
     }
     
   }, [conversationPersistence.conversationState, conversationPersistence.isLoading, messages.length, setMessages, isExpanded]);
-
-  // Restore widget navigation state from persistence
-  useEffect(() => {
-    if (conversationPersistence.isLoading || !conversationPersistence.conversationState?.widgetState) return;
-    
-    const widgetState = conversationPersistence.conversationState.widgetState;
-    
-    logger.messagePersistence('RESTORE_WIDGET_NAVIGATION', {
-      panel: widgetState.currentPanel,
-      tab: widgetState.activeTab,
-      hasSelectedItems: !!(widgetState.selectedFAQ || widgetState.selectedResource || widgetState.selectedChat)
-    }, 'useWidgetState');
-    
-    // Restore navigation state
-    if (widgetState.currentPanel) setCurrentPanel(widgetState.currentPanel);
-    if (widgetState.activeTab) setActiveTab(widgetState.activeTab);
-    if (widgetState.selectedFAQ) setSelectedFAQ(widgetState.selectedFAQ);
-    if (widgetState.selectedResource) setSelectedResource(widgetState.selectedResource);
-    if (widgetState.selectedChat) setSelectedChat(widgetState.selectedChat);
-    if (widgetState.lastDetailPanel) setLastDetailPanel(widgetState.lastDetailPanel);
-    if (widgetState.searchQuery) setSearchQuery(widgetState.searchQuery);
-    
-  }, [conversationPersistence.isLoading, conversationPersistence.conversationState?.widgetState]);
-
-  // Save widget navigation state when search query changes
-  useEffect(() => {
-    if (searchQuery && !conversationPersistence.isLoading) {
-      saveWidgetNavigationState();
-    }
-  }, [searchQuery, saveWidgetNavigationState, conversationPersistence.isLoading]);
 
   // Track active chat state
   useEffect(() => {
@@ -398,10 +303,6 @@ export function useWidgetState({ settings, conversationPersistence }: UseWidgetS
     setSelectedFAQ,
     setSelectedResource,
     setSelectedChat,
-    setLastDetailPanel,
-    
-    // Loading and interaction protection
-    loadingStateManager,
-    interactionProtection
+    setLastDetailPanel
   };
 }

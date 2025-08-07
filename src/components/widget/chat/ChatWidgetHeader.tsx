@@ -105,7 +105,7 @@ export function ChatWidgetHeader({
       case 'resource-detail':
         return (
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="sm" onClick={onBackToMain} className="p-0 h-auto text-white hover:bg-white/20 widget-interactive-element" data-critical="true">
+            <Button variant="ghost" size="sm" onClick={onBackToMain} className="p-0 h-auto text-white hover:bg-white/20">
               <ArrowLeft className="h-4 w-4" />
             </Button>
             <CardTitle className="text-sm font-medium">{selectedResource?.title}</CardTitle>
@@ -114,7 +114,7 @@ export function ChatWidgetHeader({
       case 'faq-detail':
         return (
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="sm" onClick={onBackToMain} className="p-0 h-auto text-white hover:bg-white/20 widget-interactive-element" data-critical="true">
+            <Button variant="ghost" size="sm" onClick={onBackToMain} className="p-0 h-auto text-white hover:bg-white/20">
               <ArrowLeft className="h-4 w-4" />
             </Button>
             <CardTitle className="text-sm font-medium">FAQ</CardTitle>
@@ -123,7 +123,7 @@ export function ChatWidgetHeader({
       case 'message-detail':
         return (
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="sm" onClick={onBackToMain} className="p-0 h-auto text-white hover:bg-white/20 widget-interactive-element" data-critical="true">
+            <Button variant="ghost" size="sm" onClick={onBackToMain} className="p-0 h-auto text-white hover:bg-white/20">
               <ArrowLeft className="h-4 w-4" />
             </Button>
             <CardTitle className="text-sm font-medium">Messages</CardTitle>
@@ -132,7 +132,7 @@ export function ChatWidgetHeader({
       case 'chat':
         return (
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="sm" onClick={onBackToMain} className="p-0 h-auto text-white hover:bg-white/20 widget-interactive-element" data-critical="true">
+            <Button variant="ghost" size="sm" onClick={onBackToMain} className="p-0 h-auto text-white hover:bg-white/20">
               <ArrowLeft className="h-4 w-4" />
             </Button>
             <CardTitle className="text-sm font-medium">Chat</CardTitle>
@@ -176,9 +176,8 @@ export function ChatWidgetHeader({
         <Button
           variant="ghost"
           size="icon"
-          className="h-7 w-7 text-white hover:bg-white/20 widget-interactive-element"
+          className="h-7 w-7 text-white hover:bg-white/20"
           onClick={onToggleMaximize}
-          data-critical="true"
         >
           {isMaximized ? (
             <Minimize2 className="h-3 w-3" />
@@ -190,10 +189,8 @@ export function ChatWidgetHeader({
         <Button
           variant="ghost"
           size="icon"
-          className="h-7 w-7 text-white hover:bg-white/20 widget-interactive-element"
+          className="h-7 w-7 text-white hover:bg-white/20"
           onClick={onMinimize}
-          data-critical="true"
-          aria-label="minimize widget"
         >
           <X className="h-3 w-3" />
         </Button>

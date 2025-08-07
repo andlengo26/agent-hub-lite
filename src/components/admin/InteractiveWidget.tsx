@@ -15,10 +15,6 @@ import { FAQDetailPanel, ResourceDetailPanel, MessageDetailPanel } from "@/compo
 import { useWidgetState } from "@/hooks/widget/useWidgetState";
 import { useWidgetActions } from "@/hooks/widget/useWidgetActions";
 import { useWidgetSettings } from "@/hooks/useWidgetSettings";
-import { useWelcomeMessage } from "@/hooks/widget/useWelcomeMessage";
-import { useWidgetInteractionHandler } from "@/hooks/widget/useWidgetInteractionHandler";
-import { useWidgetStabilization } from "@/hooks/widget/useWidgetStabilization";
-import { useWidgetDOMCleaner } from "@/hooks/widget/useWidgetDOMCleaner";
 import { useToast } from "@/hooks/use-toast";
 import { useConversationLifecycle } from "@/hooks/useConversationLifecycle";
 import { useMessageQuota } from "@/hooks/useMessageQuota";
@@ -40,7 +36,6 @@ import { useChats } from "@/hooks/useChats";
 import { useFAQSearch } from "@/hooks/useFAQSearch";
 import { CustomerService } from "@/services/customerService";
 import { IdentificationSession } from "@/types/user-identification";
-import { LoadingOverlay } from "@/components/widget/LoadingOverlay";
 
 export function InteractiveWidget() {
   const { settings } = useWidgetSettings();
@@ -142,22 +137,6 @@ export function InteractiveWidget() {
     }
   });
 
-  // Initialize interaction handler
-  const interactionHandler = useWidgetInteractionHandler(
-    widgetState.loadingStateManager,
-    process.env.NODE_ENV === 'development'
-  );
-
-  // Initialize stabilization system
-  const stabilization = useWidgetStabilization(widgetState.loadingStateManager, {
-    debugMode: process.env.NODE_ENV === 'development'
-  });
-
-  // Initialize DOM cleaner to fix stuck elements
-  const domCleaner = useWidgetDOMCleaner({
-    debugMode: process.env.NODE_ENV === 'development'
-  });
-
   // Initialize widget actions
   const widgetActions = useWidgetActions({
     settings,
@@ -176,8 +155,7 @@ export function InteractiveWidget() {
     incrementMessageCount,
     startAISession,
     requestHumanAgent,
-    handleConfirmedEnd,
-    loadingStateManager: widgetState.loadingStateManager
+    handleConfirmedEnd
   });
 
 
@@ -214,12 +192,35 @@ export function InteractiveWidget() {
     }
   }, [conversationPersistence.isLoading, conversationPersistence.conversationState, settings]);
 
-  // Welcome message management - isolated to prevent interaction conflicts
-  const welcomeMessageConfig = {
-    welcomeMessage: settings?.aiSettings?.welcomeMessage,
-    enabled: !!settings?.aiSettings?.welcomeMessage
-  };
-  const welcomeMessage = useWelcomeMessage(widgetState, conversationPersistence, welcomeMessageConfig);
+  // Create welcome message for new expanded sessions - wait for loading to complete
+  useEffect(() => {
+    if (conversationPersistence.isLoading) return;
+    
+    console.log('🔍 Welcome message check (expanded):', {
+      isExpanded: widgetState.isExpanded,
+      messagesLength: widgetState.messages.length,
+      hasWelcomeMessage: !!settings?.aiSettings?.welcomeMessage,
+      hasPersistedState: !!conversationPersistence.conversationState,
+      isLoading: conversationPersistence.isLoading
+    });
+    
+    if (widgetState.isExpanded && 
+        widgetState.messages.length === 0 && 
+        settings?.aiSettings?.welcomeMessage && 
+        !conversationPersistence.conversationState &&
+        !conversationPersistence.isLoading) {
+      
+      console.log('🤖 Adding welcome message for expanded widget');
+      const welcomeMessage = {
+        id: 'welcome',
+        type: 'ai' as const,
+        content: settings.aiSettings.welcomeMessage,
+        timestamp: new Date()
+      };
+      widgetState.setMessages([welcomeMessage]);
+      conversationPersistence.createNewConversation(welcomeMessage, true);
+    }
+  }, [widgetState.isExpanded, widgetState.messages.length, settings?.aiSettings?.welcomeMessage, conversationPersistence.conversationState, conversationPersistence.isLoading]);
 
   // Reset session quota when conversation ends
   useEffect(() => {
@@ -383,16 +384,8 @@ export function InteractiveWidget() {
     <div 
       className="fixed z-50 bg-background border rounded-lg shadow-xl max-w-sm sm:max-w-md lg:max-w-lg" 
       style={widgetState.getExpandedPositionClasses()}
-      onClick={(e) => {
-        // Only handle non-critical interactions
-        const target = e.target as HTMLElement;
-        const isCritical = target.closest('button, [role="button"], input, textarea, select');
-        if (!isCritical) {
-          interactionHandler.handleInteraction(e, 'click');
-        }
-      }}
     >
-      <Card className="h-full flex flex-col relative">
+      <Card className="h-full flex flex-col">
         <ChatWidgetHeader
           currentPanel={widgetState.currentPanel}
           activeTab={widgetState.activeTab}
@@ -422,14 +415,6 @@ export function InteractiveWidget() {
             />
           )}
           
-          {/* Interaction Debug - Show in development */}
-          {process.env.NODE_ENV === 'development' && (
-            <div className="text-xs text-muted-foreground p-2 border-b">
-              Loading: {widgetState.loadingStateManager.activeOperations.length} ops | 
-              Protected: {widgetState.loadingStateManager.hasBlockingOperation ? 'Yes' : 'No'}
-            </div>
-          )}
-          
           {/* Main Content Area */}
           {widgetState.currentPanel === 'chat' ? (
             // For chat panel, render directly without extra padding/scrolling
@@ -452,9 +437,6 @@ export function InteractiveWidget() {
             />
           )}
         </CardContent>
-
-        {/* Loading Overlay */}
-        <LoadingOverlay loadingStateManager={widgetState.loadingStateManager} />
       </Card>
 
       {/* Overlays and Modals */}
