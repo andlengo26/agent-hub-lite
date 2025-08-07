@@ -166,7 +166,16 @@ export function InteractiveWidget() {
     incrementMessageCount,
     startAISession,
     requestHumanAgent,
-    handleConfirmedEnd
+    handleConfirmedEnd,
+    // Widget UI state reset functions
+    setIsConversationClosed: widgetState.setIsConversationClosed,
+    setCurrentPanel: widgetState.setCurrentPanel,
+    setActiveTab: widgetState.setActiveTab,
+    setSelectedFAQ: widgetState.setSelectedFAQ,
+    setSelectedResource: widgetState.setSelectedResource,
+    setSelectedChat: widgetState.setSelectedChat,
+    setSearchQuery: widgetState.setSearchQuery,
+    handleExpand: widgetState.handleExpand
   });
 
 

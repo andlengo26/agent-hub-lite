@@ -29,6 +29,15 @@ interface UseWidgetActionsProps {
   startAISession: () => void;
   requestHumanAgent: (reason: string) => void;
   handleConfirmedEnd: () => void;
+  // Widget UI state reset functions
+  setIsConversationClosed: (closed: boolean) => void;
+  setCurrentPanel: (panel: 'main' | 'chat' | 'faq-detail' | 'resource-detail' | 'message-detail') => void;
+  setActiveTab: (tab: 'home' | 'messages' | 'resources') => void;
+  setSelectedFAQ: (faq: any) => void;
+  setSelectedResource: (resource: any) => void;
+  setSelectedChat: (chat: any) => void;
+  setSearchQuery: (query: string) => void;
+  handleExpand: () => void;
 }
 
 export function useWidgetActions({
@@ -48,7 +57,16 @@ export function useWidgetActions({
   incrementMessageCount,
   startAISession,
   requestHumanAgent,
-  handleConfirmedEnd
+  handleConfirmedEnd,
+  // Widget UI state reset functions
+  setIsConversationClosed,
+  setCurrentPanel,
+  setActiveTab,
+  setSelectedFAQ,
+  setSelectedResource,
+  setSelectedChat,
+  setSearchQuery,
+  handleExpand
 }: UseWidgetActionsProps) {
   const { toast } = useToast();
   const [localIsTyping, setLocalIsTyping] = useState(false);
@@ -423,8 +441,26 @@ export function useWidgetActions({
   }, [setMessages, conversationPersistence, isExpanded]);
 
   const handleStartNewChat = useCallback(() => {
+    // Clear conversation data
     setMessages([]);
     conversationPersistence.clearConversation?.();
+    
+    // Reset all widget UI state to prevent infinite loops
+    setIsConversationClosed(false);
+    setCurrentPanel('main');
+    setActiveTab('home');
+    setSelectedFAQ(null);
+    setSelectedResource(null);
+    setSelectedChat(null);
+    setSearchQuery('');
+    setInputValue('');
+    setHasUserSentFirstMessage(false);
+    
+    // Expand the widget and navigate to chat
+    handleExpand();
+    setTimeout(() => {
+      setCurrentPanel('chat');
+    }, 100);
     
     // Create new session with welcome message
     if (settings?.aiSettings?.welcomeMessage) {
@@ -435,9 +471,23 @@ export function useWidgetActions({
         timestamp: new Date()
       };
       setMessages([welcomeMessage]);
-      conversationPersistence.createNewConversation?.(welcomeMessage, isExpanded);
+      conversationPersistence.createNewConversation?.(welcomeMessage, true); // Force expanded state
     }
-  }, [settings?.aiSettings?.welcomeMessage, setMessages, conversationPersistence, isExpanded]);
+  }, [
+    settings?.aiSettings?.welcomeMessage, 
+    setMessages, 
+    conversationPersistence,
+    setIsConversationClosed,
+    setCurrentPanel,
+    setActiveTab,
+    setSelectedFAQ,
+    setSelectedResource,
+    setSelectedChat,
+    setSearchQuery,
+    setInputValue,
+    setHasUserSentFirstMessage,
+    handleExpand
+  ]);
 
   const handleEndConversationWithFeedback = useCallback(async (feedback?: { rating: string; comment: string }) => {
     try {
