@@ -11,6 +11,16 @@ import { logger } from '@/lib/logger';
 const CONVERSATION_STORAGE_KEY = 'widget_conversation_state';
 const STORAGE_KEY = CONVERSATION_STORAGE_KEY; // Alias for backward compatibility
 
+interface WidgetNavigationState {
+  currentPanel?: 'main' | 'chat' | 'faq-detail' | 'resource-detail' | 'message-detail';
+  activeTab?: 'home' | 'messages' | 'resources';
+  selectedFAQ?: any;
+  selectedResource?: any;
+  selectedChat?: any;
+  lastDetailPanel?: 'faq-detail' | 'resource-detail' | 'message-detail' | null;
+  searchQuery?: string;
+}
+
 interface ConversationState {
   messages: Message[];
   identificationSession: IdentificationSession | null;
@@ -20,6 +30,7 @@ interface ConversationState {
   lastInteractionTime: Date;
   isExpanded?: boolean;
   pendingMessages?: Message[]; // Messages waiting for identification
+  widgetState?: WidgetNavigationState; // Widget navigation state
 }
 
 interface UseConversationPersistenceProps {
@@ -340,6 +351,24 @@ export function useConversationPersistence({ onStateLoaded }: UseConversationPer
     updateConversationState({ isExpanded });
   }, [updateConversationState]);
 
+  const updateWidgetNavigationState = useCallback((widgetState: Partial<WidgetNavigationState>) => {
+    if (!conversationState) return;
+    
+    const currentWidgetState = conversationState.widgetState || {};
+    const updatedWidgetState = {
+      ...currentWidgetState,
+      ...widgetState
+    };
+    
+    logger.messagePersistence('UPDATE_WIDGET_NAVIGATION', {
+      panel: widgetState.currentPanel,
+      tab: widgetState.activeTab,
+      hasSelectedItems: !!(widgetState.selectedFAQ || widgetState.selectedResource || widgetState.selectedChat)
+    }, 'useConversationPersistence');
+    
+    updateConversationState({ widgetState: updatedWidgetState });
+  }, [conversationState, updateConversationState]);
+
   const updateLastInteraction = useCallback(() => {
     if (conversationState) {
       updateConversationState({});
@@ -357,6 +386,7 @@ export function useConversationPersistence({ onStateLoaded }: UseConversationPer
     setIdentificationSession,
     updateMessages,
     updateWidgetState,
+    updateWidgetNavigationState,
     updateLastInteraction,
     
     // Derived getters for backward compatibility
