@@ -30,6 +30,7 @@ import { FAQBrowser } from "@/components/widget/FAQBrowser";
 import { ResourceBrowser } from "@/components/widget/ResourceBrowser";
 import { ChatClosedState } from "@/components/widget/ChatClosedState";
 import { PostChatFeedback } from "@/components/widget/PostChatFeedback";
+import { IdleTimeoutWarning } from "@/components/widget/IdleTimeoutWarning";
 
 import { useResources } from "@/hooks/useResources";
 import { useChats } from "@/hooks/useChats";
@@ -80,7 +81,9 @@ export function InteractiveWidget() {
     cancelEndConversation,
     handleConfirmedEnd,
     sessionTimer,
-    startAISession
+    startAISession,
+    keepActiveFromWarning,
+    endConversation
   } = useConversationLifecycle(settings);
 
   // Message quota management
@@ -230,17 +233,22 @@ export function InteractiveWidget() {
     }
   }, [widgetState.isExpanded, widgetState.messages.length, settings?.aiSettings?.welcomeMessage, conversationPersistence.conversationState, conversationPersistence.isLoading]);
 
-  // Reset session quota when conversation ends
+  // Reset session quota when conversation ends or times out
   useEffect(() => {
-    if (conversationState.status === 'ended') {
+    if (conversationState.status === 'ended' || conversationState.status === 'idle_timeout') {
       messageQuota.resetSessionQuota();
       spamPrevention.resetCooldown();
       conversationPersistence.updateConversationState({ status: 'completed' });
       
+      // Clear widget view state on idle timeout to reset widget display
+      if (conversationState.status === 'idle_timeout') {
+        widgetState.viewPersistence.clearViewState();
+      }
+      
       // Show post-chat feedback for human-handled conversations
       widgetState.setShowPostChatFeedback(false); // Disabled for now since property doesn't exist
     }
-  }, [conversationState.status, messageQuota, spamPrevention, conversationPersistence]);
+  }, [conversationState.status, messageQuota, spamPrevention, conversationPersistence, widgetState]);
 
   // Handle post-chat feedback submission
   const handlePostChatFeedbackSubmit = async (feedback: { rating: number; comment: string }) => {
@@ -421,6 +429,17 @@ export function InteractiveWidget() {
               conversationState={conversationPersistence.conversationState}
               currentMessages={widgetState.messages}
             />
+          )}
+          
+          {/* Idle Timeout Warning */}
+          {conversationState.showIdleWarning && settings?.aiSettings.enableIdleTimeout && (
+            <div className="p-4 pb-0">
+              <IdleTimeoutWarning
+                warningTimeSeconds={Math.max(60, Math.floor((settings.aiSettings.idleTimeout || 10) / 4) * 60)}
+                onKeepActive={keepActiveFromWarning}
+                onEndConversation={() => endConversation('User chose to end due to idle warning')}
+              />
+            </div>
           )}
           
           {/* Main Content Area */}
