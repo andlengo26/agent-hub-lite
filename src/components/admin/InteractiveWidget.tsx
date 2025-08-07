@@ -36,6 +36,7 @@ import { useChats } from "@/hooks/useChats";
 import { useFAQSearch } from "@/hooks/useFAQSearch";
 import { CustomerService } from "@/services/customerService";
 import { IdentificationSession } from "@/types/user-identification";
+import { LoadingOverlay } from "@/components/widget/LoadingOverlay";
 
 export function InteractiveWidget() {
   const { settings } = useWidgetSettings();
@@ -155,7 +156,8 @@ export function InteractiveWidget() {
     incrementMessageCount,
     startAISession,
     requestHumanAgent,
-    handleConfirmedEnd
+    handleConfirmedEnd,
+    loadingStateManager: widgetState.loadingStateManager
   });
 
 
@@ -385,7 +387,7 @@ export function InteractiveWidget() {
       className="fixed z-50 bg-background border rounded-lg shadow-xl max-w-sm sm:max-w-md lg:max-w-lg" 
       style={widgetState.getExpandedPositionClasses()}
     >
-      <Card className="h-full flex flex-col">
+      <Card className="h-full flex flex-col relative">
         <ChatWidgetHeader
           currentPanel={widgetState.currentPanel}
           activeTab={widgetState.activeTab}
@@ -437,6 +439,9 @@ export function InteractiveWidget() {
             />
           )}
         </CardContent>
+
+        {/* Loading Overlay */}
+        <LoadingOverlay loadingStateManager={widgetState.loadingStateManager} />
       </Card>
 
       {/* Overlays and Modals */}

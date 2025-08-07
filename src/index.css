@@ -244,3 +244,32 @@
 /* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
 All colors MUST be HSL.
 */
+
+/* Fix for pointer-events issues in widget */
+.widget-interactive-element {
+  pointer-events: auto !important;
+  cursor: pointer;
+}
+
+.widget-interactive-element:disabled {
+  pointer-events: none !important;
+  cursor: not-allowed;
+}
+
+/* Ensure critical buttons always remain clickable */
+button[aria-label*="minimize"],
+button[aria-label*="close"],
+[data-critical="true"] {
+  pointer-events: auto !important;
+}
+
+/* Loading state protection */
+.widget-loading-protected {
+  pointer-events: none;
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.widget-loading-protected .widget-interactive-element {
+  pointer-events: none !important;
+}

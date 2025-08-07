@@ -7,6 +7,8 @@ import { useState, useEffect, useCallback } from 'react';
 import { Message } from '@/types/message';
 import { logger } from '@/lib/logger';
 import { IdentificationSession } from '@/types/user-identification';
+import { useWidgetLoadingState } from './useWidgetLoadingState';
+import { useInteractionProtection } from './useInteractionProtection';
 
 export type PanelType = 'main' | 'chat' | 'faq-detail' | 'resource-detail' | 'message-detail';
 export type TabType = 'home' | 'messages' | 'resources';
@@ -17,6 +19,14 @@ interface UseWidgetStateProps {
 }
 
 export function useWidgetState({ settings, conversationPersistence }: UseWidgetStateProps) {
+  // Initialize loading state management
+  const loadingStateManager = useWidgetLoadingState();
+  
+  // Initialize interaction protection
+  const interactionProtection = useInteractionProtection(loadingStateManager, {
+    debugMode: process.env.NODE_ENV === 'development'
+  });
+
   // Widget display states
   const [isExpanded, setIsExpanded] = useState(false);
   const [isMaximized, setIsMaximized] = useState(false);
@@ -106,15 +116,33 @@ export function useWidgetState({ settings, conversationPersistence }: UseWidgetS
   // Widget state management
   const handleExpand = useCallback(() => {
     console.log('🔵 User clicked to expand widget');
+    
+    // Add loading operation for widget expansion
+    loadingStateManager.addOperation({
+      id: 'widget-expand',
+      type: 'conversation',
+      priority: 1,
+      blockInteractions: false // Don't block on expand
+    });
+    
     setIsExpanded(true);
     conversationPersistence.updateWidgetState?.(true);
-  }, [conversationPersistence]);
+    
+    // Remove loading after expansion completes
+    setTimeout(() => {
+      loadingStateManager.removeOperation('widget-expand');
+    }, 300);
+  }, [conversationPersistence, loadingStateManager]);
 
   const handleMinimize = useCallback(() => {
     console.log('❌ User clicked to minimize widget');
+    
+    // Clear any stuck loading states before minimizing
+    loadingStateManager.clearAllOperations();
+    
     setIsExpanded(false);
     conversationPersistence.updateWidgetState?.(false);
-  }, [conversationPersistence]);
+  }, [conversationPersistence, loadingStateManager]);
 
   const handleToggleMaximize = useCallback(() => {
     setIsMaximized(!isMaximized);
@@ -217,6 +245,20 @@ export function useWidgetState({ settings, conversationPersistence }: UseWidgetS
       }, 2000);
     }
   }, [conversationPersistence.isLoading, settings?.appearance?.autoOpenWidget, isExpanded, messages.length, conversationPersistence.conversationState]);
+
+  // Track conversation persistence loading state
+  useEffect(() => {
+    if (conversationPersistence.isLoading) {
+      loadingStateManager.addOperation({
+        id: 'conversation-persistence-load',
+        type: 'conversation',
+        priority: 3,
+        blockInteractions: true
+      });
+    } else {
+      loadingStateManager.removeOperation('conversation-persistence-load');
+    }
+  }, [conversationPersistence.isLoading, loadingStateManager]);
 
   // Basic state restoration - enhanced recovery handled by useMessageRecoveryEnhanced
   useEffect(() => {
@@ -356,6 +398,10 @@ export function useWidgetState({ settings, conversationPersistence }: UseWidgetS
     setSelectedFAQ,
     setSelectedResource,
     setSelectedChat,
-    setLastDetailPanel
+    setLastDetailPanel,
+    
+    // Loading and interaction protection
+    loadingStateManager,
+    interactionProtection
   };
 }

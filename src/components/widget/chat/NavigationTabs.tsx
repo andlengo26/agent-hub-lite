@@ -35,7 +35,7 @@ export function NavigationTabs({
           variant="ghost"
           size="sm"
           onClick={() => handleTabClick('home')}
-          className={`flex-1 flex-col h-auto py-1 space-y-0.5 text-xs ${
+          className={`flex-1 flex-col h-auto py-1 space-y-0.5 text-xs widget-interactive-element ${
             activeTab === 'home' ? 'text-primary' : 'text-muted-foreground'
           }`}
         >
@@ -47,7 +47,7 @@ export function NavigationTabs({
           variant="ghost"
           size="sm"
           onClick={() => handleTabClick('messages')}
-          className={`flex-1 flex-col h-auto py-1 space-y-0.5 text-xs ${
+          className={`flex-1 flex-col h-auto py-1 space-y-0.5 text-xs widget-interactive-element ${
             activeTab === 'messages' ? 'text-primary' : 'text-muted-foreground'
           }`}
         >
@@ -59,7 +59,7 @@ export function NavigationTabs({
           variant="ghost"
           size="sm"
           onClick={() => handleTabClick('resources')}
-          className={`flex-1 flex-col h-auto py-1 space-y-0.5 text-xs ${
+          className={`flex-1 flex-col h-auto py-1 space-y-0.5 text-xs widget-interactive-element ${
             activeTab === 'resources' ? 'text-primary' : 'text-muted-foreground'
           }`}
         >
