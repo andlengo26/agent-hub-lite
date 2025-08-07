@@ -87,13 +87,23 @@ export function useWidgetStabilization(
     // Reset counters
     operationCounts.current.clear();
 
-    // Force re-enable all interactive elements
+    // Enhanced force re-enable of interactive elements
     try {
-      const blockedElements = document.querySelectorAll('[data-blocked-by-loading="true"]');
+      const blockedElements = document.querySelectorAll('[data-blocked-by-loading="true"], [style*="pointer-events: none"]');
       blockedElements.forEach(element => {
         const htmlElement = element as HTMLElement;
         htmlElement.style.pointerEvents = 'auto';
         htmlElement.removeAttribute('data-blocked-by-loading');
+      });
+
+      // Specifically target widget content areas
+      const widgetElements = document.querySelectorAll('.widget-content, .widget-nav, .chat-input, .message-item, .nav-tab');
+      widgetElements.forEach(element => {
+        const htmlElement = element as HTMLElement;
+        if (htmlElement.style.pointerEvents === 'none') {
+          htmlElement.style.pointerEvents = 'auto';
+          htmlElement.removeAttribute('data-blocked-by-loading');
+        }
       });
     } catch (error) {
       // Silent recovery

@@ -29,15 +29,34 @@ export function useWidgetInteractionHandler(
     const now = Date.now();
     const shouldBlock = loadingStateManager.shouldBlockInteractions();
     
-    // Check if this is a critical element that should never be blocked
+    // Enhanced critical element detection
     const isCritical = target.matches(`
       button[aria-label*="minimize"], 
       button[aria-label*="close"], 
       [data-critical="true"],
       .widget-header,
       .close-button,
-      .minimize-button
-    `.replace(/\s+/g, ' ').trim());
+      .minimize-button,
+      .widget-content,
+      .widget-nav,
+      .chat-input,
+      .message-item,
+      .nav-tab
+    `.replace(/\s+/g, ' ').trim()) || target.closest('.widget-content, .widget-nav');
+
+    // Force recovery if elements are stuck with pointer-events: none
+    if (target.style.pointerEvents === 'none' && !shouldBlock) {
+      target.style.pointerEvents = 'auto';
+      target.removeAttribute('data-blocked-by-loading');
+      
+      if (debugMode) {
+        logger.debug('FORCE_RECOVERED_ELEMENT', {
+          element: target.tagName,
+          className: target.className,
+          id: target.id
+        }, 'useWidgetInteractionHandler');
+      }
+    }
 
     if (shouldBlock && !isCritical) {
       event.preventDefault();

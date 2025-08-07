@@ -18,6 +18,7 @@ import { useWidgetSettings } from "@/hooks/useWidgetSettings";
 import { useWelcomeMessage } from "@/hooks/widget/useWelcomeMessage";
 import { useWidgetInteractionHandler } from "@/hooks/widget/useWidgetInteractionHandler";
 import { useWidgetStabilization } from "@/hooks/widget/useWidgetStabilization";
+import { useWidgetDOMCleaner } from "@/hooks/widget/useWidgetDOMCleaner";
 import { useToast } from "@/hooks/use-toast";
 import { useConversationLifecycle } from "@/hooks/useConversationLifecycle";
 import { useMessageQuota } from "@/hooks/useMessageQuota";
@@ -149,6 +150,11 @@ export function InteractiveWidget() {
 
   // Initialize stabilization system
   const stabilization = useWidgetStabilization(widgetState.loadingStateManager, {
+    debugMode: process.env.NODE_ENV === 'development'
+  });
+
+  // Initialize DOM cleaner to fix stuck elements
+  const domCleaner = useWidgetDOMCleaner({
     debugMode: process.env.NODE_ENV === 'development'
   });
 
