@@ -173,6 +173,13 @@ export function useConversationLifecycle(settings: WidgetSettings | null) {
 
   const initializeConversation = useCallback(() => {
     const now = new Date();
+    const newConversationId = `conv_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    conversationIdRef.current = newConversationId;
+    
+    // Create chat session in the central service
+    const chatSession = chatSessionService.createSession(newConversationId);
+    chatSessionIdRef.current = chatSession.id;
+    
     setConversationState({
       status: 'active',
       messageCount: 0,
@@ -208,9 +215,14 @@ export function useConversationLifecycle(settings: WidgetSettings | null) {
   }, [recordActivity, toast]);
 
   const incrementMessageCount = useCallback(() => {
+    if (!chatSessionIdRef.current) return;
+    
     setConversationState(prev => {
       const newCount = prev.messageCount + 1;
       const maxMessages = settings?.aiSettings.maxMessagesPerSession || 20;
+      
+      // Update activity in chat session service
+      chatSessionService.updateActivity(chatSessionIdRef.current!, newCount);
       
       if (settings?.aiSettings.enableMessageQuota && newCount >= maxMessages) {
         logTransition('active', 'quota_exceeded', `Message quota of ${maxMessages} exceeded`, 'system');
@@ -231,6 +243,8 @@ export function useConversationLifecycle(settings: WidgetSettings | null) {
   }, [settings, logTransition, toast, recordActivity]);
 
   const endConversation = useCallback(async (reason = 'User ended conversation', feedback?: { rating: string; comment?: string }) => {
+    if (!chatSessionIdRef.current) return;
+    
     // Clear all timeouts
     if (timeoutRefs.current.idle) clearTimeout(timeoutRefs.current.idle);
     if (timeoutRefs.current.session) clearTimeout(timeoutRefs.current.session);
@@ -238,6 +252,9 @@ export function useConversationLifecycle(settings: WidgetSettings | null) {
 
     // Stop session timer
     sessionTimer.stopTimer();
+
+    // Terminate the chat session in the central service
+    const terminatedSession = chatSessionService.terminateSession(chatSessionIdRef.current, reason, feedback);
 
     // Log final transition
     await logTransition(conversationState.status, 'ended', reason, 'user');
@@ -268,7 +285,9 @@ export function useConversationLifecycle(settings: WidgetSettings | null) {
       
       toast({
         title: "Conversation Ended",
-        description: "Summary generated and saved to your engagement history.",
+        description: terminatedSession 
+          ? "Your conversation has been saved to engagement history."
+          : "Summary generated and saved to your engagement history.",
       });
     } catch (error) {
       console.error('Failed to generate conversation summary:', error);

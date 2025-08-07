@@ -17,6 +17,7 @@ export interface UseChatSessionsReturn {
   error: string | null;
   refreshSessions: () => void;
   getSession: (sessionId: string) => ChatSession | null;
+  getSessionByConversationId: (conversationId: string) => ChatSession | null;
   createSession: (conversationId: string, userId?: string, username?: string) => ChatSession;
   updateSession: (sessionId: string, updates: Partial<ChatSession>) => ChatSession | null;
   terminateSession: (sessionId: string, reason: string, feedback?: { rating: string; comment: string }) => ChatSession | null;
@@ -56,6 +57,10 @@ export function useChatSessions(options: UseChatSessionsOptions = {}): UseChatSe
 
   const getSession = useCallback((sessionId: string): ChatSession | null => {
     return chatSessionService.getSession(sessionId);
+  }, []);
+
+  const getSessionByConversationId = useCallback((conversationId: string): ChatSession | null => {
+    return chatSessionService.getSessionByConversationId(conversationId);
   }, []);
 
   const createSession = useCallback((conversationId: string, userId?: string, username?: string): ChatSession => {
@@ -134,6 +139,7 @@ export function useChatSessions(options: UseChatSessionsOptions = {}): UseChatSe
     error,
     refreshSessions,
     getSession,
+    getSessionByConversationId,
     createSession,
     updateSession,
     terminateSession,

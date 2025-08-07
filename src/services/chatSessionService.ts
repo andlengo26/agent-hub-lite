@@ -15,7 +15,7 @@ export interface ChatSession {
   terminationReason?: string;
   terminationFeedback?: {
     rating: string;
-    comment: string;
+    comment?: string;
   };
   metadata?: {
     userAgent?: string;
@@ -145,7 +145,7 @@ class ChatSessionService {
   terminateSession(
     sessionId: string, 
     reason: string, 
-    feedback?: { rating: string; comment: string }
+    feedback?: { rating: string; comment?: string }
   ): ChatSession | null {
     const session = this.getSession(sessionId);
     if (!session) {

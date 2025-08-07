@@ -15,12 +15,20 @@ interface ConversationState {
   messages: Message[];
   identificationSession: IdentificationSession | null;
   conversationId?: string;
-  status: 'new' | 'active' | 'completed' | 'pending_identification';
+  chatSessionId?: string; // Link to chat session service
+  status: 'new' | 'active' | 'completed' | 'pending_identification' | 'terminated';
   createdAt: Date;
   lastInteractionTime: Date;
   isExpanded?: boolean;
   pendingMessages?: Message[]; // Messages waiting for identification
+  terminationReason?: string;
+  terminationFeedback?: {
+    rating: string;
+    comment?: string;
+  };
 }
+
+import { chatSessionService } from '../services/chatSessionService';
 
 interface UseConversationPersistenceProps {
   onStateLoaded?: (state: ConversationState) => void;
@@ -79,8 +87,30 @@ export function useConversationPersistence({ onStateLoaded }: UseConversationPer
             if (conversationAge < maxAge) {
               logger.messagePersistence('LOAD_SUCCESS', { 
                 messageCount: messagesWithDates.length,
-                conversationAge: Math.round(conversationAge / (1000 * 60)) + ' minutes'
+                conversationAge: Math.round(conversationAge / (1000 * 60)) + ' minutes',
+                chatSessionId: loadedState.chatSessionId
               }, 'useConversationPersistence');
+              
+              // Restore chat session if it exists
+              if (loadedState.chatSessionId) {
+                const chatSession = chatSessionService.getSession(loadedState.chatSessionId);
+                if (chatSession && chatSession.status === 'active') {
+                  logger.messagePersistence('CHAT_SESSION_RESTORED', { 
+                    sessionId: loadedState.chatSessionId,
+                    sessionStatus: chatSession.status
+                  }, 'useConversationPersistence');
+                } else if (chatSession?.status !== 'active') {
+                  // Update conversation state to match terminated session
+                  loadedState.status = 'terminated';
+                  loadedState.terminationReason = chatSession?.terminationReason;
+                  loadedState.terminationFeedback = chatSession?.terminationFeedback;
+                  logger.messagePersistence('SESSION_TERMINATED_RESTORED', { 
+                    sessionId: loadedState.chatSessionId,
+                    terminationReason: chatSession?.terminationReason
+                  }, 'useConversationPersistence');
+                }
+              }
+              
               setConversationState(loadedState);
               onStateLoaded?.(loadedState);
             } else {
@@ -148,16 +178,18 @@ export function useConversationPersistence({ onStateLoaded }: UseConversationPer
     saveConversationState(updatedState);
   }, [conversationState, saveConversationState]);
 
-  const createNewConversation = useCallback((initialMessage?: Message, isExpanded?: boolean) => {
+  const createNewConversation = useCallback((initialMessage?: Message, isExpanded?: boolean, chatSessionId?: string) => {
     logger.messagePersistence('CREATE_NEW_CONVERSATION', { 
       hasInitialMessage: !!initialMessage,
       isExpanded,
-      messageType: initialMessage?.type
+      messageType: initialMessage?.type,
+      chatSessionId
     }, 'useConversationPersistence');
     
     const newState: ConversationState = {
       messages: initialMessage ? [initialMessage] : [],
       identificationSession: null,
+      chatSessionId,
       status: 'new',
       createdAt: new Date(),
       lastInteractionTime: new Date(),
