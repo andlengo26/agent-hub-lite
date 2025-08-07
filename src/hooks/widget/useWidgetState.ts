@@ -7,7 +7,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Message } from '@/types/message';
 import { logger } from '@/lib/logger';
 import { IdentificationSession } from '@/types/user-identification';
-import { useWidgetViewPersistence, PanelType, TabType } from './useWidgetViewPersistence';
+import { useWidgetViewPersistence, PanelType, TabType, WidgetViewState } from './useWidgetViewPersistence';
 
 interface UseWidgetStateProps {
   settings: any;
@@ -20,30 +20,29 @@ interface UseWidgetStateProps {
 }
 
 export function useWidgetState({ settings, conversationPersistence, availableData }: UseWidgetStateProps) {
-  // Initialize view persistence
-  const viewPersistence = useWidgetViewPersistence({
-    onStateLoaded: (loadedState) => {
-      if (loadedState && availableData) {
-        const validatedState = viewPersistence.validateRestoredState(loadedState, availableData);
-        if (validatedState) {
-          logger.debug('WIDGET_VIEW_RESTORED', {
-            panel: validatedState.currentPanel,
-            tab: validatedState.activeTab
-          }, 'useWidgetState');
-        }
-      }
+  // Create stable callback using useCallback to prevent infinite loops
+  const onStateLoaded = useCallback((loadedState: WidgetViewState | null) => {
+    if (!loadedState || !availableData) {
+      return;
     }
+    
+    logger.debug('WIDGET_VIEW_LOADED_FOR_VALIDATION', {
+      panel: loadedState.currentPanel,
+      tab: loadedState.activeTab,
+      hasAvailableData: !!availableData
+    }, 'useWidgetState');
+  }, [availableData]);
+
+  // Initialize view persistence with stable callback
+  const viewPersistence = useWidgetViewPersistence({
+    onStateLoaded
   });
 
   // Widget display states
   const [isExpanded, setIsExpanded] = useState(false);
   const [isMaximized, setIsMaximized] = useState(false);
-  const [currentPanel, setCurrentPanel] = useState<PanelType>(
-    viewPersistence.viewState?.currentPanel || 'main'
-  );
-  const [activeTab, setActiveTab] = useState<TabType>(
-    viewPersistence.viewState?.activeTab || 'home'
-  );
+  const [currentPanel, setCurrentPanel] = useState<PanelType>('main');
+  const [activeTab, setActiveTab] = useState<TabType>('home');
   
   // Chat states
   const [messages, setMessages] = useState<Message[]>([]);
@@ -53,31 +52,14 @@ export function useWidgetState({ settings, conversationPersistence, availableDat
   const [hasUserSentFirstMessage, setHasUserSentFirstMessage] = useState(false);
   const [hasActiveChat, setHasActiveChat] = useState(false);
   
-  // Selection states - initialize from persisted state
-  const [selectedFAQ, setSelectedFAQ] = useState<any>(() => {
-    if (viewPersistence.viewState?.selectedFAQId && availableData?.faqs) {
-      return availableData.faqs.find(f => f.id === viewPersistence.viewState?.selectedFAQId);
-    }
-    return null;
-  });
-  const [selectedResource, setSelectedResource] = useState<any>(() => {
-    if (viewPersistence.viewState?.selectedResourceId && availableData?.resources) {
-      return availableData.resources.find(r => r.id === viewPersistence.viewState?.selectedResourceId);
-    }
-    return null;
-  });
-  const [selectedChat, setSelectedChat] = useState<any>(() => {
-    if (viewPersistence.viewState?.selectedChatId && availableData?.chats) {
-      return availableData.chats.find(c => c.id === viewPersistence.viewState?.selectedChatId);
-    }
-    return null;
-  });
-  const [lastDetailPanel, setLastDetailPanel] = useState<'faq-detail' | 'resource-detail' | 'message-detail' | null>(
-    viewPersistence.viewState?.lastDetailPanel || null
-  );
+  // Selection states
+  const [selectedFAQ, setSelectedFAQ] = useState<any>(null);
+  const [selectedResource, setSelectedResource] = useState<any>(null);
+  const [selectedChat, setSelectedChat] = useState<any>(null);
+  const [lastDetailPanel, setLastDetailPanel] = useState<'faq-detail' | 'resource-detail' | 'message-detail' | null>(null);
   
   // Search states
-  const [searchQuery, setSearchQuery] = useState(viewPersistence.viewState?.searchQuery || '');
+  const [searchQuery, setSearchQuery] = useState('');
   
   // Modal states
   const [showFAQBrowser, setShowFAQBrowser] = useState(false);
@@ -85,6 +67,55 @@ export function useWidgetState({ settings, conversationPersistence, availableDat
   const [showPostChatFeedback, setShowPostChatFeedback] = useState(false);
   const [isConversationClosed, setIsConversationClosed] = useState(false);
   const [showQuotaWarning, setShowQuotaWarning] = useState(false);
+
+  // Restore widget state from view persistence after it loads
+  useEffect(() => {
+    if (!viewPersistence.isLoading && viewPersistence.viewState && availableData) {
+      const validatedState = viewPersistence.validateRestoredState(viewPersistence.viewState, availableData);
+      
+      if (validatedState) {
+        logger.debug('WIDGET_STATE_RESTORING', {
+          currentPanel: currentPanel,
+          targetPanel: validatedState.currentPanel,
+          isLoading: viewPersistence.isLoading
+        }, 'useWidgetState');
+        
+        // Restore panel and tab states
+        setCurrentPanel(validatedState.currentPanel);
+        setActiveTab(validatedState.activeTab);
+        
+        // Restore selected items
+        if (validatedState.selectedFAQId && availableData.faqs) {
+          const faq = availableData.faqs.find(f => f.id === validatedState.selectedFAQId);
+          if (faq) setSelectedFAQ(faq);
+        }
+        
+        if (validatedState.selectedResourceId && availableData.resources) {
+          const resource = availableData.resources.find(r => r.id === validatedState.selectedResourceId);
+          if (resource) setSelectedResource(resource);
+        }
+        
+        if (validatedState.selectedChatId && availableData.chats) {
+          const chat = availableData.chats.find(c => c.id === validatedState.selectedChatId);
+          if (chat) setSelectedChat(chat);
+        }
+        
+        // Restore other state
+        if (validatedState.lastDetailPanel) setLastDetailPanel(validatedState.lastDetailPanel);
+        if (validatedState.searchQuery) setSearchQuery(validatedState.searchQuery);
+        
+        logger.debug('WIDGET_STATE_RESTORED', {
+          panel: validatedState.currentPanel,
+          tab: validatedState.activeTab,
+          selectedIds: {
+            faq: validatedState.selectedFAQId,
+            resource: validatedState.selectedResourceId,
+            chat: validatedState.selectedChatId
+          }
+        }, 'useWidgetState');
+      }
+    }
+  }, [viewPersistence.isLoading, viewPersistence.viewState, availableData]); // Remove viewPersistence from deps
   
   // Widget positioning
   const getPositionClasses = useCallback(() => {

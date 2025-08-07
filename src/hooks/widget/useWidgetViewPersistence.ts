@@ -33,9 +33,17 @@ export function useWidgetViewPersistence({ onStateLoaded }: UseWidgetViewPersist
 
   // Load view state from localStorage on initialization
   useEffect(() => {
-    try {
-      const storedData = localStorage.getItem(STORAGE_KEY);
-      if (storedData) {
+    let isMounted = true;
+    
+    const loadState = async () => {
+      try {
+        const storedData = localStorage.getItem(STORAGE_KEY);
+        if (!storedData || !isMounted) {
+          // Call onStateLoaded in the next tick to avoid circular updates
+          setTimeout(() => onStateLoaded?.(null), 0);
+          return;
+        }
+
         const parsed = JSON.parse(storedData);
         
         // Convert timestamp back to Date object
@@ -51,8 +59,11 @@ export function useWidgetViewPersistence({ onStateLoaded }: UseWidgetViewPersist
               age: hoursSinceCreated
             }, 'useWidgetViewPersistence');
             
-            setViewState(parsed);
-            onStateLoaded?.(parsed);
+            if (isMounted) {
+              setViewState(parsed);
+              // Call onStateLoaded in the next tick to avoid circular updates
+              setTimeout(() => onStateLoaded?.(parsed), 0);
+            }
           } else {
             logger.debug('WIDGET_VIEW_EXPIRED', {
               age: hoursSinceCreated,
@@ -60,20 +71,35 @@ export function useWidgetViewPersistence({ onStateLoaded }: UseWidgetViewPersist
             }, 'useWidgetViewPersistence');
             
             localStorage.removeItem(STORAGE_KEY);
-            onStateLoaded?.(null);
+            if (isMounted) {
+              // Call onStateLoaded in the next tick to avoid circular updates
+              setTimeout(() => onStateLoaded?.(null), 0);
+            }
           }
+        } else if (isMounted) {
+          // Call onStateLoaded in the next tick to avoid circular updates
+          setTimeout(() => onStateLoaded?.(null), 0);
         }
-      } else {
-        onStateLoaded?.(null);
+      } catch (error) {
+        logger.error('WIDGET_VIEW_LOAD_ERROR', error, 'useWidgetViewPersistence');
+        localStorage.removeItem(STORAGE_KEY);
+        if (isMounted) {
+          // Call onStateLoaded in the next tick to avoid circular updates
+          setTimeout(() => onStateLoaded?.(null), 0);
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
       }
-    } catch (error) {
-      logger.error('WIDGET_VIEW_LOAD_ERROR', error, 'useWidgetViewPersistence');
-      localStorage.removeItem(STORAGE_KEY);
-      onStateLoaded?.(null);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [onStateLoaded]);
+    };
+
+    loadState();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []); // Remove onStateLoaded dependency to prevent infinite loop
 
   // Save view state to localStorage
   const saveViewState = useCallback((state: WidgetViewState) => {
