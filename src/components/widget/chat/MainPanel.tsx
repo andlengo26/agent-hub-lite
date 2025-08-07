@@ -90,7 +90,7 @@ export function MainPanel({
                 className="w-full text-white py-3 text-base font-medium"
                 style={{ backgroundColor: appearance.primaryColor }}
               >
-                Chat With Us
+                {hasActiveChat ? "Continue with the Chat" : "Chat With Us"}
               </Button>
             </div>
 
