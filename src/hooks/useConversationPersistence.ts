@@ -29,6 +29,8 @@ interface ConversationState {
 }
 
 import { chatSessionService } from '../services/chatSessionService';
+import { convertMessageTimestamps, dedupeMessagesById } from './persistence/messages';
+import { safeParseJSON } from './persistence/serializers';
 
 interface UseConversationPersistenceProps {
   onStateLoaded?: (state: ConversationState) => void;
@@ -52,7 +54,10 @@ export function useConversationPersistence({ onStateLoaded }: UseConversationPer
       
       if (savedState) {
         try {
-          const parsedState: ConversationState = JSON.parse(savedState);
+          const parsedState = safeParseJSON<ConversationState>(savedState);
+          if (!parsedState) {
+            throw new Error('INVALID_JSON');
+          }
           logger.messagePersistence('PARSE_SUCCESS', { 
             messageCount: parsedState.messages?.length || 0,
             status: parsedState.status,
@@ -62,10 +67,7 @@ export function useConversationPersistence({ onStateLoaded }: UseConversationPer
           // Validate conversation state structure and freshness
           if (parsedState.messages && Array.isArray(parsedState.messages)) {
             // Convert string dates back to Date objects for messages
-            const messagesWithDates = parsedState.messages.map(msg => ({
-              ...msg,
-              timestamp: new Date(msg.timestamp)
-            }));
+            const messagesWithDates = convertMessageTimestamps(parsedState.messages);
             
             const loadedState = {
               ...parsedState,
@@ -243,12 +245,7 @@ export function useConversationPersistence({ onStateLoaded }: UseConversationPer
         operation
       }, 'useConversationPersistence');
       // Deduplicate messages by ID, keeping the latest
-      const seenIds = new Set();
-      const dedupedMessages = messages.filter(msg => {
-        if (seenIds.has(msg.id)) return false;
-        seenIds.add(msg.id);
-        return true;
-      });
+      const dedupedMessages = dedupeMessagesById(messages);
       logger.messagePersistence('MESSAGES_DEDUPLICATED', {
         originalCount: messages.length,
         dedupedCount: dedupedMessages.length
