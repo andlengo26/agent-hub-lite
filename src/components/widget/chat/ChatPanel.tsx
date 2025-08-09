@@ -76,6 +76,8 @@ export function ChatPanel({
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  const isTerminated = ['ended','idle_timeout','ai_timeout','user_ended','escalated'].includes(conversationStatus);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSendMessage();
@@ -122,12 +124,14 @@ export function ChatPanel({
                 value={inputValue}
                 onChange={(e) => onInputChange(e.target.value)}
                 placeholder={
-                  !hasUserSentFirstMessage || canSendMessage 
-                    ? "Type your message..." 
-                    : "Complete identification to send messages"
+                  isTerminated
+                    ? "Conversation ended. Start a new chat to continue."
+                    : (!hasUserSentFirstMessage || canSendMessage 
+                      ? "Type your message..." 
+                      : "Complete identification to send messages")
                 }
                 className="min-h-[40px] pr-24"
-                disabled={hasUserSentFirstMessage && !canSendMessage}
+                disabled={isTerminated || (hasUserSentFirstMessage && !canSendMessage)}
               />
               <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex gap-1">
                 <Button
@@ -136,7 +140,7 @@ export function ChatPanel({
                   variant="ghost"
                   className="h-8 w-8 p-0"
                   onClick={onFileUpload}
-                  disabled={!canSendMessage}
+                  disabled={isTerminated || !canSendMessage}
                 >
                   <Paperclip className="h-4 w-4" />
                 </Button>
@@ -146,7 +150,7 @@ export function ChatPanel({
                   variant="ghost"
                   className="h-8 w-8 p-0"
                   onClick={onVoiceRecording}
-                  disabled={!canSendMessage}
+                  disabled={isTerminated || !canSendMessage}
                 >
                   {isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
                 </Button>
@@ -155,7 +159,7 @@ export function ChatPanel({
             <Button
               type="submit"
               size="sm"
-              disabled={!inputValue.trim() || (hasUserSentFirstMessage && !canSendMessage)}
+              disabled={isTerminated || !inputValue.trim() || (hasUserSentFirstMessage && !canSendMessage)}
               style={{ backgroundColor: appearance.primaryColor, color: '#ffffff' }}
             >
               <Send className="h-4 w-4" />
@@ -168,7 +172,7 @@ export function ChatPanel({
               variant="ghost"
               size="sm"
               onClick={onVoiceCall}
-              disabled={!canSendMessage}
+              disabled={isTerminated || !canSendMessage}
             >
               <Phone className="h-4 w-4 mr-2" />
               Voice Call
@@ -178,7 +182,7 @@ export function ChatPanel({
               variant="ghost"
               size="sm"
               onClick={onTalkToHuman}
-              disabled={!canSendMessage}
+              disabled={isTerminated || !canSendMessage}
             >
               <User className="h-4 w-4 mr-2" />
               Talk to Human

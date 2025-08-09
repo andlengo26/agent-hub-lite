@@ -84,6 +84,22 @@ export interface Engagement {
   lastEngagedAt: string;
   agentsInvolved: string[];
   aiSummary: string;
+  // Optional session metadata when sourced from chat sessions
+  source?: 'chat_session' | 'external';
+  sessionData?: {
+    id: string;
+    conversationId: string;
+    status: string;
+    startTime: string;
+    endTime?: string;
+    messageCount: number;
+    terminationReason?: string;
+    feedback?: {
+      rating: string;
+      comment?: string;
+    };
+    duration?: number;
+  };
 }
 
 export interface Note {

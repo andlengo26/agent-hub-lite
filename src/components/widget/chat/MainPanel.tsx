@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { TabType } from './NavigationTabs';
 import { FAQ, Resource, ChatHistory, IdentificationSession } from '@/types/main-panel';
+import { SessionsList } from '@/components/widget/messages/SessionsList';
 
 interface MainPanelProps {
   activeTab: TabType;
@@ -148,18 +149,12 @@ export function MainPanel({
                     Loading chat history...
                   </div>
                 ) : (
-                  // Import and use SessionsList component here
                   <div className="space-y-3">
-                    {/* Placeholder for SessionsList component integration */}
-                    <div className="p-4 border border-dashed border-muted-foreground/30 rounded-lg text-center">
-                      <p className="text-sm text-muted-foreground">
-                        Chat Sessions List Component
-                      </p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        This will display the SessionsList component with terminated session banners
-                      </p>
-                    </div>
-                    
+                    <SessionsList 
+                      onSessionSelect={onContinueChat}
+                      onStartNewChat={onStartChat}
+                    />
+
                     {/* Legacy chat history display */}
                     {chats.map((chat) => (
                       <div
